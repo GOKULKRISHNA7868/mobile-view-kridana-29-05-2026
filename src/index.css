@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* smooth dark/light mode transition */
+html {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+/* 3D SPIN WHEEL EFFECT */
+@keyframes spin3D {
+  0% {
+    transform: rotateX(25deg) rotate(0deg);
+  }
+  80% {
+    transform: rotateX(25deg) rotate(var(--rotation));
+  }
+  90% {
+    transform: rotateX(25deg) rotate(calc(var(--rotation) - 4deg));
+  }
+  100% {
+    transform: rotateX(25deg) rotate(calc(var(--rotation) + 2deg));
+  }
+}
+
+.wheel-3d-spin {
+  transform-style: preserve-3d;
+  animation: spin3D 4.7s cubic-bezier(0.05, 0.82, 0.24, 1) forwards;
+}
+.input {
+  @apply w-full border border-gray-300 rounded px-3 py-2 bg-gray-50 
+         focus:outline-none focus:border-black;
+}
+
+.textarea {
+  @apply w-full border rounded-xl px-4 py-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-green-400;
+}
+/* Hide scrollbar but allow scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE & Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+.menu-item {
+  padding: 12px;
+  border-radius: 10px;
+  text-align: left;
+  transition: 0.2s;
+}
+
+.menu-item:hover {
+  background-color: #f3f4f6;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease;
+}
+html,
+body {
+  scroll-behavior: auto !important;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.25s ease-out;
+}
+@media (max-width: 768px) {
+  .mobile-date {
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .mobile-date::-webkit-datetime-edit {
+    display: block;
+    color: #111;
+  }
+
+  .mobile-date::-webkit-datetime-edit-year-field,
+  .mobile-date::-webkit-datetime-edit-month-field,
+  .mobile-date::-webkit-datetime-edit-day-field {
+    color: #111;
+  }
+
+  .mobile-date:before {
+    content: "dd-mm-yyyy";
+    color: #111;
+    margin-right: 8px;
+  }
+
+  .mobile-date:valid:before {
+    content: "";
+  }
+}
+
+@media (max-width: 768px) {
+  .fc .fc-col-header-cell {
+    min-width: auto !important;
+  }
+
+  .fc .fc-col-header-cell-cushion {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    padding: 4px 1px;
+    white-space: normal !important;
+  }
+
+  .fc .fc-timegrid-axis {
+    width: 66px !important;
+  }
+}

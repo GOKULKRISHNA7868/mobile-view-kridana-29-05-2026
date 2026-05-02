@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">kridana</string>
+    <string name="title_activity_main">kridana</string>
+    <string name="package_name">com.kridana.app</string>
+    <string name="custom_url_scheme">com.kridana.app</string>
+</resources>
