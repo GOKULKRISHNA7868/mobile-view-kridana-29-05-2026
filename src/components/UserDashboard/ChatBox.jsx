@@ -42,8 +42,9 @@ const ChatBox = () => {
   const [unreadCounts, setUnreadCounts] = useState({});
   const [renameValue, setRenameValue] = useState("");
   const { selectedStudentUid } = useSelectedStudent();
-
+  const userCache = {};
   const chatUid = selectedStudentUid || user?.uid;
+  const [chatFilter, setChatFilter] = useState("all");
   const getValidImage = (url, name) => {
     if (!url)
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`;
@@ -56,115 +57,56 @@ const ChatBox = () => {
     setHasMobileNotification(hasUnread);
   }, [unreadCounts]);
   const fetchUserProfile = async (uid) => {
-    /* ================= USERS ================= */
-    const userSnap = await getDoc(doc(db, "users", uid));
-    if (userSnap.exists()) {
-      const d = userSnap.data();
+    if (userCache[uid]) return userCache[uid];
 
-      return {
-        uid,
-        name: d.name || "User",
-        profileImageUrl: d.profileImageUrl || "",
-        role: d.role || "user",
-      };
+    const collectionsToCheck = [
+      "users",
+      "students",
+      "trainerstudents",
+      "trainers",
+      "institutes",
+    ];
+
+    for (const col of collectionsToCheck) {
+      const snap = await getDoc(doc(db, col, uid));
+
+      if (snap.exists()) {
+        const d = snap.data();
+
+        const profile = {
+          uid,
+          name:
+            d.name ||
+            d.instituteName ||
+            d.founderName ||
+            d.trainerName ||
+            `${d.firstName || ""} ${d.lastName || ""}`.trim() ||
+            "User",
+
+          profileImageUrl:
+            d.profileImageUrl || d.studentPhotoUrl || d.ownerPhotoUrl || "",
+
+          role: d.role || col,
+        };
+
+        userCache[uid] = profile;
+
+        return profile;
+      }
     }
 
-    /* ================= STUDENTS ================= */
-    const stuSnap = await getDoc(doc(db, "students", uid));
-    if (stuSnap.exists()) {
-      const d = stuSnap.data();
-
-      return {
-        uid,
-        name: `${d.firstName || ""} ${d.lastName || ""}`.trim() || "Student",
-        profileImageUrl: d.profileImageUrl || d.studentPhotoUrl || "",
-        role: d.role || "student",
-      };
-    }
-
-    /* ================= TRAINER STUDENTS ================= */
-    const tsSnap = await getDoc(doc(db, "trainerstudents", uid));
-    if (tsSnap.exists()) {
-      const d = tsSnap.data();
-
-      return {
-        uid,
-        name: `${d.firstName || ""} ${d.lastName || ""}`.trim() || "Student",
-        profileImageUrl: d.profileImageUrl || "",
-        role: d.role || "student",
-      };
-    }
-
-    /* ================= TRAINERS ================= */
-    const trainerSnap = await getDoc(doc(db, "trainers", uid));
-    if (trainerSnap.exists()) {
-      const d = trainerSnap.data();
-
-      return {
-        uid,
-        name:
-          `${d.firstName || ""} ${d.lastName || ""}`.trim() ||
-          d.trainerName ||
-          "Trainer",
-        profileImageUrl: d.profileImageUrl || "",
-        role: d.role || "trainer",
-      };
-    }
-
-    /* ================= INSTITUTES ================= */
-    const instSnap = await getDoc(doc(db, "institutes", uid));
-    if (instSnap.exists()) {
-      const d = instSnap.data();
-
-      return {
-        uid,
-        name: d.instituteName || d.founderName || "Institute",
-        profileImageUrl: d.profileImageUrl || "",
-        role: d.role || "institute",
-      };
-    }
-
-    /* ================= DEFAULT ================= */
-    return {
+    const fallback = {
       uid,
       name: "User",
       profileImageUrl: "",
       role: "user",
     };
+
+    userCache[uid] = fallback;
+
+    return fallback;
   };
-  useEffect(() => {
-    if (!chatUid) return;
 
-    const q = query(collection(db, "followers"));
-
-    const unsub = onSnapshot(q, async (snap) => {
-      const docs = snap.docs.map((d) => d.data());
-
-      /* people i follow */
-      const iFollow = docs
-        .filter((x) => x.followerId === chatUid)
-        .map((x) => x.profileId);
-
-      /* follow me */
-      const followMe = docs
-        .filter((x) => x.profileId === chatUid)
-        .map((x) => x.followerId);
-
-      /* mutual */
-      const mutualIds = iFollow.filter((id) => followMe.includes(id));
-
-      let arr = [];
-
-      for (const uid of mutualIds) {
-        const p = await fetchUserProfile(uid);
-        arr.push(p);
-      }
-
-      setMutualFriends(arr);
-    });
-
-    return () => unsub();
-  }, [chatUid]);
   useEffect(() => {
     if (!chatUid) return;
 
@@ -174,97 +116,35 @@ const ChatBox = () => {
     );
 
     const unsub = onSnapshot(q, async (snap) => {
-      let arr = [];
+      const chatsData = await Promise.all(
+        snap.docs.map(async (d) => {
+          const data = d.data();
 
-      for (const d of snap.docs) {
-        const data = d.data();
+          if (data.type === "group") return null;
 
-        if (data.type === "group") continue;
+          const members = data.members || [];
 
-        const members = data.members || [];
-        const otherUid = members.find((id) => id !== chatUid);
+          const otherUid = members.find((id) => id !== chatUid);
 
-        if (!otherUid) continue;
+          if (!otherUid) return null;
 
-        let profile = {
-          uid: otherUid,
-          name: "User",
-          profileImageUrl: "",
-        };
+          const profile = await fetchUserProfile(otherUid);
 
-        /* ================= TRAINERS ================= */
-        const trainerSnap = await getDoc(doc(db, "trainers", otherUid));
-
-        if (trainerSnap.exists()) {
-          const t = trainerSnap.data();
-
-          profile = {
-            uid: otherUid,
-            name: `${t.firstName || ""} ${t.lastName || ""}`.trim(),
-            profileImageUrl: t.profileImageUrl || "",
+          return {
+            id: d.id,
+            members,
+            ...profile,
+            lastAt: data.lastAt || data.createdAt,
+            lastMessage: data.lastMessage || "",
           };
-        } else {
-          /* ================= INSTITUTE ================= */
-          const instSnap = await getDoc(doc(db, "institutes", otherUid));
+        }),
+      );
 
-          if (instSnap.exists()) {
-            const i = instSnap.data();
+      const filtered = chatsData
+        .filter(Boolean)
+        .sort((a, b) => (b.lastAt?.seconds || 0) - (a.lastAt?.seconds || 0));
 
-            profile = {
-              uid: otherUid,
-              name:
-                i.instituteName ||
-                i.founderName ||
-                `${i.firstName || ""} ${i.lastName || ""}`.trim() ||
-                "Institute Admin",
-              profileImageUrl: i.profileImageUrl || "",
-            };
-          } else {
-            /* ================= INSTITUTE TRAINERS ================= */
-            const tq = query(
-              collection(db, "InstituteTrainers"),
-              where("trainerUid", "==", otherUid),
-            );
-
-            const ts = await getDocs(tq);
-
-            if (!ts.empty) {
-              const t = ts.docs[0].data();
-
-              profile = {
-                uid: otherUid,
-                name: `${t.firstName || ""} ${t.lastName || ""}`.trim(),
-                profileImageUrl: t.profileImageUrl || "",
-              };
-            } else {
-              /* ================= STUDENTS ================= */
-              const stuSnap = await getDoc(doc(db, "students", otherUid));
-
-              if (stuSnap.exists()) {
-                const s = stuSnap.data();
-
-                profile = {
-                  uid: otherUid,
-                  name: `${s.firstName || ""} ${s.lastName || ""}`.trim(),
-                  profileImageUrl: s.studentPhotoUrl || s.profileImageUrl || "",
-                };
-              }
-            }
-          }
-        }
-
-        arr.push({
-          id: d.id,
-          members: members, // ✅ VERY IMPORTANT
-          ...profile,
-          lastAt: data.lastAt || data.createdAt,
-          lastMessage: data.lastMessage || "",
-        });
-      }
-
-      arr.sort((a, b) => (b.lastAt?.seconds || 0) - (a.lastAt?.seconds || 0));
-
-      setRecentChats(arr);
+      setRecentChats(filtered);
     });
 
     return () => unsub();
@@ -623,371 +503,502 @@ const ChatBox = () => {
     .map((uid) => users.find((u) => u.uid === uid))
     .filter(Boolean);
   return (
-    <div className="flex h-screen w-full bg-[#f3f3f3] overflow-hidden">
-      <div className="flex flex-col flex-1">
-        {/* HEADER */}
-        <div className="bg-[#efb082] px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Conversations</h1>
-
-          {/* REMOVE THREE DOTS + SHOW CHATS BUTTON */}
-          <button
-            onClick={() => {
-              setShowSidebar(true);
-              setHasMobileNotification(false); // remove blink after open
-            }}
-            className="relative bg-white px-4 py-2 rounded-full text-sm font-medium shadow"
-          >
-            Chats
-            {/* RED BLINK IF NEW MESSAGE */}
-            {hasMobileNotification && (
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* TABS */}
-        <div className="px-4 py-3 flex gap-3 bg-[#f3f3f3]">
-          <button
-            onClick={() => {
-              setActiveTab("chats");
-              setScreen("chat");
-              setHasMobileNotification(false); // remove blink when opened
-            }}
-            className={`relative px-5 py-1 rounded-full text-sm font-medium ${
-              activeTab === "chats"
-                ? "bg-orange-500 text-white"
-                : "bg-white border"
-            }`}
-          >
-            Chats
-            {/* MOBILE RED BLINK DOT */}
-            {hasMobileNotification && activeTab !== "chats" && (
-              <span className="lg:hidden absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
-              </span>
-            )}
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveTab("group");
-              setScreen("chat");
-            }}
-            className={`px-5 py-1 rounded-full text-sm font-medium ${
-              activeTab === "group"
-                ? "bg-orange-500 text-white"
-                : "bg-white border"
-            }`}
-          >
-            Group
-          </button>
-        </div>
-
-        {/* TOP MENU */}
-        <div className="flex items-center justify-between bg-[#efb082] mx-4 rounded-md px-4 py-3">
-          <span className="font-medium">{activeChatName || "Chat"}</span>
-
-          <div className="relative">
-            <MoreVertical
-              onClick={() => setShowMenu(!showMenu)}
-              className="cursor-pointer"
-            />
-
-            {showMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md border z-50">
-                <button
-                  onClick={() => {
-                    setScreen("createGroup");
-                    setShowMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                >
-                  ➕ Create Group
-                </button>
-
-                {activeChat?.type === "group" && (
-                  <>
-                    <button
-                      onClick={() => {
-                        setScreen("participants");
-                        setShowMenu(false);
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                    >
-                      👥 View Participants
-                    </button>
-
-                    {isAdmin() && (
-                      <>
-                        <button
-                          onClick={() => {
-                            setRenameValue(activeChatName);
-                            setShowMenu(false);
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                        >
-                          ✏ Rename Group
-                        </button>
-
-                        <button
-                          onClick={deleteGroup}
-                          className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600"
-                        >
-                          🗑 Delete Group
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* RENAME INPUT */}
-        {renameValue !== "" && isAdmin() && (
-          <div className="px-4 py-2 flex gap-2 bg-white mx-4 mt-2 rounded border">
-            <input
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              className="flex-1 border px-3 py-1 rounded text-sm"
-              placeholder="New group name"
-            />
-            <button
-              onClick={renameGroup}
-              className="bg-orange-500 text-white px-3 rounded text-sm"
-            >
-              Save
-            </button>
-          </div>
-        )}
-
-        {/* ================= CREATE GROUP ================= */}
-
-        {/* ================= PARTICIPANTS ================= */}
-        {screen === "participants" && (
-          <div className="flex-1 p-6 overflow-y-auto">
-            <h2 className="font-semibold mb-4">Participants</h2>
-
-            {memberObjects.map((m) => (
-              <div
-                key={m.uid}
-                className="flex justify-between items-center border-b py-2"
-              >
-                <span>
-                  {m.name} ({m.role})
-                </span>
-
-                {isAdmin() && m.uid !== chatUid && (
-                  <button
-                    onClick={() => removeParticipant(m.uid)}
-                    className="text-red-500 text-sm"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ================= CHAT ================= */}
-        {screen === "chat" && (
-          <>
-            <div className="flex-1 px-4 py-6 space-y-4 overflow-y-auto">
-              {messages.map((m) => {
-                const sender = users.find((u) => u.uid === m.senderId);
-
-                return m.senderId === chatUid ? (
-                  <div key={m.id} className="flex justify-end">
-                    <div className="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm flex flex-col gap-1 max-w-[75%]">
-                      {activeChat?.type === "group" && (
-                        <span className="text-[10px] opacity-80 text-right">
-                          You
-                        </span>
-                      )}
-
-                      <span>{m.text}</span>
-
-                      {m.readBy?.length > 1 && (
-                        <span className="text-[10px] opacity-80 text-right">
-                          ✓✓
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div key={m.id} className="flex">
-                    <div className="bg-gray-300 px-4 py-2 rounded-xl text-sm flex flex-col gap-1 max-w-[75%]">
-                      {activeChat?.type === "group" && (
-                        <span className="text-[10px] font-semibold text-gray-700">
-                          {sender?.name || "User"}
-                        </span>
-                      )}
-
-                      <span>{m.text}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="px-4 pb-4">
-              <div className="flex items-center gap-3 border rounded-full px-4 py-2 bg-white">
-                <input
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Type message..."
-                  className="flex-1 outline-none text-sm"
-                />
-                <Send
-                  onClick={sendMessage}
-                  className="w-5 h-5 text-orange-500 cursor-pointer"
-                />
-              </div>
-            </div>
-          </>
-        )}
-      </div>
-      {showSidebar && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
-          onClick={() => setShowSidebar(false)}
-        />
-      )}
-
-      {/* ================= RIGHT SIDEBAR ================= */}
-      {/* ================= RIGHT SIDEBAR ================= */}
+    <div className="flex h-[82vh] md:h-[60vh] w-full bg-[#f3f3f3] overflow-hidden rounded-xl">
+      {/* ================= CHAT LIST ================= */}
       <div
         className={`
-    fixed lg:static top-0 right-0 h-full w-80 bg-white z-50
-    transform transition-all duration-300 ease-in-out
-    ${showSidebar ? "translate-x-0 shadow-2xl" : "translate-x-full"}
-    lg:translate-x-0 lg:flex flex-col border-l
-  `}
+        ${activeChat && window.innerWidth < 768 ? "hidden" : "flex"}
+        flex-col
+        w-full
+        md:w-[380px]
+        bg-[#F8F8F8]
+        border-r
+        border-gray-100
+        h-full
+      `}
       >
-        <div className="px-4 py-4 font-semibold border-b flex justify-between items-center">
-          <span></span>
+        {/* HEADER */}
+        <div className="px-5 pt-6 pb-4 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-black">Chat</h1>
+
+            <button
+              onClick={() => setShowSidebar(true)}
+              className="relative bg-[#FF6B00] text-white px-4 py-2 rounded-full text-sm font-medium"
+            >
+              Chats
+              {hasMobileNotification && (
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* SEARCH */}
+          <div className="mt-5">
+            <input
+              placeholder="Search conversations"
+              className="
+              w-full
+              bg-white
+              rounded-2xl
+              px-5
+              py-3
+              text-sm
+              outline-none
+              shadow-sm
+              border
+              border-gray-100
+            "
+            />
+          </div>
+        </div>
+
+        {/* ACTIVE USERS */}
+        <div className="px-5 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-[15px]">Active Users</h2>
+          </div>
+
+          <div className="overflow-x-auto whitespace-nowrap scrollbar-hide">
+            <div className="flex gap-4 pb-3">
+              {mutualFriends.slice(0, 20).map((friend) => (
+                <div
+                  key={friend.uid}
+                  onClick={() => startChat(friend)}
+                  className="flex flex-col items-center min-w-[72px] cursor-pointer"
+                >
+                  <div className="relative">
+                    <img
+                      src={getValidImage(friend.profileImageUrl, friend.name)}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+
+                    <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                  </div>
+
+                  <span className="text-xs mt-2 font-medium text-gray-700 truncate w-full text-center">
+                    {friend.name?.split(" ")[0]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* CHAT LIST */}
+        {/* CHAT LIST */}
+        {/* FILTER BUTTONS */}
+        <div className="px-3 pb-3 flex gap-2">
+          <button
+            onClick={() => setChatFilter("all")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+              chatFilter === "all"
+                ? "bg-[#FF6B00] text-white"
+                : "bg-white text-gray-600"
+            }`}
+          >
+            All
+          </button>
 
           <button
-            onClick={() => setShowSidebar(false)}
-            className="lg:hidden text-sm text-gray-500"
+            onClick={() => setChatFilter("individual")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+              chatFilter === "individual"
+                ? "bg-[#FF6B00] text-white"
+                : "bg-white text-gray-600"
+            }`}
           >
-            Close
+            Chats
+          </button>
+
+          <button
+            onClick={() => setChatFilter("group")}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+              chatFilter === "group"
+                ? "bg-[#FF6B00] text-white"
+                : "bg-white text-gray-600"
+            }`}
+          >
+            Groups
           </button>
         </div>
-        <div className="px-4 py-4 font-semibold border-b">Recent Chats</div>
-        {/* ================= RIGHT SIDEBAR ================= */}
 
-        <div className="flex-1 overflow-y-auto">
-          {activeTab === "group" ? (
-            groups.map((g) => (
-              <div
-                key={g.id}
-                onClick={() => {
-                  setActiveChat({ id: g.id, type: "group" });
-                  setActiveChatName(g.name);
-                  setScreen("chat");
-                  setShowSidebar(false);
-                }}
-                className="px-4 py-3 border-b hover:bg-gray-100 cursor-pointer"
-              >
-                {g.name}
-              </div>
-            ))
-          ) : (
-            <>
-              {/* ================= RECENT CHATS ================= */}
-              {recentChats.map((chat) => {
-                const otherUid = chat.members?.find((m) => m !== chatUid) || "";
+        {/* CHAT LIST */}
+        <div className="flex-1 overflow-y-auto px-3 pb-6 min-h-0">
+          {[
+            ...recentChats.map((c) => ({
+              ...c,
+              chatType: "individual",
+            })),
 
-                let otherUser = users.find((u) => u.uid === otherUid);
-
-                if (!otherUser) {
-                  otherUser = {
-                    uid: otherUid,
-                    name: chat.name || "User",
-                    profileImageUrl: chat.profileImageUrl || "",
-                  };
-                }
-
+            ...groups.map((g) => ({
+              ...g,
+              chatType: "group",
+              lastAt: g.lastAt || g.createdAt,
+            })),
+          ]
+            .filter((chat) => {
+              if (chatFilter === "all") return true;
+              return chat.chatType === chatFilter;
+            })
+            .sort((a, b) => (b.lastAt?.seconds || 0) - (a.lastAt?.seconds || 0))
+            .map((chat) => {
+              /* ================= GROUP ================= */
+              if (chat.chatType === "group") {
                 return (
                   <div
                     key={chat.id}
-                    onClick={async () => {
-                      setShowSidebar(false);
-
-                      await new Promise((r) => setTimeout(r, 100));
-
+                    onClick={() => {
                       setActiveChat({
                         id: chat.id,
-                        type: "individual",
+                        type: "group",
                       });
 
-                      setActiveChatName(otherUser.name);
+                      setActiveChatName(chat.name);
                       setScreen("chat");
                     }}
-                    className="px-4 py-3 border-b hover:bg-gray-100 cursor-pointer flex justify-between"
+                    className="
+              bg-white
+              rounded-3xl
+              px-4
+              py-4
+              mb-3
+              flex
+              items-center
+              gap-4
+              shadow-sm
+              cursor-pointer
+            "
                   >
-                    <div className="flex gap-3 items-center">
+                    {/* GROUP AVATAR */}
+                    <div className="relative">
                       <img
-                        src={getValidImage(
-                          otherUser.profileImageUrl,
-                          otherUser.name,
-                        )}
-                        className="w-9 h-9 rounded-full object-cover"
+                        src={getValidImage("", chat.name)}
+                        className="w-14 h-14 rounded-full object-cover"
                       />
 
-                      <div>
-                        <div className="font-medium">{otherUser.name}</div>
-                        <div className="text-xs text-gray-500 truncate w-40">
-                          {chat.lastMessage || ""}
-                        </div>
-                      </div>
+                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#FF6B00] border-2 border-white rounded-full"></div>
                     </div>
 
-                    {unreadCounts[chat.id] > 0 && (
-                      <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                        {unreadCounts[chat.id]}
-                      </span>
-                    )}
+                    {/* INFO */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-[15px] truncate">
+                          {chat.name}
+                        </h3>
+
+                        <span className="text-[11px] text-gray-400">
+                          {chat.lastAt?.seconds
+                            ? new Date(
+                                chat.lastAt.seconds * 1000,
+                              ).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })
+                            : ""}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-sm text-gray-400 truncate pr-3">
+                          {chat.lastMessage || "Group conversation"}
+                        </p>
+
+                        {unreadCounts[chat.id] > 0 && (
+                          <div className="min-w-[22px] h-[22px] px-1 rounded-full bg-[#FF6B00] flex items-center justify-center text-white text-[11px] font-semibold">
+                            {unreadCounts[chat.id]}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 );
-              })}
+              }
 
-              {/* ================= FRIENDS WHO MUTUAL FOLLOW ================= */}
-              {mutualFriends
-                .filter(
-                  (f) =>
-                    !recentChats.some((chat) => chat.members?.includes(f.uid)),
-                )
-                .map((friend) => (
-                  <div
-                    key={friend.uid}
-                    onClick={() => startChat(friend)}
-                    className="px-4 py-3 border-b hover:bg-orange-50 cursor-pointer"
-                  >
-                    <div className="flex gap-3 items-center">
-                      <img
-                        src={getValidImage(friend.profileImageUrl, friend.name)}
-                        className="w-9 h-9 rounded-full object-cover"
-                      />
+              /* ================= INDIVIDUAL ================= */
+              const otherUid = chat.members?.find((m) => m !== chatUid) || "";
 
-                      <div>
-                        <div className="font-medium">{friend.name}</div>
-                        <div className="text-xs text-orange-500">
-                          Start Chat
+              let otherUser = users.find((u) => u.uid === otherUid);
+
+              if (!otherUser) {
+                otherUser = {
+                  uid: otherUid,
+                  name: chat.name || "User",
+                  profileImageUrl: chat.profileImageUrl || "",
+                };
+              }
+
+              return (
+                <div
+                  key={chat.id}
+                  onClick={() => {
+                    setActiveChat({
+                      id: chat.id,
+                      type: "individual",
+                    });
+
+                    setActiveChatName(otherUser.name);
+                    setScreen("chat");
+                  }}
+                  className="
+            bg-white
+            rounded-3xl
+            px-4
+            py-4
+            mb-3
+            flex
+            items-center
+            gap-4
+            shadow-sm
+            cursor-pointer
+          "
+                >
+                  {/* AVATAR */}
+                  <div className="relative">
+                    <img
+                      src={getValidImage(
+                        otherUser.profileImageUrl,
+                        otherUser.name,
+                      )}
+                      className="w-14 h-14 rounded-full object-cover"
+                    />
+
+                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                  </div>
+
+                  {/* INFO */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-[15px] truncate">
+                        {otherUser.name}
+                      </h3>
+
+                      <span className="text-[11px] text-gray-400">
+                        {chat.lastAt?.seconds
+                          ? new Date(
+                              chat.lastAt.seconds * 1000,
+                            ).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : ""}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-sm text-gray-400 truncate pr-3">
+                        {chat.lastMessage || "Start conversation"}
+                      </p>
+
+                      {unreadCounts[chat.id] > 0 && (
+                        <div className="min-w-[22px] h-[22px] px-1 rounded-full bg-[#FF6B00] flex items-center justify-center text-white text-[11px] font-semibold">
+                          {unreadCounts[chat.id]}
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
-                ))}
-            </>
-          )}
+                </div>
+              );
+            })}
+        </div>
+      </div>
+
+      {/* ================= ACTIVE CHAT ================= */}
+      <div
+        className={`
+        ${activeChat ? "flex" : "hidden md:flex"}
+        flex-1
+        flex-col
+        bg-[#F4F4F4]
+        h-full
+        overflow-hidden
+      `}
+      >
+        {/* TOP HEADER */}
+        <div
+          className="
+          bg-white
+          border-b
+          border-gray-100
+          px-4
+          py-3
+          flex
+          items-center
+          justify-between
+          flex-shrink-0
+          z-20
+        "
+        >
+          <div className="flex items-center gap-3">
+            {/* BACK */}
+            <button
+              onClick={() => {
+                setActiveChat(null);
+                setMessages([]);
+              }}
+              className="md:hidden text-xl"
+            >
+              ←
+            </button>
+
+            {/* PROFILE */}
+            <div className="relative">
+              <img
+                src={getValidImage("", activeChatName)}
+                className="w-11 h-11 rounded-full object-cover"
+              />
+
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+            </div>
+
+            <div>
+              <h2 className="font-semibold text-[15px]">
+                {activeChatName || "Chat"}
+              </h2>
+
+              <p className="text-xs text-green-500">Online</p>
+            </div>
+          </div>
+
+          {/* ACTIONS */}
+          <div className="flex items-center gap-4">
+            <button>📞</button>
+
+            <MoreVertical
+              size={20}
+              className="cursor-pointer"
+              onClick={() => setShowMenu(!showMenu)}
+            />
+          </div>
+        </div>
+
+        {/* MESSAGE AREA */}
+        <div
+          className="
+          flex-1
+          overflow-y-auto
+          px-4
+          py-5
+          space-y-4
+          min-h-0
+          pb-[130px]
+        "
+        >
+          {/* TODAY CHIP */}
+          <div className="flex justify-center">
+            <div className="bg-white text-gray-400 text-xs px-4 py-1 rounded-full shadow-sm">
+              Today
+            </div>
+          </div>
+
+          {messages.map((m) => {
+            const sender = users.find((u) => u.uid === m.senderId);
+
+            const isMine = m.senderId === chatUid;
+
+            return (
+              <div
+                key={m.id}
+                className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`
+                  max-w-[78%]
+                  px-4
+                  py-3
+                  text-sm
+                  shadow-sm
+                  ${
+                    isMine
+                      ? "bg-[#FFE2CF] rounded-2xl rounded-tr-sm"
+                      : "bg-white rounded-2xl rounded-tl-sm"
+                  }
+                `}
+                >
+                  {activeChat?.type === "group" && !isMine && (
+                    <p className="text-[11px] font-semibold text-[#FF6B00] mb-1">
+                      {sender?.name || "User"}
+                    </p>
+                  )}
+
+                  <p className="whitespace-pre-wrap break-words">{m.text}</p>
+
+                  <div className="flex justify-end mt-1">
+                    <span className="text-[10px] text-gray-400">
+                      {m.readBy?.length > 1 && isMine ? "✓✓" : ""}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* INPUT BAR */}
+        <div
+          className="
+          bg-[#F4F4F4]
+          border-t
+          border-gray-100
+          px-3
+          pt-2
+          pb-[calc(env(safe-area-inset-bottom)+12px)]
+          flex-shrink-0
+        "
+        >
+          <div className="flex items-end gap-3">
+            {/* INPUT */}
+            <div
+              className="
+              flex-1
+              bg-white
+              rounded-full
+              px-4
+              py-3
+              flex
+              items-center
+              gap-3
+              shadow-sm
+            "
+            >
+              <input
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Message"
+                className="flex-1 outline-none text-sm bg-transparent"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    sendMessage();
+                  }
+                }}
+              />
+            </div>
+
+            {/* SEND BUTTON */}
+            <button
+              onClick={sendMessage}
+              className="
+              w-14
+              h-14
+              rounded-full
+              bg-[#FF6B00]
+              flex
+              items-center
+              justify-center
+              shadow-lg
+              shrink-0
+            "
+            >
+              {text.trim() ? (
+                <Send size={20} className="text-white" />
+              ) : (
+                <Mic size={22} className="text-white" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

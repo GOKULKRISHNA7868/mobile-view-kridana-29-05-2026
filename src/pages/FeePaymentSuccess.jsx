@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { db, auth } from "../firebase";
+
 import {
   collection,
   doc,
@@ -15,6 +16,7 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
 
   const [saving, setSaving] = useState(true);
+  const hasSaved = useRef(false);
 
   if (!state) return <div className="p-10">No Data</div>;
 
@@ -41,6 +43,10 @@ const PaymentSuccess = () => {
 
   // 🔥 SAVE FUNCTION
   const handleSubmit = async () => {
+    if (hasSaved.current) return;
+
+    hasSaved.current = true;
+
     try {
       setSaving(true);
 

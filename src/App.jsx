@@ -1,12 +1,15 @@
 import React, { useEffect } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
+
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { App as CapApp } from "@capacitor/app";
 
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { AuthProvider } from "./context/AuthContext";
+
 import ScrollToTop from "./components/ScrollToTop";
+
 import usePageTracking from "./hooks/usePageTracking";
 
 /* ================= CORE PAGES ================= */
@@ -16,11 +19,13 @@ import TrainerSignup from "./pages/TrainerSignup.jsx";
 import InstituteSignup from "./pages/InstituteSignup.jsx";
 import Login from "./pages/Login.jsx";
 import Landing from "./pages/Landing.jsx";
+
 import FeePaymentSuccess from "./pages/FeePaymentSuccess";
 import InstFeePaymentSuccess from "./pages/InstFeePaymentSuccess";
 
 /* ================= NAVBAR ================= */
 import Navbar from "./components/Navbar.jsx";
+
 import About from "./pages/About.jsx";
 import Career from "./pages/Career.jsx";
 import Contact from "./pages/Contact.jsx";
@@ -32,6 +37,7 @@ import AddAddressPage from "./components/AddAddressPage.jsx";
 import PaymentPage from "./components/PaymentPage.jsx";
 import CartPage from "./components/CartPage.jsx";
 import WishlistPage from "./components/WishlistPage.jsx";
+
 import ReelViewer from "./pages/ReelViewer";
 import Reelspage from "./pages/Reelspage.jsx";
 
@@ -43,8 +49,10 @@ import UserDashboard from "./components/UserDashboard";
 /* ================= LIST & DETAILS ================= */
 import ViewInstitutes from "./pages/ViewInstitutes.jsx";
 import ViewTrainers from "./pages/ViewTrainers.jsx";
+
 import InstituteDetailsPage from "./pages/InstituteDetailsPage.jsx";
 import TrainerDetailsPage from "./pages/TrainerDetailsPage.jsx";
+
 import Terms from "./pages/Terms.jsx";
 import Privacy from "./pages/Privacy.jsx";
 import PaymentPolicy from "./pages/PaymentPolicy.jsx";
@@ -54,6 +62,7 @@ import DeliveryAndShippingPolicy from "./pages/DeliveryAndShippingPolicy.jsx";
 /* ================= SELL FLOW ================= */
 import SellSportsMaterial from "./components/InstituteDashboard/SellSportsMaterial.jsx";
 import UploadProductDetails from "./components/InstituteDashboard/UploadProductDetails.jsx";
+
 import ChatBox1 from "./components/InstituteDashboard/ChatBox.jsx";
 
 /* ================= SERVICES ================= */
@@ -70,34 +79,68 @@ import Dance from "./pages/Services/Dance.jsx";
 import AquaticSports from "./pages/Services/AquaticSports.jsx";
 
 import Categories from "./pages/Categories";
+
 import AvailableDemoClasses from "./pages/AvailableDemoClasses.jsx";
+
 import "./index.css";
+
 import Plans from "./pages/Plans.jsx";
+
 import ProtectedRoute from "./routes/ProtectedRoute";
+
 import PaymentAndRefundPolicy from "./pages/PaymentAndRefundPolicy";
+
 import ChatBox from "./pages/ChatBox.jsx";
+
 import PaymentSuccess from "./components/PaymentSuccess.jsx";
 import PaymentFailed from "./components/PaymentFailed.jsx";
+
 import { SelectedStudentProvider } from "./context/SelectedStudentContext";
+
 import ResetPassword from "./pages/ResetPassword";
+
 import Feedback from "./pages/Feedback";
+
 import HelpCenter from "./pages/HelpCenter.jsx";
+
 import MobileCategoriesPage from "./pages/MobileCategoriesPage";
+
 import MobileEditprofile from "./pages/MobileEditprofile";
+
 import PendingFeesDetails from "./components/InstituteDashboard/PendingFeesDetails";
+
 import StudentsAttendancePage from "./components/InstituteDashboard/StudentsAttendancePage";
+
 import TrainerStudentsPage from "./components/TrainersDashboard/TrainerStudentsPage";
+
 import Uploadimages from "./pages/Uploadimages";
+
 import SuggestedPage from "./pages/SuggestedPage.jsx";
+
 import ChatBoxT from "./components/TrainersDashboard/ChatBox";
+
 import ChatBoxS from "./components/UserDashboard/ChatBox";
+
 import Reelsdata from "./components/TrainersDashboard/Reelsdata.jsx";
+
 import InstituteReelsdata from "./components/InstituteDashboard/Reelsdata.jsx";
+
 import AllPeoplePage from "./pages/AllPeoplePage";
+
+import PaymentMethodPage from "./pages/PaymentMethodPage.jsx";
+
+import Paymentselection from "./components/UserDashboard/paymentselection.jsx";
+
+import TrainerPaymentSelection from "./components/UserDashboard/TrainerPaymentSelection.jsx";
+
 function App() {
   usePageTracking();
+
   const location = useLocation();
 
+  /* =========================================================
+     HIDE NAVBAR
+  ========================================================= */
   const hideNavbarPaths = [
     "/RoleSelection",
     "/login",
@@ -105,14 +148,79 @@ function App() {
     "/trainer-signup",
     "/institute-signup",
   ];
-  const hideFooterPaths = [
-    "/RoleSelection", // Welcome to Kridana page
-  ];
+
+  const hideFooterPaths = ["/RoleSelection"];
 
   const showNavbar = !hideNavbarPaths.includes(location.pathname);
+
   const showFooter = !hideFooterPaths.includes(location.pathname);
 
-  /* ================= MOBILE NOTIFICATION PERMISSION ================= */
+  /* =========================================================
+     BLOCK ONLY EDGE GESTURES
+     FIXED MOBILE SIDE SCROLL ISSUE
+  ========================================================= */
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+
+    const EDGE_SIZE = 20;
+
+    const handleTouchStart = (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e) => {
+      const currentX = e.touches[0].clientX;
+
+      // =====================================================
+      // BLOCK LEFT EDGE BACK GESTURE ONLY
+      // =====================================================
+      if (startX <= EDGE_SIZE && currentX > startX) {
+        e.preventDefault();
+        return;
+      }
+
+      // =====================================================
+      // BLOCK RIGHT EDGE GESTURE ONLY
+      // =====================================================
+      if (startX >= window.innerWidth - EDGE_SIZE && currentX < startX) {
+        e.preventDefault();
+        return;
+      }
+    };
+
+    document.addEventListener("touchstart", handleTouchStart, {
+      passive: true,
+    });
+
+    document.addEventListener("touchmove", handleTouchMove, {
+      passive: false,
+    });
+
+    // =======================================================
+    // HARDWARE BACK BUTTON
+    // =======================================================
+    const backHandler = CapApp.addListener("backButton", ({ canGoBack }) => {
+      if (canGoBack) {
+        window.history.back();
+      } else {
+        CapApp.exitApp();
+      }
+    });
+
+    return () => {
+      document.removeEventListener("touchstart", handleTouchStart);
+
+      document.removeEventListener("touchmove", handleTouchMove);
+
+      backHandler.remove();
+    };
+  }, []);
+
+  /* =========================================================
+     MOBILE NOTIFICATIONS
+  ========================================================= */
   useEffect(() => {
     const initNotifications = async () => {
       try {
@@ -133,9 +241,16 @@ function App() {
 
     initNotifications();
 
-    CapApp.addListener("appStateChange", ({ isActive }) => {
-      console.log("App Active:", isActive);
-    });
+    const appStateListener = CapApp.addListener(
+      "appStateChange",
+      ({ isActive }) => {
+        console.log("App Active:", isActive);
+      },
+    );
+
+    return () => {
+      appStateListener.remove();
+    };
   }, []);
 
   return (
@@ -143,69 +258,127 @@ function App() {
       <SelectedStudentProvider>
         <CartProvider>
           <WishlistProvider>
-            <div className="bg-white text-black min-h-screen">
+            <div
+              className="
+                bg-white
+                text-black
+                min-h-screen
+                overflow-x-hidden
+                touch-pan-y
+              "
+              style={{
+                overscrollBehaviorX: "none",
+                WebkitOverflowScrolling: "touch",
+              }}
+            >
               {showNavbar && <Navbar />}
+
               <ScrollToTop />
 
               <Routes>
-                {/* AUTH */}
+                {/* =====================================================
+                    AUTH
+                ===================================================== */}
                 <Route path="AllPeoplePage" element={<AllPeoplePage />} />
+
+                <Route
+                  path="/PaymentMethodPage"
+                  element={<PaymentMethodPage />}
+                />
+
+                <Route
+                  path="/TrainerPaymentSelection"
+                  element={<TrainerPaymentSelection />}
+                />
+
+                <Route
+                  path="/paymentselection"
+                  element={<Paymentselection />}
+                />
+
                 <Route path="/about" element={<About />} />
+
                 <Route path="/career" element={<Career />} />
+
                 <Route path="/contact" element={<Contact />} />
+
                 <Route path="/" element={<Landing />} />
+
                 <Route path="/login" element={<Login />} />
+
                 <Route path="/signup" element={<Signup />} />
+
                 <Route path="/trainer-signup" element={<TrainerSignup />} />
+
                 <Route path="/institute-signup" element={<InstituteSignup />} />
+
                 <Route path="/chat/:chatId" element={<ChatBox />} />
+
                 <Route
                   path="/MobileCategoriesPage"
                   element={<MobileCategoriesPage />}
                 />
+
                 <Route
                   path="/MobileEditprofile"
                   element={<MobileEditprofile />}
                 />
+
                 <Route
                   path="/StudentsAttendancePage"
                   element={<StudentsAttendancePage />}
                 />
+
                 <Route
                   path="/TrainerStudentsPage"
                   element={<TrainerStudentsPage />}
                 />
+
                 <Route path="/feedback" element={<Feedback />} />
+
                 <Route path="/help-center" element={<HelpCenter />} />
+
                 <Route
                   path="/pending-fees/:branch"
                   element={<PendingFeesDetails />}
                 />
+
                 <Route path="/Uploadimages" element={<Uploadimages />} />
+
                 <Route
                   path="/components/InstituteDashboard/ChatBox"
                   element={<ChatBox1 />}
                 />
+
                 <Route path="/ChatBox" element={<ChatBoxT />} />
+
                 <Route
                   path="/components/UserDashboard/ChatBox"
                   element={<ChatBoxS />}
                 />
 
-                {/* LANDING */}
+                {/* =====================================================
+                    LANDING
+                ===================================================== */}
                 <Route path="/RoleSelection" element={<RoleSelection />} />
+
                 <Route path="/reels/:index" element={<ReelViewer />} />
+
                 <Route path="/trending-plays" element={<Reelspage />} />
+
                 <Route
                   path="/feepaymentsuccess"
                   element={<FeePaymentSuccess />}
                 />
+
                 <Route
                   path="/Instfeepaymentsuccess"
                   element={<InstFeePaymentSuccess />}
                 />
 
-                {/* DASHBOARDS */}
+                {/* =====================================================
+                    DASHBOARDS
+                ===================================================== */}
                 <Route
                   path="/trainers/dashboard"
                   element={
@@ -226,32 +399,46 @@ function App() {
 
                 <Route path="/user/dashboard" element={<UserDashboard />} />
 
-                {/* SELL */}
+                {/* =====================================================
+                    SELL
+                ===================================================== */}
                 <Route
                   path="/sell-sports-material"
                   element={<SellSportsMaterial />}
                 />
+
                 <Route
                   path="/upload-product-details"
                   element={<UploadProductDetails />}
                 />
 
-                {/* SHOP */}
+                {/* =====================================================
+                    SHOP
+                ===================================================== */}
                 <Route
                   path="/components/TrainersDashboard/reelsdata"
                   element={<Reelsdata />}
                 />
+
                 <Route
                   path="/components/InstituteDashboard/Reelsdata"
                   element={<InstituteReelsdata />}
                 />
+
                 <Route path="/shop" element={<ShopPage />} />
+
                 <Route path="/shop/:category" element={<ProductsGridPage />} />
+
                 <Route path="/addresspage" element={<AddAddressPage />} />
+
                 <Route path="/payment" element={<PaymentPage />} />
+
                 <Route path="/payment-failed" element={<PaymentFailed />} />
+
                 <Route path="/payment-success" element={<PaymentSuccess />} />
+
                 <Route path="/cart" element={<CartPage />} />
+
                 <Route path="/wishlist" element={<WishlistPage />} />
 
                 <Route
@@ -259,63 +446,91 @@ function App() {
                   element={<ChatBoxT />}
                 />
 
-                {/* DETAILS */}
+                {/* =====================================================
+                    DETAILS
+                ===================================================== */}
                 <Route path="/trainers" element={<ViewTrainers />} />
+
                 <Route path="/institutes" element={<ViewInstitutes />} />
+
                 <Route path="/trainers/:id" element={<TrainerDetailsPage />} />
+
                 <Route
                   path="/institutes/:id"
                   element={<InstituteDetailsPage />}
                 />
+
                 <Route path="/viewTrainers" element={<ViewTrainers />} />
+
                 <Route path="/viewInstitutes" element={<ViewInstitutes />} />
+
                 <Route path="/terms" element={<Terms />} />
+
                 <Route path="/privacy" element={<Privacy />} />
+
                 <Route path="/paymentpolicy" element={<PaymentPolicy />} />
+
                 <Route path="/reset-password" element={<ResetPassword />} />
+
                 <Route
                   path="/customer-policies"
                   element={<CustomerCentricPolicies />}
                 />
+
                 <Route
                   path="/delivery-shipping-policy"
                   element={<DeliveryAndShippingPolicy />}
                 />
+
                 <Route
                   path="/payment-refund-policy"
                   element={<PaymentAndRefundPolicy />}
                 />
 
-                {/* SERVICES */}
+                {/* =====================================================
+                    SERVICES
+                ===================================================== */}
                 <Route path="/categories" element={<Categories />} />
+
                 <Route
                   path="/services/martial-arts"
                   element={<MartialArts />}
                 />
+
                 <Route path="/services/teamball" element={<TeamBallSports />} />
+
                 <Route
                   path="/services/racketsports"
                   element={<RacketSports />}
                 />
+
                 <Route path="/services/fitness" element={<Fitness />} />
+
                 <Route
                   path="/services/target-precision-sports"
                   element={<TargetPrecisionSports />}
                 />
+
                 <Route
                   path="/services/equestrian-sports"
                   element={<EquestrianSports />}
                 />
+
                 <Route
                   path="/services/adventure-outdoor-sports"
                   element={<AdventureOutdoorSports />}
                 />
+
                 <Route path="/services/ice-sports" element={<IceSports />} />
+
                 <Route path="/services/wellness" element={<Wellness />} />
+
                 <Route path="/services/dance" element={<Dance />} />
+
                 <Route path="/services/aquatic" element={<AquaticSports />} />
 
                 <Route path="/plans" element={<Plans />} />
+
                 <Route
                   path="/book-demo/:instituteId"
                   element={<AvailableDemoClasses />}

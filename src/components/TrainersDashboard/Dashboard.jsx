@@ -1,39 +1,58 @@
-import React, { useEffect, useState } from "react";
-import { Settings } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+
+import {
+  Settings,
+  Search,
+  Phone,
+  Mail,
+  Eye,
+  IndianRupee,
+  Users,
+  BadgeCheck,
+} from "lucide-react";
+
 import { db } from "../../firebase";
+
 import { useAuth } from "../../context/AuthContext";
+
 import { collection, query, where, getDocs } from "firebase/firestore";
+
 import { useNavigate } from "react-router-dom";
 
 const TrainerDashboard = () => {
   const { user } = useAuth();
+
   const navigate = useNavigate();
 
   const [students, setStudents] = useState([]);
+
   const [fees, setFees] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
+  const [search, setSearch] = useState("");
+
   const [stats, setStats] = useState({
-    total: 0,
+    totalStudents: 0,
     newStudents: 0,
-    paid: 0,
-    pending: 0,
+    totalFees: 0,
+    paidAmount: 0,
+    pendingAmount: 0,
   });
-  const Row = ({ label, value, color }) => (
-    <div className="flex justify-between">
-      <span className="text-gray-500">{label}</span>
-      <span className={`font-semibold ${color || ""}`}>₹{value}</span>
-    </div>
-  );
-  // ================= FETCH =================
+
+  // =========================================================
+  // FETCH DATA
+  // =========================================================
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
-      setLoading(true);
-
       try {
-        // ===== TRAINER STUDENTS =====
+        setLoading(true);
+
+        // =====================================================
+        // STUDENTS
+        // =====================================================
         const studentSnap = await getDocs(
           query(
             collection(db, "trainerstudents"),
@@ -41,14 +60,16 @@ const TrainerDashboard = () => {
           ),
         );
 
-        const studentsData = studentSnap.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
+        const studentsData = studentSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
         }));
 
         setStudents(studentsData);
 
-        // ===== FEES (FROM INSTITUTE) =====
+        // =====================================================
+        // FEES
+        // =====================================================
         const feeSnap = await getDocs(
           query(
             collection(db, "institutesFees"),
@@ -56,51 +77,67 @@ const TrainerDashboard = () => {
           ),
         );
 
-        const feesData = feeSnap.docs.map((d) => d.data());
+        const feesData = feeSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
         setFees(feesData);
 
-        // ================= TOTAL (ALL STUDENTS FEES) =================
-        let totalAmount = 0;
+        // =====================================================
+        // TOTAL FEES
+        // =====================================================
+        let totalFees = 0;
 
-        studentsData.forEach((s) => {
-          if (Array.isArray(s.sports)) {
-            s.sports.forEach((sp) => {
-              totalAmount += Number(sp.fee || 0);
+        studentsData.forEach((student) => {
+          if (Array.isArray(student.sports) && student.sports.length > 0) {
+            student.sports.forEach((sport) => {
+              totalFees += Number(sport.fee || 0);
             });
-          } else if (s.monthlyFee) {
-            totalAmount += Number(s.monthlyFee || 0);
+          } else {
+            totalFees += Number(student.monthlyFee || 0);
           }
         });
 
-        // ================= PAID =================
+        // =====================================================
+        // PAID
+        // =====================================================
         let paidAmount = 0;
 
-        feesData.forEach((f) => {
-          paidAmount += Number(f.paidAmount || 0);
+        feesData.forEach((fee) => {
+          paidAmount += Number(fee.paidAmount || 0);
         });
 
-        // ================= PENDING =================
-        const pendingAmount = totalAmount - paidAmount;
+        // =====================================================
+        // PENDING
+        // =====================================================
+        const pendingAmount = totalFees - paidAmount;
 
-        // ================= OTHER STATS =================
-        const totalStudents = studentsData.length;
+        // =====================================================
+        // NEW STUDENTS
+        // =====================================================
+        const newStudents = studentsData.filter((student) => {
+          const joinDate = new Date(student.joiningDate);
 
-        const newStudents = studentsData.filter((s) => {
-          const join = new Date(s.joiningDate);
           const now = new Date();
-          return (now - join) / (1000 * 60 * 60 * 24) <= 30;
+
+          const diffDays = (now - joinDate) / (1000 * 60 * 60 * 24);
+
+          return diffDays <= 30;
         }).length;
 
-        // ✅ FINAL SET
+        // =====================================================
+        // STATS
+        // =====================================================
         setStats({
-          total: totalStudents,
+          totalStudents: studentsData.length,
           newStudents,
-          paid: paidAmount,
-          pending: pendingAmount,
-          totalAmount, // optional if you want to show separately
+          totalFees,
+          paidAmount,
+          pendingAmount,
         });
       } catch (err) {
-        console.error(err);
+        console.log(err);
       }
 
       setLoading(false);
@@ -108,189 +145,298 @@ const TrainerDashboard = () => {
 
     fetchData();
   }, [user]);
-  // ================= PIE / DONUT =================
-  const totalData = stats.total || 1;
 
-  const green = (stats.newStudents / totalData) * 100;
-  const purple = (stats.paid / totalData) * 100;
-  const black = (stats.pending / totalData) * 100;
+  // =========================================================
+  // SEARCH FILTER
+  // =========================================================
+  const filteredStudents = useMemo(() => {
+    return students.filter((student) => {
+      const text = `
+        ${student.firstName}
+        ${student.lastName}
+        ${student.phone}
+        ${student.email}
+        ${student.registerNumber}
+        ${student.category}
+        ${student.subCategory}
+      `.toLowerCase();
 
-  const donutStyle = {
-    background: `conic-gradient(
-      #22c55e 0% ${green}%,
-      #9333ea ${green}% ${green + purple}%,
-      #000000 ${green + purple}% 100%
-    )`,
-  };
+      return text.includes(search.toLowerCase());
+    });
+  }, [students, search]);
+
+  // =========================================================
+  // LOADING
+  // =========================================================
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FFF7F2] flex items-center justify-center">
+        <div className="text-gray-500 text-lg">Loading Dashboard...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#FFF4ED] px-4 py-5 space-y-6">
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img
-            src={user?.photoURL || ""}
-            alt=""
-            className="w-10 h-10 rounded-full bg-gray-300"
-          />
-          <span className="font-semibold text-gray-800">Hi Trainer 👋</span>
-        </div>
+    <div className="min-h-screen bg-[#FFF7F2] pb-32">
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-4">
+        <div className="flex items-center justify-between">
+          {/* LEFT */}
+          <div className="flex items-center gap-3">
+            <img
+              src={user?.photoURL || "https://ui-avatars.com/api/?name=Trainer"}
+              alt=""
+              className="w-12 h-12 rounded-full object-cover border"
+            />
 
-        <div className="p-2 bg-white rounded-lg shadow-sm">
-          <Settings size={18} />
-        </div>
-      </div>
+            <div>
+              <h1 className="font-bold text-lg">Trainer Dashboard</h1>
 
-      {/* TITLE */}
-      <h1 className="text-2xl font-bold text-black">Trainer Dashboard</h1>
-
-      {/* ================= OVERVIEW ================= */}
-      <div className="bg-white rounded-2xl shadow-sm p-4 flex gap-4 items-center">
-        {loading ? (
-          <div className="w-24 h-24 rounded-full bg-gray-200 animate-pulse"></div>
-        ) : (
-          <div className="relative w-24 h-24">
-            <div
-              style={donutStyle}
-              className="w-full h-full rounded-full"
-            ></div>
-
-            <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center text-xs font-semibold">
-              {stats.total}
+              <p className="text-sm text-gray-500">Welcome Trainer 👋</p>
             </div>
           </div>
-        )}
 
-        {/* LEGEND */}
-        <div className="grid grid-cols-2 gap-2 text-xs flex-1">
-          {loading ? (
-            <>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-3 bg-gray-200 animate-pulse"></div>
-              ))}
-            </>
-          ) : (
-            <>
-              <Legend
-                label={`New: ${stats.newStudents}`}
-                color="bg-green-500"
-              />
-              <Legend label={`Paid: ${stats.paid}`} color="bg-purple-600" />
-              <Legend label={`Pending: ${stats.pending}`} color="bg-black" />
-            </>
-          )}
+          {/* SETTINGS */}
+          <button className="bg-[#FF6A00] text-white p-3 rounded-2xl">
+            <Settings size={18} />
+          </button>
         </div>
       </div>
 
-      {/* ================= STUDENT LIST ================= */}
-      <div>
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="font-bold text-lg">My Students</h2>
+      <div className="px-4 py-5 space-y-5">
+        {/* ===================================================
+            STATS TABLE
+        =================================================== */}
 
-          {students.length > 4 && (
-            <button
-              onClick={() => navigate("/TrainerStudentsPage")}
-              className="text-[#FF6A00] text-sm font-semibold"
-            >
-              View More →
-            </button>
-          )}
+        {/* ===================================================
+            SEARCH
+        =================================================== */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center gap-3 border rounded-2xl px-4 py-3">
+            <Search size={18} className="text-gray-400" />
+
+            <input
+              type="text"
+              placeholder="Search student..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 outline-none bg-transparent"
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          {(loading ? Array(4).fill(0) : students.slice(0, 4)).map((s, i) => (
-            <div key={i} className="bg-white rounded-2xl shadow-sm p-3">
-              {loading ? (
-                <div className="h-16 bg-gray-200 rounded animate-pulse"></div>
-              ) : (
-                <>
-                  <img
-                    src={s.profileImageUrl}
-                    className="w-12 h-12 rounded-full mb-2"
-                    alt=""
-                  />
-                  <div className="font-semibold text-sm">
-                    {s.firstName} {s.lastName}
-                  </div>
-                  <div className="text-xs text-gray-500">{s.sessions}</div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+        {/* ===================================================
+            STUDENTS TABLE
+        =================================================== */}
+        <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
+          {/* HEADER */}
+          <div className="px-4 py-4 bg-[#FF6A00]">
+            <h2 className="text-white font-bold text-lg">Students List</h2>
+          </div>
 
-      {/* ================= PAYMENTS ================= */}
-      <div>
-        <h2 className="font-bold text-lg mb-3">Payments</h2>
+          {/* MOBILE TABLE */}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1300px]">
+              <thead className="bg-orange-50">
+                <tr className="text-left">
+                  <Th>Photo</Th>
 
-        <div className="grid grid-cols-2 gap-3">
-          {loading
-            ? Array(4)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="bg-white h-40 rounded-2xl animate-pulse"
-                  ></div>
-                ))
-            : fees.map((f, i) => {
-                const total = f.totalAmount || 0;
-                const paid = f.paidAmount || 0;
-                const pending = total - paid;
+                  <Th>Name</Th>
 
-                return (
-                  <div
-                    key={i}
-                    className="bg-white rounded-2xl shadow-sm p-4 space-y-3 active:scale-95 transition"
-                  >
-                    {/* HEADER */}
-                    <div className="font-semibold text-gray-800 text-sm">
-                      {f.category || "General"}
-                    </div>
+                  <Th>Phone</Th>
 
-                    {/* DATA */}
-                    <div className="space-y-1 text-sm">
-                      <Row label="Total" value={stats.totalAmount} />
-                      <Row
-                        label="Paid"
-                        value={stats.paid}
-                        color="text-green-600"
-                      />
-                      <Row
-                        label="Pending"
-                        value={stats.pending}
-                        color="text-red-500"
-                      />
-                    </div>
+                  <Th>Email</Th>
 
-                    {/* FOOTER */}
-                    <div className="border-t pt-3 flex justify-between items-center">
-                      <div
-                        className={`w-3 h-3 rounded-full ${
-                          pending > 0 ? "bg-orange-500" : "bg-green-500"
+                  <Th>Register No</Th>
+
+                  <Th>Category</Th>
+
+                  <Th>Sport</Th>
+
+                  <Th>Session</Th>
+
+                  <Th>Timing</Th>
+
+                  <Th>Fee</Th>
+
+                  <Th>Joining</Th>
+
+                  <Th>Status</Th>
+
+                  <Th>Actions</Th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={13}
+                      className="text-center py-10 text-gray-500"
+                    >
+                      No Students Found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredStudents.map((student, index) => {
+                    const sport = student.sports?.[0] || {};
+
+                    return (
+                      <tr
+                        key={student.id}
+                        className={`border-b ${
+                          index % 2 === 0 ? "bg-white" : "bg-gray-50"
                         }`}
-                      ></div>
+                      >
+                        {/* PHOTO */}
+                        <Td>
+                          <img
+                            src={student.profileImageUrl}
+                            alt=""
+                            className="w-12 h-12 rounded-full object-cover border"
+                          />
+                        </Td>
 
-                      <button className="bg-[#FF6A00] text-white text-xs px-3 py-1 rounded-lg font-semibold">
-                        View
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                        {/* NAME */}
+                        <Td>
+                          <div className="font-semibold">
+                            {student.firstName} {student.lastName}
+                          </div>
+
+                          <div className="text-xs text-gray-500">
+                            {student.gender}
+                          </div>
+                        </Td>
+
+                        {/* PHONE */}
+                        <Td>
+                          <div className="flex items-center gap-2">
+                            <Phone size={14} />
+
+                            {student.phone}
+                          </div>
+                        </Td>
+
+                        {/* EMAIL */}
+                        <Td>
+                          <div className="flex items-center gap-2">
+                            <Mail size={14} />
+
+                            <span className="break-all">{student.email}</span>
+                          </div>
+                        </Td>
+
+                        {/* REGISTER */}
+                        <Td>{student.registerNumber}</Td>
+
+                        {/* CATEGORY */}
+                        <Td>{student.category}</Td>
+
+                        {/* SPORT */}
+                        <Td>{student.subCategory || sport.subCategory}</Td>
+
+                        {/* SESSION */}
+                        <Td>{student.sessions}</Td>
+
+                        {/* TIMING */}
+                        <Td>{student.timings || sport.timings}</Td>
+
+                        {/* FEE */}
+                        <Td>₹{student.monthlyFee || sport.fee || 0}</Td>
+
+                        {/* JOINING */}
+                        <Td>{student.joiningDate}</Td>
+
+                        {/* STATUS */}
+                        <Td>
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              student.status === "Active"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {student.status || "Active"}
+                          </span>
+                        </Td>
+
+                        {/* ACTIONS */}
+                        <Td>
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={`tel:${student.phone}`}
+                              className="bg-green-500 text-white px-3 py-2 rounded-xl text-xs"
+                            >
+                              Call
+                            </a>
+                          </div>
+                        </Td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        {/* ===================================================
+            FEES TABLE
+        =================================================== */}
       </div>
     </div>
   );
 };
 
-// SMALL COMPONENT
-const Legend = ({ label, color }) => (
-  <div className="flex items-center gap-2">
-    <div className={`w-3 h-3 ${color}`}></div>
-    <span>{label}</span>
-  </div>
-);
+// =========================================================
+// TABLE HEADER
+// =========================================================
+const Th = ({ children }) => {
+  return (
+    <th className="px-4 py-4 text-sm font-bold text-gray-700 whitespace-nowrap">
+      {children}
+    </th>
+  );
+};
+
+// =========================================================
+// TABLE DATA
+// =========================================================
+const Td = ({ children, className = "" }) => {
+  return (
+    <td className={`px-4 py-4 text-sm whitespace-nowrap ${className}`}>
+      {children}
+    </td>
+  );
+};
+
+// =========================================================
+// SUMMARY TABLE ROW
+// =========================================================
+const TableRow = ({ icon, label, value, valueColor }) => {
+  return (
+    <tr className="border-b">
+      <td className="px-4 py-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-orange-100 text-[#FF6A00] p-2 rounded-xl">
+            {icon}
+          </div>
+
+          <span className="font-medium">{label}</span>
+        </div>
+      </td>
+
+      <td
+        className={`px-4 py-4 text-right font-bold ${
+          valueColor || "text-black"
+        }`}
+      >
+        {value}
+      </td>
+    </tr>
+  );
+};
 
 export default TrainerDashboard;

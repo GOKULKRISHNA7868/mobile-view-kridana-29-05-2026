@@ -1,19 +1,10 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, User, ArrowLeft } from "lucide-react";
-import {
-  Target,
-  Circle,
-  Disc,
-  Crosshair,
-  Activity,
-  Flag,
-  Grid,
-  HelpCircle,
-} from "lucide-react";
+import { Search, ArrowLeft } from "lucide-react";
 
 const TargetPrecisionPage = () => {
   const navigate = useNavigate();
+
   const [selectedSubCategory, setSelectedSubCategory] = React.useState(null);
   const [showChoice, setShowChoice] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -21,35 +12,20 @@ const TargetPrecisionPage = () => {
   const category = "Precision Sports";
 
   const categories = [
-    { name: "Archery", icon: Target },
-    { name: "Golf", icon: Flag },
-    { name: "Bowling", icon: Circle },
-    { name: "Darts", icon: Crosshair },
-    { name: "Snooker", icon: Circle },
-    { name: "Pool", icon: Circle },
-    { name: "Billiards", icon: Circle },
-    { name: "Target Shooting", icon: Crosshair },
-    { name: "Clay Pigeon Shooting", icon: Target },
-    { name: "Air Rifle Shooting", icon: Crosshair },
-    { name: "Air Pistol Shooting", icon: Crosshair },
-    { name: "Croquet", icon: Grid },
-    { name: "Petanque", icon: Circle },
-    { name: "Bocce", icon: Circle },
-    { name: "Lawn Bowls", icon: Circle },
-    { name: "Carom Billiards", icon: Circle },
-    { name: "Nine-Pin Bowling", icon: Circle },
-    { name: "Disc Golf", icon: Disc },
-    { name: "Kubb", icon: Grid },
-    { name: "Pitch and Putt", icon: Flag },
-    { name: "Shove Ha’penny", icon: Grid },
-    { name: "Toad in the Hole", icon: HelpCircle },
-    { name: "Bat and Trap", icon: Activity },
-    { name: "Boccia", icon: Circle },
-    { name: "Gateball", icon: Activity },
+    { name: "Archery", image: "/precision/Archery.png" },
+
+    { name: "Golf", image: "/precision/Golf.png" },
+
+    { name: "Snooker", image: "/precision/snooker.png" },
+
+    {
+      name: "Target Shooting",
+      image: "/precision/Target ShootingF.png",
+    },
   ];
 
   const filteredCategories = categories.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   /* Swipe Back */
@@ -79,39 +55,43 @@ const TargetPrecisionPage = () => {
   }, [navigate]);
 
   return (
-    <div className="bg-[#FFF9F5] min-h-screen px-4 py-6">
+    <div className="bg-[#FFF9F5] min-h-screen px-4 py-6 overflow-x-hidden">
       {/* HEADER */}
       <div className="flex items-center gap-3 mb-5">
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center active:scale-95"
+          className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center active:scale-95 flex-shrink-0"
         >
           <ArrowLeft size={20} />
         </button>
 
-        <h1 className="text-2xl font-extrabold">Explore Subcategories</h1>
+        <h1 className="text-xl sm:text-2xl font-extrabold truncate">
+          Explore Subcategories
+        </h1>
       </div>
 
       {/* SEARCH */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="flex-grow flex items-center bg-white border border-gray-200 rounded-full px-4 py-2">
-          <Search size={18} className="text-gray-400 mr-2" />
+        <div className="flex-grow flex items-center bg-white border border-gray-200 rounded-full px-4 py-2 min-w-0">
+          <Search size={18} className="text-gray-400 mr-2 flex-shrink-0" />
+
           <input
             type="text"
             placeholder="Search disciplines..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full outline-none bg-transparent text-sm"
+            className="w-full outline-none bg-transparent text-sm min-w-0"
           />
-        </div>
-
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-          <User className="text-gray-600" size={20} />
         </div>
       </div>
 
+      {/* COUNT */}
+      <p className="text-sm text-gray-600 mb-4">
+        {filteredCategories.length} Disciplines Available
+      </p>
+
       {/* GRID */}
-      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-3 pb-6">
         {filteredCategories.map((item) => (
           <div
             key={item.name}
@@ -119,13 +99,55 @@ const TargetPrecisionPage = () => {
               setSelectedSubCategory(item.name);
               setShowChoice(true);
             }}
-            className="h-[120px] rounded-2xl bg-white shadow-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-lg transition active:scale-95"
+            className="
+              min-h-[165px]
+              rounded-2xl
+              bg-white
+              shadow-md
+              flex
+              flex-col
+              items-center
+              justify-start
+              pt-3
+              px-2
+              pb-3
+              cursor-pointer
+              hover:shadow-lg
+              transition
+              active:scale-95
+              overflow-hidden
+            "
           >
-            <item.icon size={28} className="text-[#FF6A00]" />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="
+                w-[70px]
+                h-[70px]
+                sm:w-[80px]
+                sm:h-[80px]
+                object-contain
+                flex-shrink-0
+              "
+            />
 
-            <p className="text-xs text-gray-700 text-center px-1 font-medium">
-              {item.name}
-            </p>
+            <div className="flex-1 flex items-center justify-center w-full mt-2">
+              <p
+                className="
+                  text-[11px]
+                  sm:text-xs
+                  text-gray-700
+                  text-center
+                  font-medium
+                  leading-tight
+                  break-words
+                  whitespace-normal
+                  w-full
+                "
+              >
+                {item.name}
+              </p>
+            </div>
           </div>
         ))}
       </div>
@@ -133,8 +155,9 @@ const TargetPrecisionPage = () => {
       {/* MODAL */}
       {showChoice && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white w-full max-w-md rounded-2xl p-6 text-center">
+          <div className="bg-white w-full max-w-md rounded-2xl p-6 text-center animate-in fade-in zoom-in duration-200">
             <h2 className="text-xl font-bold mb-2">{category}</h2>
+
             <p className="text-gray-600 mb-6">What are you looking for?</p>
 
             <div className="flex flex-col gap-3">
@@ -142,12 +165,12 @@ const TargetPrecisionPage = () => {
                 onClick={() => {
                   navigate(
                     `/viewtrainers?category=Precision Sports&subCategory=${encodeURIComponent(
-                      selectedSubCategory
-                    )}`
+                      selectedSubCategory,
+                    )}`,
                   );
                   setShowChoice(false);
                 }}
-                className="bg-orange-500 text-white py-3 rounded-xl font-semibold"
+                className="bg-orange-500 text-white py-3 rounded-xl font-semibold active:scale-95 transition"
               >
                 Trainers
               </button>
@@ -156,12 +179,12 @@ const TargetPrecisionPage = () => {
                 onClick={() => {
                   navigate(
                     `/viewinstitutes?category=Precision Sports&subCategory=${encodeURIComponent(
-                      selectedSubCategory
-                    )}`
+                      selectedSubCategory,
+                    )}`,
                   );
                   setShowChoice(false);
                 }}
-                className="border border-orange-500 text-orange-500 py-3 rounded-xl font-semibold"
+                className="border border-orange-500 text-orange-500 py-3 rounded-xl font-semibold active:scale-95 transition"
               >
                 Institutes
               </button>
@@ -169,7 +192,7 @@ const TargetPrecisionPage = () => {
 
             <button
               onClick={() => setShowChoice(false)}
-              className="mt-4 text-sm text-gray-500"
+              className="mt-4 text-sm text-gray-500 font-medium"
             >
               Cancel
             </button>

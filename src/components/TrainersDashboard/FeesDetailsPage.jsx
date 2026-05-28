@@ -199,13 +199,14 @@ const FeesDetailsPage = () => {
     setSelectedStudent(student);
     setSelectedSport(sport);
 
-    const existingFee = institutesFees.find(
-      (f) =>
-        f.studentId === student.id &&
-        f.category === sport.category &&
-        f.subCategory === sport.subCategory &&
-        f.month === `${selectedYear}-${selectedMonth}`,
-    );
+    const existingFee = institutesFees.find((f) => {
+      return (
+        String(f.studentId).trim() === String(student.id).trim() &&
+        String(f.category).trim() === String(sport.category).trim() &&
+        String(f.subCategory).trim() === String(sport.subCategory).trim() &&
+        String(f.month).trim() === `${selectedYear}-${selectedMonth}`.trim()
+      );
+    });
 
     setEditData({
       totalFee:
@@ -309,6 +310,13 @@ const FeesDetailsPage = () => {
   const totalPending = totalAmount - totalPaid;
 
   const getFeeData = (student, sport) => {
+    console.log(
+      "CHECK",
+      student.id,
+      sport.category,
+      sport.subCategory,
+      `${selectedYear}-${selectedMonth}`,
+    );
     const feeRecord = institutesFees.find(
       (f) =>
         f.studentId === student.id &&
@@ -625,6 +633,15 @@ const FeesDetailsPage = () => {
           </div>
         )}
       </div>
+      {showEditModal && (
+        <ModalForm
+          title="Update Fee Details"
+          data={editData}
+          setData={setEditData}
+          onSave={updateStudentPayment}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
     </div>
   );
 };
@@ -640,9 +657,15 @@ const StatCard = ({ title, value }) => (
 );
 
 const ModalForm = ({ title, data, setData, onSave, onClose }) => (
-  <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-xl w-96 space-y-4">
-      <h2>{title}</h2>
+  <div
+    className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4"
+    onClick={onClose}
+  >
+    <div
+      className="bg-white p-6 rounded-xl w-full max-w-md space-y-4 shadow-2xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <h2 className="text-xl font-semibold">{title}</h2>
 
       <input
         type="number"
@@ -659,6 +682,7 @@ const ModalForm = ({ title, data, setData, onSave, onClose }) => (
         onChange={(e) => setData({ ...data, paidAmount: e.target.value })}
         className="border w-full p-2 rounded"
       />
+
       {data.feeWaived && (
         <input
           type="text"
@@ -668,12 +692,14 @@ const ModalForm = ({ title, data, setData, onSave, onClose }) => (
           className="border w-full p-2 rounded"
         />
       )}
+
       <input
         type="date"
         value={data.paidDate}
         onChange={(e) => setData({ ...data, paidDate: e.target.value })}
         className="border w-full p-2 rounded"
       />
+
       <button
         onClick={() =>
           setData({
@@ -688,8 +714,10 @@ const ModalForm = ({ title, data, setData, onSave, onClose }) => (
       >
         Fee Waived
       </button>
+
       <div className="flex justify-end gap-3">
         <button onClick={onClose}>Cancel</button>
+
         <button
           onClick={onSave}
           className="bg-orange-500 text-white px-4 py-2 rounded"

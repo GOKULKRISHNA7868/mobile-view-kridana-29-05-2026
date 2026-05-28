@@ -59,7 +59,7 @@ const StudentsAttendancePage = () => {
   const [attendance, setAttendance] = useState({});
   const [search, setSearch] = useState("");
   const [draftAttendance, setDraftAttendance] = useState({});
-
+  const scrollRef = useRef(null);
   const [selectedSession, setSelectedSession] = useState("");
   const [selectedDate, setSelectedDate] = useState(today);
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
@@ -84,11 +84,30 @@ const StudentsAttendancePage = () => {
   const [exportToDate, setExportToDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const clearAllAttendance = () => {
+    setDraftAttendance({});
+  };
   useEffect(() => {
     if (passedBranch) {
       setSelectedBranch(passedBranch);
     }
   }, [passedBranch]);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  }, [
+    currentPage,
+    selectedDate,
+    selectedSession,
+    selectedCategory,
+    selectedSubCategory,
+    selectedBranch,
+    search,
+  ]);
   // Load Students
   useEffect(() => {
     if (!user || institute?.role !== "institute") return;
@@ -457,10 +476,27 @@ const StudentsAttendancePage = () => {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
 
-    XLSX.writeFile(
-      workbook,
-      `attendance_${exportFromDate}_to_${exportToDate}.xlsx`,
-    );
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const fileName = `attendance_${exportFromDate}_to_${exportToDate}.xlsx`;
+
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(link.href);
 
     setShowExportModal(false);
   };
@@ -583,9 +619,10 @@ const StudentsAttendancePage = () => {
       </div>
 
       {/* ================= SCROLL STUDENTS ONLY ================= */}
-      <div className="flex-1 pt-[200px] pb-[90px] overflow-hidden">
+      <div className="flex-1 pt-[210px] pb-[90px] overflow-hidden">
         <div
-          className="h-full overflow-y-auto px-3 py-3 space-y-3"
+          ref={scrollRef}
+          className="h-full overflow-y-auto px-3 py-3 space-y-3 scroll-smooth"
           style={{
             WebkitOverflowScrolling: "touch",
           }}
@@ -660,7 +697,21 @@ const StudentsAttendancePage = () => {
           })}
 
           {/* SAVE BUTTON */}
-          <div className="flex justify-center mt-4">
+          <div className="flex justify-center gap-3 mt-4 flex-wrap">
+            {/* Clear All */}
+            <button
+              onClick={clearAllAttendance}
+              disabled={!hasChanges}
+              className={`px-5 py-2 text-sm font-semibold rounded-lg border ${
+                hasChanges
+                  ? "bg-white text-gray-700 border-gray-300"
+                  : "bg-gray-100 text-gray-400 border-gray-200"
+              }`}
+            >
+              Clear All
+            </button>
+
+            {/* Save */}
             <button
               onClick={handleSaveAll}
               disabled={!hasChanges}

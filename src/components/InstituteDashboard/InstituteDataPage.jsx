@@ -1,50 +1,54 @@
-import React, { useEffect, useState } from "react";
-import { Settings } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+
+import {
+  Search,
+  Phone,
+  Mail,
+  CheckCircle2,
+  AlertCircle,
+  Clock3,
+} from "lucide-react";
+
 import { db } from "../../firebase";
 import { useAuth } from "../../context/AuthContext";
+
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+
 const PerformanceDashboard = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const [students, setStudents] = useState([]);
   const [fees, setFees] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const location = useLocation();
-  const passedBranch = location.state?.branch || "";
-  const [stats, setStats] = useState({
-    total: 0,
-    newStudents: 0,
-    paid: 0,
-    pending: 0,
-    dropped: 0,
-  });
 
-  // ================= FETCH =================
+  const [loading, setLoading] = useState(true);
+
+  const [search, setSearch] = useState("");
+  const [branchFilter, setBranchFilter] = useState("All");
+
+  // ================= FETCH DATA =================
   useEffect(() => {
     if (!user) return;
 
     const fetchData = async () => {
-      setLoading(true);
-
       try {
-        const studentSnap = await getDocs(
+        setLoading(true);
+
+        // ================= STUDENTS =================
+        const studentsSnap = await getDocs(
           query(
             collection(db, "students"),
             where("instituteId", "==", user.uid),
           ),
         );
 
-        const studentsData = studentSnap.docs.map((d) => ({
-          id: d.id,
-          ...d.data(),
+        const studentsData = studentsSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
         }));
 
         setStudents(studentsData);
 
+        // ================= FEES =================
         const feeSnap = await getDocs(
           query(
             collection(db, "studentFees"),
@@ -52,34 +56,14 @@ const PerformanceDashboard = () => {
           ),
         );
 
-        const feesData = feeSnap.docs.map((d) => d.data());
+        const feesData = feeSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
         setFees(feesData);
-
-        // ===== STATS =====
-        const total = studentsData.length;
-
-        const newStudents = studentsData.filter((s) => {
-          const join = new Date(s.joiningDate);
-          const now = new Date();
-          return (now - join) / (1000 * 60 * 60 * 24) <= 30;
-        }).length;
-
-        const paid = feesData.filter(
-          (f) => f.paidAmount >= f.totalAmount,
-        ).length;
-        const pending = feesData.filter(
-          (f) => f.paidAmount < f.totalAmount,
-        ).length;
-
-        setStats({ total, newStudents, paid, pending, dropped: 0 });
-
-        const uniqueBranches = [
-          ...new Set(studentsData.map((s) => s.branch || "Unknown")),
-        ];
-
-        setBranches(uniqueBranches);
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.log(error);
       }
 
       setLoading(false);
@@ -88,203 +72,377 @@ const PerformanceDashboard = () => {
     fetchData();
   }, [user]);
 
-  // ================= DONUT CALC =================
-  const totalData = stats.total || 1;
+  // ================= COMBINE STUDENT + FEES =================
+  const tableData = useMemo(() => {
+    return students.map((student) => {
+      const fee = fees.find((f) => f.studentId === student.id);
 
-  const green = (stats.newStudents / totalData) * 100;
-  const purple = (stats.paid / totalData) * 100;
-  const black = (stats.pending / totalData) * 100;
-  const orange = (stats.total / totalData) * 100;
+      const totalAmount = Number(fee?.totalAmount || student.monthlyFee || 0);
 
-  const donutStyle = {
-    background: `conic-gradient(
-      #22c55e 0% ${green}%,
-      #9333ea ${green}% ${green + purple}%,
-      #000000 ${green + purple}% ${green + purple + black}%,
-      #ea580c ${green + purple + black}% 100%
-    )`,
+      const paidAmount = Number(fee?.paidAmount || 0);
+
+      const pendingAmount = totalAmount - paidAmount;
+
+      let paymentStatus = "Pending";
+
+      if (pendingAmount <= 0) {
+        paymentStatus = "Paid";
+      } else if (paidAmount > 0) {
+        paymentStatus = "Partial";
+      }
+
+      return {
+        ...student,
+        totalAmount,
+        paidAmount,
+        pendingAmount,
+        paymentStatus,
+      };
+    });
+  }, [students, fees]);
+
+  // ================= BRANCHES =================
+  const branches = useMemo(() => {
+    const list = tableData.map((s) => s.branch || "Unknown");
+
+    return ["All", ...new Set(list)];
+  }, [tableData]);
+
+  // ================= FILTER =================
+  const filteredStudents = useMemo(() => {
+    return tableData.filter((student) => {
+      const fullName = `${student.firstName || ""} ${
+        student.lastName || ""
+      }`.toLowerCase();
+
+      const matchesSearch =
+        fullName.includes(search.toLowerCase()) ||
+        student.phone?.includes(search) ||
+        student.email?.toLowerCase().includes(search.toLowerCase()) ||
+        student.registernumber?.toLowerCase().includes(search.toLowerCase());
+
+      const matchesBranch =
+        branchFilter === "All" || student.branch === branchFilter;
+
+      return matchesSearch && matchesBranch;
+    });
+  }, [tableData, search, branchFilter]);
+
+  // ================= STATUS UI =================
+  const StatusBadge = ({ status }) => {
+    if (status === "Paid") {
+      return (
+        <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-[11px] font-semibold whitespace-nowrap">
+          <CheckCircle2 size={12} />
+          Paid
+        </div>
+      );
+    }
+
+    if (status === "Partial") {
+      return (
+        <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-100 text-yellow-700 text-[11px] font-semibold whitespace-nowrap">
+          <Clock3 size={12} />
+          Partial
+        </div>
+      );
+    }
+
+    return (
+      <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-red-100 text-red-700 text-[11px] font-semibold whitespace-nowrap">
+        <AlertCircle size={12} />
+        Pending
+      </div>
+    );
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF4ED] px-4 py-5 space-y-6">
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3"></div>
-      </div>
+    <div
+      className="
+       top-10
+    min-h-[100dvh]
+    h-[100dvh]
+    bg-[#FFF7F2]
+   
+    overflow-hidden
+    flex
+    flex-col
+    fixed
+    inset-0
+    w-full
+  "
+    >
+      {/* ================= FIXED TOP SECTION ================= */}
+      <div className="shrink-0 px-3 md:px-5 pt-4">
+        {/* ================= HEADER ================= */}
+        <div className="mb-5">
+          <h1 className="text-2xl font-bold text-black">Students Dashboard</h1>
 
-      {/* TITLE */}
-      <h1 className="text-2xl font-bold text-black">Performance Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Manage all students and payment details
+          </p>
+        </div>
 
-      {/* ================= OVERVIEW ================= */}
-      <div className="bg-white rounded-2xl shadow-sm p-4 flex gap-4 items-center">
-        {/* LOADING DONUT */}
-        {loading ? (
-          <div className="w-24 h-24 rounded-full bg-gray-200 animate-pulse"></div>
-        ) : (
-          <div className="relative w-24 h-24">
-            <div
-              style={donutStyle}
-              className="w-full h-full rounded-full"
-            ></div>
+        {/* ================= FILTERS ================= */}
+        <div className="bg-white rounded-2xl shadow-sm p-3 mb-4">
+          {/* SEARCH */}
+          <div className="relative mb-3">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
 
-            {/* CENTER CUT */}
-            <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center text-xs font-semibold">
-              {stats.total}
+            <input
+              type="text"
+              placeholder="Search student..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="
+                w-full
+                pl-10
+                pr-4
+                py-3
+                border
+                border-gray-200
+                rounded-xl
+                text-sm
+                outline-none
+                focus:border-orange-500
+              "
+            />
+          </div>
+
+          {/* BRANCH FILTER */}
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 min-w-max pb-1">
+              {branches.map((branch, index) => (
+                <button
+                  key={index}
+                  onClick={() => setBranchFilter(branch)}
+                  className={`
+                    px-4
+                    py-2
+                    rounded-xl
+                    text-sm
+                    font-semibold
+                    whitespace-nowrap
+                    transition
+                    active:scale-95
+                    ${
+                      branchFilter === branch
+                        ? "bg-[#FF6A00] text-white"
+                        : "bg-gray-100 text-gray-700"
+                    }
+                  `}
+                >
+                  {branch}
+                </button>
+              ))}
             </div>
           </div>
-        )}
-
-        {/* LEGEND */}
-        <div className="grid grid-cols-2 gap-2 text-xs flex-1">
-          {loading ? (
-            <>
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="h-3 bg-gray-200 rounded animate-pulse"
-                ></div>
-              ))}
-            </>
-          ) : (
-            <>
-              <Legend
-                color="bg-green-500"
-                label={`New: ${stats.newStudents}`}
-              />
-              <Legend color="bg-purple-600" label={`Paid: ${stats.paid}`} />
-              <Legend color="bg-black" label={`Pending: ${stats.pending}`} />
-              <Legend color="bg-orange-600" label={`Total: ${stats.total}`} />
-            </>
-          )}
         </div>
       </div>
 
-      {/* ================= BRANCH ATTENDANCE ================= */}
-      <div>
-        <h2 className="font-bold text-lg mb-3">Branch Wise Attendance</h2>
+      {/* ================= TABLE SECTION ONLY SCROLLABLE ================= */}
+      <div
+        className="
+    flex-1
+    min-h-0
+    px-3
+    md:px-5
+    pb-[170px]
+    md:pb-6
+  "
+      >
+        <div
+          className="
+            bg-white
+            rounded-2xl
+            shadow-sm
+            h-full
+            flex
+            flex-col
+            overflow-hidden
+          "
+        >
+          {/* TABLE HEADER */}
+          <div className="px-4 py-4 border-b bg-white shrink-0">
+            <h2 className="font-bold text-lg">Students Table</h2>
 
-        <div className="grid grid-cols-2 gap-3">
-          {loading
-            ? Array(4)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="bg-white h-32 rounded-2xl animate-pulse"
-                  ></div>
-                ))
-            : branches.map((branch, i) => {
-                const count = students.filter(
-                  (s) => (s.branch || "Unknown") === branch,
-                ).length;
+            <p className="text-sm text-gray-500 mt-1">
+              Total Records: {filteredStudents.length}
+            </p>
+          </div>
 
-                return (
-                  <div
-                    key={i}
-                    onClick={() =>
-                      navigate("/StudentsAttendancePage", { state: { branch } })
-                    }
-                    className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer active:scale-95 transition"
-                  >
-                    <div className="h-24 bg-gray-100"></div>
+          {/* ================= TABLE SCROLL AREA ================= */}
+          <div
+            className="
+              flex-1
+              min-h-0
+              overflow-auto
+              overscroll-contain
+              touch-pan-x
+              touch-pan-y
+            "
+          >
+            {loading ? (
+              <div className="p-4 space-y-3">
+                {Array(6)
+                  .fill(0)
+                  .map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-40 bg-gray-100 rounded-2xl animate-pulse"
+                    />
+                  ))}
+              </div>
+            ) : filteredStudents.length === 0 ? (
+              <div className="p-10 text-center text-gray-500">
+                No Students Found
+              </div>
+            ) : (
+              <div className="min-w-[1150px]">
+                <table className="w-full border-collapse">
+                  {/* ================= STICKY TABLE HEADER ================= */}
+                  <thead className="sticky top-0 z-20 bg-[#FFF1E8]">
+                    <tr className="text-left text-xs text-gray-700">
+                      <th className="px-3 py-3 whitespace-nowrap">Profile</th>
 
-                    <div className="p-3">
-                      <div className="font-semibold text-gray-800">
-                        {branch}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        Students: {count}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-        </div>
-      </div>
+                      <th className="px-3 py-3 whitespace-nowrap">Name</th>
 
-      {/* ================= BRANCH PAYMENTS ================= */}
-      <div>
-        <h2 className="font-bold text-lg mb-3">Branch Wise Payments</h2>
+                      <th className="px-3 py-3 whitespace-nowrap">Phone</th>
 
-        <div className="grid grid-cols-2 gap-3">
-          {loading
-            ? Array(4)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className="bg-white h-40 rounded-2xl animate-pulse"
-                  ></div>
-                ))
-            : branches.map((branch, i) => {
-                const branchStudents = students.filter(
-                  (s) => (s.branch || "Unknown") === branch,
-                );
+                      <th className="px-3 py-3 whitespace-nowrap">Email</th>
 
-                let total = 0;
-                let paid = 0;
+                      <th className="px-3 py-3 whitespace-nowrap">Branch</th>
 
-                branchStudents.forEach((s) => {
-                  const fee = fees.find((f) => f.studentId === s.id);
-                  if (fee) {
-                    total += fee.totalAmount || 0;
-                    paid += fee.paidAmount || 0;
-                  }
-                });
+                      <th className="px-3 py-3 whitespace-nowrap">Sport</th>
 
-                const pending = total - paid;
+                      <th className="px-3 py-3 whitespace-nowrap">Belt</th>
 
-                return (
-                  <div
-                    key={i}
-                    onClick={() => navigate(`/pending-fees/${branch}`)}
-                    className="bg-white rounded-2xl shadow-sm p-4 space-y-3 cursor-pointer active:scale-95 transition"
-                  >
-                    <div className="font-semibold text-gray-800">{branch}</div>
+                      <th className="px-3 py-3 whitespace-nowrap">Session</th>
 
-                    <div className="space-y-1 text-sm">
-                      <Row label="Total" value={total} />
-                      <Row label="Paid" value={paid} color="text-green-600" />
-                      <Row
-                        label="Pending"
-                        value={pending}
-                        color="text-red-500"
-                      />
-                    </div>
+                      <th className="px-3 py-3 whitespace-nowrap">
+                        Monthly Fee
+                      </th>
 
-                    <div className="border-t pt-3 flex justify-between items-center">
-                      <div
-                        className={`w-3 h-3 rounded-full ${
-                          pending > 0 ? "bg-orange-500" : "bg-green-500"
-                        }`}
-                      ></div>
+                      <th className="px-3 py-3 whitespace-nowrap">Paid</th>
 
-                      <button className="bg-[#FF6A00] text-white text-xs px-3 py-1 rounded-lg font-semibold">
-                        View
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                      <th className="px-3 py-3 whitespace-nowrap">Pending</th>
+
+                      <th className="px-3 py-3 whitespace-nowrap">Status</th>
+                    </tr>
+                  </thead>
+
+                  {/* ================= TABLE BODY ================= */}
+                  <tbody>
+                    {filteredStudents.map((student) => (
+                      <tr
+                        key={student.id}
+                        className="
+                          border-b
+                          text-sm
+                          bg-white
+                        "
+                      >
+                        {/* PROFILE */}
+                        <td className="px-3 py-3">
+                          <img
+                            src={
+                              student.profileImageUrl ||
+                              "https://ui-avatars.com/api/?name=Student"
+                            }
+                            alt="profile"
+                            className="
+                              w-12
+                              h-12
+                              rounded-full
+                              object-cover
+                            "
+                          />
+                        </td>
+
+                        {/* NAME */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="font-semibold">
+                            {student.firstName} {student.lastName}
+                          </div>
+
+                          <div className="text-xs text-gray-500">
+                            {student.registernumber}
+                          </div>
+                        </td>
+
+                        {/* PHONE */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            <Phone size={13} />
+
+                            {student.phone || "-"}
+                          </div>
+                        </td>
+
+                        {/* EMAIL */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            <Mail size={13} />
+
+                            <span>{student.email || "-"}</span>
+                          </div>
+                        </td>
+
+                        {/* BRANCH */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {student.branch || "-"}
+                        </td>
+
+                        {/* SPORT */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {student.subCategory ||
+                            student.sports?.[0]?.subCategory ||
+                            "-"}
+                        </td>
+
+                        {/* BELT */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {student.belt || "-"}
+                        </td>
+
+                        {/* SESSION */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {student.sessions || "-"}
+                        </td>
+
+                        {/* MONTHLY */}
+                        <td className="px-3 py-3 whitespace-nowrap font-semibold">
+                          ₹{student.totalAmount}
+                        </td>
+
+                        {/* PAID */}
+                        <td className="px-3 py-3 whitespace-nowrap text-green-600 font-semibold">
+                          ₹{student.paidAmount}
+                        </td>
+
+                        {/* PENDING */}
+                        <td className="px-3 py-3 whitespace-nowrap text-red-500 font-semibold">
+                          ₹{student.pendingAmount}
+                        </td>
+
+                        {/* STATUS */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          <StatusBadge status={student.paymentStatus} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
-// ================= SMALL COMPONENTS =================
-const Legend = ({ color, label }) => (
-  <div className="flex items-center gap-2">
-    <div className={`w-3 h-3 ${color}`}></div>
-    <span>{label}</span>
-  </div>
-);
-
-const Row = ({ label, value, color }) => (
-  <div className="flex justify-between">
-    <span className="text-gray-500">{label}</span>
-    <span className={`font-semibold ${color || ""}`}>₹{value}</span>
-  </div>
-);
 
 export default PerformanceDashboard;

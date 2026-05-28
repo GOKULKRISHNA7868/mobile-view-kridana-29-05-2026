@@ -4,7 +4,7 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase";
-
+import { ArrowLeft } from "lucide-react";
 export default function Signup() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -91,6 +91,13 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-8">
       <div className="w-full max-w-md">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-[#FF6A00] font-semibold mb-4 sm:mb-6 text-sm sm:text-base"
+        >
+          <ArrowLeft size={18} />
+          Back
+        </button>
         <h2 className="text-3xl font-bold mb-6 text-orange-500">
           {role === "institute"
             ? "Register Your Institute"

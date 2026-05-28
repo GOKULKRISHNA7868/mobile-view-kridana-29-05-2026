@@ -41,75 +41,24 @@ const Dance = () => {
   };
 
   const categories = [
-    { name: "Bharatanatyam", icon: Sparkles },
-    { name: "Kathak", icon: Sparkles },
-    { name: "Kathakali", icon: Sparkles },
-    { name: "Kuchipudi", icon: Sparkles },
-    { name: "Odissi", icon: Sparkles },
-    { name: "Mohiniyattam", icon: Sparkles },
-    { name: "Manipuri", icon: Sparkles },
-    { name: "Sattriya", icon: Sparkles },
+    //{ name: "Bharatanatyam", image: "/dance/bharatanatyam.png" },
+    //{ name: "Kathak", image: "/dance/kathak.png" },
+    //{ name: "Kathakali", image: "/dance/kathakali.png" },
+    // { name: "Kuchipudi", image: "/dance/kuchipudi.png" },
+    //{ name: "Odissi", image: "/dance/odissi.png" },
+    // { name: "Mohiniyattam", image: "/dance/mohiniyattam.png" },
+    // { name: "Manipuri", image: "/dance/manipuri.png" },
+    // { name: "Sattriya", image: "/dance/sattriya.png" },
 
-    { name: "Chhau", icon: Drum },
-    { name: "Yakshagana", icon: Drum },
-    { name: "Lavani", icon: Drum },
-    { name: "Ghoomar", icon: Users },
-    { name: "Kalbelia", icon: Users },
-    { name: "Garba", icon: Users },
-    { name: "Dandiya Raas", icon: Users },
-    { name: "Bhangra", icon: Users },
-    { name: "Bihu", icon: Users },
-    { name: "Dollu Kunitha", icon: Drum },
-    { name: "Theyyam", icon: Flame },
+    { name: "Bharatanatyam", image: "/dance/indian classic F.png" },
 
-    { name: "Ballet", icon: Star },
-    { name: "Contemporary", icon: Heart },
-    { name: "Jazz Dance", icon: Music },
-    { name: "Tap Dance", icon: Music },
-    { name: "Modern Dance", icon: Music },
-
-    { name: "Hip Hop", icon: Zap },
-    { name: "Breakdance", icon: Activity },
-    { name: "Street Dance", icon: Activity },
-    { name: "House Dance", icon: Activity },
-    { name: "Locking", icon: Zap },
-    { name: "Popping", icon: Zap },
-    { name: "Krumping", icon: Flame },
-    { name: "Waacking", icon: Zap },
-    { name: "Voguing", icon: Sparkles },
-
-    { name: "Salsa", icon: Flame },
-    { name: "Bachata", icon: Heart },
-    { name: "Merengue", icon: Flame },
-    { name: "Cha-Cha", icon: Music },
-    { name: "Rumba", icon: Heart },
-    { name: "Samba", icon: Flame },
-    { name: "Paso Doble", icon: Star },
-    { name: "Jive", icon: Zap },
-    { name: "Tango", icon: Heart },
-    { name: "Waltz", icon: Waves },
-    { name: "Foxtrot", icon: Music },
-    { name: "Quickstep", icon: Zap },
-
-    { name: "Flamenco", icon: Flame },
-    { name: "Irish Stepdance", icon: Activity },
-    { name: "Scottish Highland Dance", icon: Users },
-    { name: "Morris Dance", icon: Users },
-    { name: "Hula", icon: Waves },
-    { name: "Maori Haka", icon: Drum },
-    { name: "African Tribal Dance", icon: Drum },
-
-    { name: "Zumba", icon: Activity },
-    { name: "K-Pop Dance", icon: Star },
-    { name: "Shuffle Dance", icon: Zap },
-    { name: "Electro Dance", icon: Zap },
-    { name: "Pole Dance", icon: Activity },
-
-    { name: "Ballroom Dance", icon: Users },
-    { name: "Line Dance", icon: Users },
-    { name: "Square Dance", icon: Users },
-    { name: "Folk Dance", icon: Users },
-    { name: "Contra Dance", icon: Users },
+    { name: "Ballet", image: "/dance/ballet f.png" },
+    { name: "Hip Hop", image: "/dance/HIppop.png" },
+    { name: "Salsa", image: "/dance/Salsa F.png" },
+    { name: "Zumba", image: "/dance/Zumba F.png" },
+    { name: "Salsa", image: "/dance/Salsa F.png" },
+    //{ name: "Yakshagana", image: "/dance/yakshagana.png" },
+    // { name: "Lavani", image: "/dance/lavani.png" },
   ];
 
   const filteredCategories = categories.filter((item) =>
@@ -145,9 +94,6 @@ const Dance = () => {
         </div>
 
         {/* Profile */}
-        <div className="w-10 h-10 rounded-full bg-[#FF6A00] text-white flex items-center justify-center font-bold">
-          👤
-        </div>
       </div>
 
       {/* Title */}
@@ -171,7 +117,11 @@ const Dance = () => {
             }}
             className="h-[120px] rounded-2xl bg-white shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition active:scale-95"
           >
-            <item.icon size={28} className="text-[#FF6A00]" />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-[90px] h-[90px] object-contain"
+            />
 
             <p className="text-xs text-gray-700 text-center px-1 font-medium leading-tight">
               {item.name}

@@ -25,123 +25,7 @@ const PaymentOverview = () => {
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [feeHistory, setFeeHistory] = useState([]);
   const navigate = useNavigate();
-  const [showQRModal, setShowQRModal] = useState(false);
-  const [paymentInfo, setPaymentInfo] = useState(null);
-  // REPLACE YOUR EXISTING openUPIPayment FUNCTION WITH THIS FULL FIXED VERSION
 
-  // =============================================
-  // REPLACE ONLY YOUR openUPIPayment FUNCTION
-  // =============================================
-
-  const openUPIPayment = ({ amount, name, upiId, note, onSuccess }) => {
-    try {
-      const finalAmount = Number(amount).toFixed(2);
-
-      // =====================================
-      // IMPORTANT:
-      // Use VALID UPI ID ONLY
-      // Example:
-      // yourname@okaxis
-      // mobilenumber@ybl
-      // mobilenumber@ibl
-      // =====================================
-
-      const cleanUpi = upiId.trim();
-
-      // unique transaction id
-      const txnId = "TXN" + Date.now();
-
-      const upiLink =
-        `upi://pay?pa=${encodeURIComponent(cleanUpi)}` +
-        `&pn=${encodeURIComponent(name)}` +
-        `&tr=${txnId}` +
-        `&tn=${encodeURIComponent(note)}` +
-        `&am=${finalAmount}` +
-        `&cu=INR`;
-
-      const qrImage = `https://quickchart.io/qr?text=${encodeURIComponent(
-        upiLink,
-      )}&size=320`;
-
-      setPaymentInfo({
-        amount: finalAmount,
-        name,
-        upiId: cleanUpi,
-        note,
-        txnId,
-        qrImage,
-        onSuccess,
-      });
-
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      // =====================================
-      // MOBILE
-      // =====================================
-      if (isMobile) {
-        setProcessing(true);
-
-        let appOpened = false;
-        let returned = false;
-        let hiddenAt = 0;
-
-        const handleVisibility = () => {
-          // left app
-          if (document.visibilityState === "hidden") {
-            appOpened = true;
-            hiddenAt = Date.now();
-          }
-
-          // returned to app
-          if (
-            document.visibilityState === "visible" &&
-            appOpened &&
-            !returned
-          ) {
-            returned = true;
-
-            document.removeEventListener("visibilitychange", handleVisibility);
-
-            setProcessing(false);
-
-            const spent = Date.now() - hiddenAt;
-
-            // if user stayed in payment app enough time
-            if (spent > 2500) {
-              setTimeout(() => {
-                setShowQRModal(true);
-              }, 400);
-            } else {
-              alert("Payment cancelled.");
-            }
-          }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibility);
-
-        // Android / Browser best method
-        window.location.assign(upiLink);
-
-        // if no app opened
-        setTimeout(() => {
-          if (!appOpened) {
-            document.removeEventListener("visibilitychange", handleVisibility);
-
-            setProcessing(false);
-
-            setShowQRModal(true);
-          }
-        }, 3000);
-      } else {
-        // desktop -> QR only
-        setShowQRModal(true);
-      }
-    } catch (error) {
-      console.log(error);
-      setProcessing(false);
-      alert("Unable to open payment.");
-    }
-  };
   const filteredHistory = feeHistory.filter(
     (f) =>
       (!selectedCategory || f.category === selectedCategory) &&
@@ -154,7 +38,19 @@ const PaymentOverview = () => {
   );
 
   const [processing, setProcessing] = useState(false);
-
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+  const API_URL =
+    window.location.hostname === "localhost"
+      ? "http://localhost:5000"
+      : "https://kridana-razorpay-backend.onrender.com";
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (!u) {
@@ -195,6 +91,11 @@ const PaymentOverview = () => {
         const q = query(feesRef, where("studentId", "==", activeStudentId));
 
         const feesSnap = await getDocs(q);
+
+        console.log(
+          "Fetched Fees:",
+          feesSnap.docs.map((d) => d.data()),
+        );
 
         const history = [];
         let paidSum = 0;
@@ -305,11 +206,12 @@ const PaymentOverview = () => {
     student.sports.forEach((sport) => {
       const record = feeHistory.find(
         (f) =>
-          f.month === m.key &&
-          f.category === sport.category &&
-          f.subCategory === sport.subCategory,
+          f.month?.trim() === m.key?.trim() &&
+          f.category?.trim().toLowerCase() ===
+            sport.category?.trim().toLowerCase() &&
+          f.subCategory?.trim().toLowerCase() ===
+            sport.subCategory?.trim().toLowerCase(),
       );
-
       // If record exists AND paidAmount = 0 AND reason exists → skip fee
       if (record && Number(record.paidAmount) === 0 && record.reason) {
         return;
@@ -451,103 +353,87 @@ const PaymentOverview = () => {
                     return {
                       category: sport.category,
                       subCategory: sport.subCategory,
-                      amount: Number(sport.fee || 0),
+                      amount: Number(sport.fee || 0), // ✅ attach fee HERE
                       paidAmount: record?.paidAmount || 0,
                       paid: record && Number(record.paidAmount) > 0,
                     };
                   });
 
-                  const hasPending = records.some((r) => !r.paid);
+                  const hasPending = records.some(
+                    (r) => !r.paid || r.paidAmount === 0,
+                  );
 
-                  // ✅ PAY ALL PENDING
-                  const handlePayNow = async () => {
-                    if (processing) return;
+                  // 🔥 PAY NOW HANDLER
+                  const handlePayNow = () => {
+                    const unpaidRecords = student.sports
+                      .map((sport) => {
+                        const record = feeHistory.find(
+                          (f) =>
+                            f.month === item.key &&
+                            f.category === sport.category &&
+                            f.subCategory === sport.subCategory,
+                        );
 
-                    const unpaidItems = records.filter((r) => !r.paid);
+                        if (record && Number(record.paidAmount) > 0)
+                          return null;
 
-                    const totalAmount = unpaidItems.reduce(
-                      (sum, item) => sum + Number(item.amount),
+                        return {
+                          category: sport.category,
+                          subCategory: sport.subCategory,
+                          amount: Number(sport.fee || 0),
+                        };
+                      })
+                      .filter(Boolean);
+
+                    const totalAmount = unpaidRecords.reduce(
+                      (sum, r) => sum + r.amount,
                       0,
                     );
 
-                    if (totalAmount <= 0) {
-                      alert("No pending fees");
-                      return;
-                    }
+                    navigate("/PaymentSelection", {
+                      state: {
+                        paymentType: "multiple",
 
-                    openUPIPayment({
-                      amount: totalAmount,
-                      name: "SUDHA SHASHANK REDDY",
-                      upiId: "8088368869@upi",
-                      note: `Fee Payment ${item.month}`,
+                        studentId: activeStudentId,
 
-                      onSuccess: async (utrId) => {
-                        const paymentData = {
-                          studentId: activeStudentId,
-                          studentName: `${student.firstName} ${student.lastName}`,
-                          month: item.key,
-                          items: unpaidItems,
-                          totalAmount,
-                          paymentId: utrId,
-                          status: "success",
-                          date: new Date().toLocaleDateString(),
-                          time: new Date().toLocaleTimeString(),
-                        };
+                        studentName: `${student.firstName} ${student.lastName}`,
 
-                        navigate("/Instfeepaymentsuccess", {
-                          state: paymentData,
-                        });
+                        month: item.key,
 
-                        setProcessing(false);
+                        items: unpaidRecords,
+
+                        totalAmount,
+
+                        student,
                       },
                     });
                   };
 
                   return (
                     <div className="text-left sm:text-right">
-                      {hasPending && (
-                        <button
-                          onClick={handlePayNow}
-                          className="mb-3 bg-green-600 text-white px-4 py-2 rounded text-xs w-full hover:bg-green-700"
-                        >
-                          Pay All Pending
-                        </button>
-                      )}
-
                       {records.map((r, i) => {
-                        const handleSinglePayment = async () => {
-                          if (processing) return;
+                        const handleSinglePayment = () => {
+                          navigate("/PaymentSelection", {
+                            state: {
+                              paymentType: "single",
 
-                          openUPIPayment({
-                            amount: r.amount,
-                            name: "SUDHA SHASHANK REDDY",
-                            upiId: "8088368869@upi",
-                            note: `${r.category}-${r.subCategory}-${item.month}`,
+                              studentId: activeStudentId,
 
-                            onSuccess: async (utrId) => {
-                              const paymentData = {
-                                studentId: activeStudentId,
-                                studentName: `${student.firstName} ${student.lastName}`,
-                                month: item.key,
-                                items: [
-                                  {
-                                    category: r.category,
-                                    subCategory: r.subCategory,
-                                    amount: r.amount,
-                                  },
-                                ],
-                                totalAmount: r.amount,
-                                paymentId: utrId,
-                                status: "success",
-                                date: new Date().toLocaleDateString(),
-                                time: new Date().toLocaleTimeString(),
-                              };
+                              studentName: `${student.firstName} ${student.lastName}`,
 
-                              navigate("/Instfeepaymentsuccess", {
-                                state: paymentData,
-                              });
+                              month: item.key,
 
-                              setProcessing(false);
+                              items: [
+                                {
+                                  category: r.category,
+                                  subCategory: r.subCategory,
+                                  amount: r.amount,
+                                },
+                              ],
+
+                              totalAmount: r.amount,
+
+                              student,
                             },
                           });
                         };
@@ -631,64 +517,6 @@ const PaymentOverview = () => {
             <p className="text-xs text-gray-400">
               Please don’t close this page
             </p>
-          </div>
-        </div>
-      )}
-      {/* ======================================== */}
-      {/* ADD THIS QR MODAL ABOVE LAST </div> */}
-      {/* ======================================== */}
-
-      {showQRModal && paymentInfo && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-xl">
-            <h2 className="text-xl font-bold text-center mb-3">
-              Pay ₹{paymentInfo.amount}
-            </h2>
-
-            <img
-              src={paymentInfo.qrImage}
-              alt="QR Code"
-              className="w-64 h-64 mx-auto border rounded-xl"
-            />
-
-            <p className="text-center text-sm mt-3 text-gray-600">
-              Scan using PhonePe / GPay / Paytm
-            </p>
-
-            <p className="text-center text-xs text-gray-500 mt-1">
-              {paymentInfo.upiId}
-            </p>
-
-            <div className="mt-5 space-y-2">
-              <button
-                onClick={() => {
-                  const utr = prompt("Enter UTR Number");
-
-                  if (!utr || utr.trim() === "") {
-                    alert("UTR required");
-                    return;
-                  }
-
-                  paymentInfo.onSuccess(utr);
-
-                  setShowQRModal(false);
-                  setPaymentInfo(null);
-                }}
-                className="w-full bg-green-600 text-white py-3 rounded-xl font-semibold"
-              >
-                I Paid
-              </button>
-
-              <button
-                onClick={() => {
-                  setShowQRModal(false);
-                  setPaymentInfo(null);
-                }}
-                className="w-full bg-gray-200 py-3 rounded-xl"
-              >
-                Cancel
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -1,19 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  User,
-  ArrowLeft,
-  Dumbbell,
-  Activity,
-  Flame,
-  Timer,
-  Repeat,
-  HeartPulse,
-  StretchHorizontal,
-  Bike,
-  CircleDot,
-} from "lucide-react";
+import { Search, ArrowLeft } from "lucide-react";
 
 const Fitness = () => {
   const navigate = useNavigate();
@@ -43,30 +30,18 @@ const Fitness = () => {
   };
 
   const categories = [
-    { name: "Gym Workout", icon: Dumbbell },
-    { name: "Weight Training", icon: Dumbbell },
-    { name: "Bodybuilding", icon: Dumbbell },
-    { name: "Powerlifting", icon: Dumbbell },
+    { name: "Gym Workout", image: "/fitness/gym training.png" },
 
-    { name: "CrossFit", icon: Flame },
-    { name: "Calisthenics", icon: Activity },
-    { name: "Circuit Training", icon: Repeat },
-    { name: "HIIT (High-Intensity Interval Training)", icon: Timer },
+    { name: "Bodybuilding", image: "/fitness/bodybuilding f.png" },
 
-    { name: "Functional Training", icon: Activity },
-    { name: "Core Training", icon: CircleDot },
-    { name: "Mobility Training", icon: Activity },
-    { name: "Stretching", icon: StretchHorizontal },
+    { name: "CrossFit", image: "/fitness/crossfit icon F.png" },
 
-    { name: "Resistance Band Training", icon: Repeat },
-    { name: "Kettlebell Training", icon: Dumbbell },
-    { name: "Boot Camp Training", icon: Flame },
+    { name: "Calisthenics", image: "/fitness/calestheisa.png" },
 
-    { name: "Spinning (Indoor Cycling)", icon: Bike },
-    { name: "Step Fitness", icon: Activity },
-
-    { name: "Pilates", icon: HeartPulse },
-    { name: "Yoga", icon: HeartPulse },
+    {
+      name: "HIIT (High-Intensity Interval Training)",
+      image: "/fitness/HIIT F.png",
+    },
   ];
 
   const filteredCategories = categories.filter((item) =>
@@ -75,7 +50,7 @@ const Fitness = () => {
 
   return (
     <div
-      className="bg-[#FFF9F5] min-h-screen px-4 py-5"
+      className="bg-[#FFF9F5] min-h-screen px-4 py-5 overflow-x-hidden"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
@@ -84,26 +59,22 @@ const Fitness = () => {
         {/* Back */}
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center active:scale-95"
+          className="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center active:scale-95 flex-shrink-0"
         >
           <ArrowLeft size={20} />
         </button>
 
         {/* Search */}
-        <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-full px-4 py-2">
-          <Search size={18} className="text-gray-400 mr-2" />
+        <div className="flex-1 flex items-center bg-white border border-gray-200 rounded-full px-4 py-2 min-w-0">
+          <Search size={18} className="text-gray-400 mr-2 flex-shrink-0" />
+
           <input
             type="text"
             placeholder="Search fitness..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full outline-none text-sm bg-transparent"
+            className="w-full outline-none text-sm bg-transparent min-w-0"
           />
-        </div>
-
-        {/* Profile */}
-        <div className="w-10 h-10 rounded-full bg-[#FF6A00] text-white flex items-center justify-center">
-          <User size={18} />
         </div>
       </div>
 
@@ -118,7 +89,7 @@ const Fitness = () => {
       </p>
 
       {/* Grid */}
-      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-4 pb-8">
+      <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 gap-3 pb-8">
         {filteredCategories.map((item) => (
           <div
             key={item.name}
@@ -126,13 +97,57 @@ const Fitness = () => {
               setSelectedSubCategory(item.name);
               setShowChoice(true);
             }}
-            className="h-[120px] rounded-2xl bg-white shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition active:scale-95"
+            className="
+              min-h-[165px]
+              rounded-2xl
+              bg-white
+              shadow-sm
+              border
+              border-gray-100
+              flex
+              flex-col
+              items-center
+              justify-start
+              pt-3
+              px-2
+              pb-3
+              cursor-pointer
+              hover:shadow-md
+              transition
+              active:scale-95
+              overflow-hidden
+            "
           >
-            <item.icon size={28} className="text-[#FF6A00]" />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="
+                w-[70px]
+                h-[70px]
+                sm:w-[80px]
+                sm:h-[80px]
+                object-contain
+                flex-shrink-0
+              "
+            />
 
-            <p className="text-xs text-gray-700 text-center px-1 font-medium leading-tight">
-              {item.name}
-            </p>
+            <div className="flex-1 flex items-center justify-center w-full mt-2">
+              <p
+                className="
+                  text-[11px]
+                  sm:text-xs
+                  text-gray-700
+                  text-center
+                  font-medium
+                  leading-tight
+                  break-words
+                  whitespace-normal
+                  w-full
+                "
+              >
+                {item.name}
+              </p>
+            </div>
           </div>
         ))}
       </div>
@@ -156,7 +171,7 @@ const Fitness = () => {
                     )}`,
                   );
                 }}
-                className="bg-[#FF6A00] text-white py-3 rounded-xl font-semibold"
+                className="bg-[#FF6A00] text-white py-3 rounded-xl font-semibold active:scale-95 transition"
               >
                 Find Trainers
               </button>
@@ -169,7 +184,7 @@ const Fitness = () => {
                     )}`,
                   );
                 }}
-                className="border border-[#FF6A00] text-[#FF6A00] py-3 rounded-xl font-semibold"
+                className="border border-[#FF6A00] text-[#FF6A00] py-3 rounded-xl font-semibold active:scale-95 transition"
               >
                 Find Institutes
               </button>

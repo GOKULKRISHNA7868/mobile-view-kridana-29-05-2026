@@ -1,24 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { db, auth } from "../firebase";
+import { db } from "../firebase";
+
 import {
   collection,
   addDoc,
   doc,
   serverTimestamp,
   getDoc,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 
 const FeePaymentSuccess = () => {
-  const { state } = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
+  const savedPayment = localStorage.getItem("paymentData");
+  const hasSaved = useRef(false);
+  const state =
+    location.state || (savedPayment ? JSON.parse(savedPayment) : null);
 
   const [saving, setSaving] = useState(true);
   const [saved, setSaved] = useState(false);
-
-  if (!state) {
-    return <div className="p-8">No Data Found</div>;
-  }
+  const [alreadySaved, setAlreadySaved] = useState(false);
 
   // 🔒 BLOCK BACK BUTTON
   useEffect(() => {
@@ -27,6 +32,7 @@ const FeePaymentSuccess = () => {
     };
 
     window.history.pushState(null, "", window.location.href);
+
     window.addEventListener("popstate", handleBack);
 
     return () => {
@@ -34,86 +40,175 @@ const FeePaymentSuccess = () => {
     };
   }, []);
 
-  // 🔥 AUTO SAVE FUNCTION
+  // 🔥 SAVE FUNCTION
   const handleSubmit = async () => {
+    if (hasSaved.current) return;
+
+    hasSaved.current = true;
     try {
       setSaving(true);
 
-      const loginUid = auth.currentUser?.uid;
-
-      if (!loginUid) {
-        alert("User not logged in");
+      if (!state?.studentId) {
+        alert("Student ID missing");
         return;
       }
 
-      // ✅ 1. Fetch student data
-      const studentRef = doc(db, "students", loginUid);
+      // ✅ GET STUDENT
+      const studentRef = doc(db, "students", state.studentId);
+
       const studentSnap = await getDoc(studentRef);
 
       if (!studentSnap.exists()) {
-        alert("Student data not found ❌");
+        alert("Student not found");
         return;
       }
 
       const studentData = studentSnap.data();
+
       const instituteId = studentData.instituteId || "";
 
-      // ✅ 2. Save institute payment history
-      const instituteRef = collection(
+      // ==================================================
+      // ✅ CHECK DUPLICATE PAYMENT HISTORY
+      // ==================================================
+
+      const paymentHistoryRef = collection(
         db,
         "instituepaymenthistory",
-        loginUid,
+        state.studentId,
         "payments",
       );
 
-      await addDoc(instituteRef, {
-        studentName: state.studentName || "",
-        studentId: loginUid,
-        instituteId: instituteId,
-        month: state.month || "",
-        totalAmount: state.totalAmount || 0,
-        paymentId: state.paymentId || "",
-        orderId: state.orderId || "",
-        status: state.status || "paid",
-        items: state.items || [],
-        date: state.date || "",
-        time: state.time || "",
-        createdAt: serverTimestamp(),
-      });
+      const paymentQuery = query(
+        paymentHistoryRef,
+        where("paymentId", "==", state.paymentId || ""),
+      );
 
-      // ✅ 3. Save individual fees
-      for (const item of state.items) {
-        await addDoc(collection(db, "studentFees"), {
-          category: item.category || "",
-          subCategory: item.subCategory || "",
-          createdAt: serverTimestamp(),
-          feeWaived: false,
-          instituteId: instituteId,
+      const paymentSnap = await getDocs(paymentQuery);
+
+      // ==================================================
+      // ✅ SAVE PAYMENT HISTORY
+      // ==================================================
+
+      if (paymentSnap.empty) {
+        await addDoc(paymentHistoryRef, {
+          studentName: state.studentName || "",
+
+          studentId: state.studentId,
+
+          instituteId,
+
           month: state.month || "",
+
+          totalAmount: state.totalAmount || 0,
+
+          paymentId: state.paymentId || "",
+
+          orderId: state.orderId || "",
+
+          signature: state.signature || "",
+
+          utrNumber: state.utrNumber || "",
+
+          paymentMethod: state.paymentMethod || "",
+
+          status: state.status || "paid",
+
+          items: state.items || [],
+
+          date: state.date || "",
+
+          time: state.time || "",
+
+          createdAt: serverTimestamp(),
+        });
+      }
+
+      // ==================================================
+      // ✅ SAVE STUDENT FEES
+      // ==================================================
+
+      for (const item of state.items || []) {
+        // 🔍 CHECK DUPLICATE
+        const feeQuery = query(
+          collection(db, "studentFees"),
+          where("studentId", "==", state.studentId),
+          where("month", "==", state.month),
+          where("category", "==", item.category),
+          where("subCategory", "==", item.subCategory),
+        );
+
+        const existingFee = await getDocs(feeQuery);
+
+        // ✅ Already exists
+        if (!existingFee.empty) {
+          continue;
+        }
+
+        // ✅ SAVE
+        await addDoc(collection(db, "studentFees"), {
+          // STUDENT
+          studentId: state.studentId,
+
+          studentName: state.studentName || "",
+
+          instituteId,
+
+          // SPORTS
+          category: item.category || "",
+
+          subCategory: item.subCategory || "",
+
+          // PAYMENT
+          month: state.month || "",
+
           paidAmount: item.amount || 0,
-          paidDate: state.date || "",
-          studentId: loginUid,
+
           totalAmount: item.amount || 0,
+
+          paidDate: state.date || "",
+
+          paymentId: state.paymentId || "",
+
+          orderId: state.orderId || "",
+
+          signature: state.signature || "",
+
+          utrNumber: state.utrNumber || "",
+
+          paymentMethod: state.paymentMethod || "",
+
+          paymentStatus: state.status || "paid",
+
+          // EXTRA
+          feeWaived: false,
+
           waiveReason: "",
+
+          createdAt: serverTimestamp(),
         });
       }
 
       // ✅ SUCCESS
       setSaved(true);
     } catch (err) {
-      console.error("❌ SAVE ERROR:", err);
+      console.error("SAVE ERROR:", err);
+
       alert("Failed to save payment");
     } finally {
       setSaving(false);
     }
   };
 
-  // 🚀 AUTO TRIGGER
+  // 🚀 AUTO SAVE
   useEffect(() => {
-    handleSubmit();
-  }, []);
+    if (state && state.studentId && state.items && !alreadySaved) {
+      setAlreadySaved(true);
 
-  // 🚀 AUTO REDIRECT AFTER SUCCESS (optional)
+      handleSubmit();
+    }
+  }, [state, alreadySaved]);
+
+  // 🚀 REDIRECT
   useEffect(() => {
     if (saved) {
       setTimeout(() => {
@@ -122,15 +217,20 @@ const FeePaymentSuccess = () => {
     }
   }, [saved, navigate]);
 
-  // 🔄 LOADING SCREEN
+  // ✅ AFTER HOOKS
+  if (!state) {
+    return <div className="p-8">No Data Found</div>;
+  }
+
+  // 🔄 LOADING
   if (saving) {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white z-50">
         <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-lg font-semibold">Please wait...</p>
-        <p className="text-sm opacity-70">
-          Saving your payment, do not close or go back
-        </p>
+
+        <p className="text-lg font-semibold">Saving your payment...</p>
+
+        <p className="text-sm opacity-70">Please do not close this page</p>
       </div>
     );
   }
@@ -138,18 +238,19 @@ const FeePaymentSuccess = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center items-center p-6">
       <div className="bg-white shadow-lg rounded-xl p-6 w-full max-w-lg">
-        {/* HEADER */}
         <h1 className="text-2xl font-bold text-green-600 mb-4 text-center">
-          {saved ? "Payment Saved Successfully 🎉" : "Processing Payment..."}
+          Payment Saved Successfully 🎉
         </h1>
 
         <div className="space-y-2 text-sm">
           <p>
             <b>Student:</b> {state.studentName}
           </p>
+
           <p>
             <b>Month:</b> {state.month}
           </p>
+
           <p>
             <b>Status:</b> {state.status}
           </p>
@@ -163,26 +264,20 @@ const FeePaymentSuccess = () => {
           <p>
             <b>Payment ID:</b> {state.paymentId}
           </p>
-          <p>
-            <b>Order ID:</b> {state.orderId}
-          </p>
 
           <p>
-            <b>Date:</b> {state.date}
-          </p>
-          <p>
-            <b>Time:</b> {state.time}
+            <b>Order ID:</b> {state.orderId}
           </p>
 
           <hr className="my-3" />
 
           <h3 className="font-semibold">Items Paid:</h3>
-
-          {state.items.map((item, i) => (
+          {(state.items || []).map((item, i) => (
             <div key={i} className="flex justify-between">
               <p>
                 {item.category} - {item.subCategory}
               </p>
+
               <p>₹{item.amount}</p>
             </div>
           ))}

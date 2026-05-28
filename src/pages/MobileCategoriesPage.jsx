@@ -14,24 +14,40 @@ import {
   Dumbbell,
   Activity,
 } from "lucide-react";
-
+import {
+  FaFistRaised,
+  FaFootballBall,
+  FaTableTennis,
+  FaDumbbell,
+  FaBullseye,
+  FaHorse,
+  FaMountain,
+  FaSnowflake,
+  FaSwimmer,
+  FaSpa,
+  FaMusic,
+} from "react-icons/fa";
 const categories = [
-  { name: "Martial Arts", icon: Swords, path: "martial-arts" },
-  { name: "Dance", icon: Music, path: "dance" },
+  { name: "Martial Arts", icon: FaFistRaised, path: "martial-arts" },
+  { name: "Dance", icon: FaMusic, path: "dance" },
   {
     name: "Adventure & Outdoor",
-    icon: Mountain,
+    icon: FaMountain,
     path: "adventure-outdoor-sports",
   },
-  { name: "Equestrian Sports", icon: Activity, path: "equestrian-sports" },
-  { name: "Wellness", icon: Flower2, path: "wellness" },
-  { name: "Team Ball Sports", icon: Trophy, path: "teamball" },
+  { name: "Equestrian Sports", icon: FaHorse, path: "equestrian-sports" },
+  { name: "Wellness", icon: FaSpa, path: "wellness" },
+  { name: "Team Ball Sports", icon: FaFootballBall, path: "teamball" },
 
-  { name: "Ice Sports", icon: Snowflake, path: "ice-sports" },
-  { name: "Racket Sports", icon: Dribbble, path: "racketsports" },
-  { name: "Target & Precision", icon: Target, path: "target-precision-sports" },
-  { name: "Fitness", icon: Dumbbell, path: "fitness" },
-  { name: "AquaticSports", icon: Activity, path: "aquatic" },
+  { name: "Ice Sports", icon: FaSnowflake, path: "ice-sports" },
+  { name: "Racket Sports", icon: FaTableTennis, path: "racketsports" },
+  {
+    name: "Target & Precision",
+    icon: FaBullseye,
+    path: "target-precision-sports",
+  },
+  { name: "Fitness", icon: FaDumbbell, path: "fitness" },
+  { name: "AquaticSports", icon: FaSwimmer, path: "aquatic" },
 ];
 
 const CategoriesPage = () => {

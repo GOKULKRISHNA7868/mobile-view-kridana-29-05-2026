@@ -38,16 +38,14 @@ const EquestrianSports = () => {
       navigate(-1);
     }
   };
-
   const categories = [
-    { name: "Horse Racing", icon: Activity },
-    { name: "Polo", icon: Flag },
-    { name: "Barrel Racing", icon: Circle },
-    { name: "Rodeo", icon: Zap },
-    { name: "Mounted Archery", icon: Target },
-    { name: "Tent Pegging", icon: Shield },
+    { name: "Horse Racing", image: "/equestrian/horse racing F.png" },
+    { name: "Polo", image: "/equestrian/Polo F.png" },
+    //{ name: "Barrel Racing", image: "/equestrian/barrelracing.png" },
+    // { name: "Rodeo", image: "/equestrian/rodeo.png" },
+    //{ name: "Mounted Archery", image: "/equestrian/mountedarchery.png" },
+    { name: "Tent Pegging", image: "/equestrian/Tent Pegging F.png" },
   ];
-
   const filteredCategories = categories.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
@@ -81,9 +79,6 @@ const EquestrianSports = () => {
         </div>
 
         {/* Profile */}
-        <div className="w-10 h-10 rounded-full bg-[#FF6A00] text-white flex items-center justify-center">
-          <User size={18} />
-        </div>
       </div>
 
       {/* Title */}
@@ -107,7 +102,11 @@ const EquestrianSports = () => {
             }}
             className="h-[120px] rounded-2xl bg-white shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition active:scale-95"
           >
-            <item.icon size={26} className="text-[#FF6A00]" />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-[90px] h-[90px] object-contain"
+            />
 
             <p className="text-xs text-gray-700 text-center px-1 font-medium leading-tight">
               {item.name}

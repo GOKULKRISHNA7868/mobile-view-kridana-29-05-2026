@@ -244,20 +244,39 @@ const Dashboard = () => {
         if (docData.categories) {
           docData.categories.forEach((cat) => {
             (cat.subCategories || []).forEach((sub) => {
+              /* TRAINING */
               if (sub.metrics && !training) {
                 training = sub.metrics;
               }
 
+              /* OBSERVATIONS */
               if (sub.metricObservations && !observations) {
                 observations = sub.metricObservations;
               }
 
+              /* PHYSICAL */
               if (sub.physicalFitness && !physical) {
                 physical = sub.physicalFitness;
+              }
+
+              /* 🔥 ATTENDANCE */
+              if (sub.attendance) {
+                attendanceResult.push({
+                  title: `${cat.category} - ${sub.name}`,
+
+                  total: Number(sub.attendance.totalClasses || 0),
+
+                  present: Number(sub.attendance.presentClasses || 0),
+
+                  absent: Number(sub.attendance.absentClasses || 0),
+
+                  percent: sub.attendance.percent || "0%",
+                });
               }
             });
           });
         }
+
         console.log("TRAINING ✅", training);
         console.log("PHYSICAL ✅", physical);
 
@@ -610,7 +629,9 @@ const Dashboard = () => {
                     <div
                       className="bg-orange-500 h-2 rounded-full"
                       style={{
-                        width: `${item.total ? (item.present / item.total) * 100 : 0}%`,
+                        width: `${
+                          item.total ? (item.present / item.total) * 100 : 0
+                        }%`,
                       }}
                     ></div>
                   </div>

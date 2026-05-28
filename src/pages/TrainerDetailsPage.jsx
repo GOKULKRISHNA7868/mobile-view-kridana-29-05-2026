@@ -319,7 +319,7 @@ export default function TrainerDetailsPage() {
 /* ================= MEDIA CARD ================= */
 function MediaCard({ post }) {
   const isReel = post.type === "video";
-
+  const [openImage, setOpenImage] = useState(false);
   const [likes, setLikes] = useState(0);
   const [views, setViews] = useState(0);
   const [comments, setComments] = useState(0);
@@ -513,12 +513,37 @@ function MediaCard({ post }) {
           className="w-full h-56 object-cover"
         />
       ) : (
-        <img
-          src={post.url}
-          onClick={handleView}
-          className="w-full h-56 object-cover"
-          alt=""
-        />
+        <>
+          <img
+            src={post.url}
+            onClick={() => {
+              handleView();
+              setOpenImage(true);
+            }}
+            className="w-full h-56 object-contain bg-gray-100 cursor-pointer"
+            alt=""
+          />
+
+          {/* IMAGE POPUP */}
+          {openImage && (
+            <div className="fixed inset-0 z-[99999] bg-white flex items-center justify-center">
+              {/* CLOSE */}
+              <button
+                onClick={() => setOpenImage(false)}
+                className="absolute top-4 right-4 z-50 bg-black/70 text-white w-10 h-10 rounded-full flex items-center justify-center text-lg"
+              >
+                ✕
+              </button>
+
+              {/* IMAGE */}
+              <img
+                src={post.url}
+                alt=""
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
+          )}
+        </>
       )}
 
       <div className="p-4">

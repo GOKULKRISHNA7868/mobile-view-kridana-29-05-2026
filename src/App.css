@@ -1,3 +1,40 @@
 body {
   padding-bottom: 80px;
 }
+/* ================= MOBILE FOOTER SAFE AREA ================= */
+
+html,
+body,
+#root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Prevent content hiding under footer */
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Capacitor mobile app smooth */
+* {
+  box-sizing: border-box;
+}
+
+/* FIX INPUTS / BUTTONS HIDING */
+input,
+textarea,
+select,
+button {
+  scroll-margin-bottom: 120px;
+}
+
+/* FIX LAST ELEMENT HIDING */
+.page-container,
+.main-content,
+.scroll-container {
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}

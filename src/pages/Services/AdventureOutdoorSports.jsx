@@ -43,31 +43,11 @@ const Adventure = () => {
   };
 
   const categories = [
-    { name: "Rock Climbing", icon: Mountain },
-    { name: "Mountaineering", icon: Mountain },
-    { name: "Trekking", icon: Map },
-    { name: "Hiking", icon: Map },
-    { name: "Mountain Biking", icon: Bike },
-    { name: "Sandboarding", icon: Snowflake },
-    { name: "Orienteering", icon: Compass },
-    { name: "Obstacle Course Racing", icon: Flag },
-    { name: "Skydiving", icon: Cloud },
-    { name: "Paragliding", icon: Wind },
-    { name: "Hang Gliding", icon: Wind },
-    { name: "Parachuting", icon: Cloud },
-    { name: "Hot-air Ballooning", icon: Cloud },
-    { name: "Skiing", icon: Snowflake },
-    { name: "Snowboarding", icon: Snowflake },
-    { name: "Ice Climbing", icon: Mountain },
-    { name: "Heli-skiing", icon: Wind },
-    { name: "Bungee Jumping", icon: ArrowDown },
-    { name: "BASE Jumping", icon: ArrowDown },
-    { name: "Canyoning", icon: Mountain },
-    { name: "Kite Buggy", icon: Wind },
-    { name: "Zorbing", icon: Circle },
-    { name: "Zip Lining", icon: Zap },
+    { name: "figure skating", image: "/adventure/figure skating F.png" },
+    { name: "speed skating", image: "/adventure/speed skating F.png" },
+    { name: "skiboarding", image: "/adventure/skiboarding F.png" },
+    { name: "Ice Skating", image: "/adventure/Ice Skating F.png" },
   ];
-
   const filteredCategories = categories.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
@@ -101,9 +81,6 @@ const Adventure = () => {
         </div>
 
         {/* Profile */}
-        <div className="w-10 h-10 rounded-full bg-[#FF6A00] text-white flex items-center justify-center font-bold">
-          👤
-        </div>
       </div>
 
       {/* TITLE */}
@@ -127,7 +104,11 @@ const Adventure = () => {
             }}
             className="h-[110px] bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center cursor-pointer hover:shadow-md transition active:scale-95"
           >
-            <item.icon size={28} className="text-[#FF6A00]" />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-[90px] h-[90px] object-contain"
+            />
 
             <p className="mt-2 text-xs text-gray-700 text-center px-1 font-medium leading-tight">
               {item.name}

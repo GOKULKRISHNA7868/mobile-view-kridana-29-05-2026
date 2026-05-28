@@ -259,7 +259,41 @@ export default function InstituteDetailsPage() {
       </div>
     );
   }
+  function AboutSection({ text }) {
+    const [expanded, setExpanded] = useState(false);
 
+    const shouldTrim = text?.length > 180;
+
+    return (
+      <div className="bg-orange-50 rounded-2xl p-4">
+        <p
+          className={`
+          text-sm text-gray-700 leading-7 whitespace-pre-wrap break-words
+          transition-all duration-300
+          ${expanded ? "" : "line-clamp-4"}
+        `}
+        >
+          {text || "No description available"}
+        </p>
+
+        {shouldTrim && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="
+            mt-3
+            text-[#FF6B00]
+            font-semibold
+            text-sm
+            active:scale-95
+            transition
+          "
+          >
+            {expanded ? "Read Less" : "Read More"}
+          </button>
+        )}
+      </div>
+    );
+  }
   // ================= NO DATA =================
   if (!inst || Object.keys(inst).length === 0) {
     return (
@@ -304,10 +338,6 @@ export default function InstituteDetailsPage() {
                 {inst.category || "Cricketer"}
               </p>
             </div>
-
-            <div className="bg-orange-50 text-[#FF6B00] text-[10px] px-2 py-1 rounded-full font-semibold">
-              LIC-2345
-            </div>
           </div>
 
           {/* ACTION BUTTONS */}
@@ -327,10 +357,6 @@ export default function InstituteDetailsPage() {
               <Phone size={15} />
               Call
             </a>
-
-            <button className="bg-[#FF6B00] text-white py-2 rounded-xl text-sm font-semibold">
-              Book Slot
-            </button>
           </div>
 
           {/* STATS */}
@@ -364,18 +390,27 @@ export default function InstituteDetailsPage() {
 
         {/* ABOUT */}
         <Section title="About">
-          <div className="bg-orange-50 rounded-2xl p-4 text-sm text-gray-600 leading-6">
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry's standard dummy text.
-          </div>
+          <AboutSection text={inst.description || ""} />
         </Section>
-
+        {/* ACHIEVEMENTS */}
         {/* ACHIEVEMENTS */}
         <Section title="Achievements">
           <div className="bg-white rounded-2xl border border-gray-200 p-4">
-            <AchievementRow title="District" g="5" s="3" b="2" />
-            <AchievementRow title="State" g="3" s="2" b="1" />
-            <AchievementRow title="National" g="1" s="1" b="0" />
+            {inst?.achievements ? (
+              Object.entries(inst.achievements).map(([level, medals]) => (
+                <AchievementRow
+                  key={level}
+                  title={level}
+                  g={medals?.gold || 0}
+                  s={medals?.silver || 0}
+                  b={medals?.bronze || 0}
+                />
+              ))
+            ) : (
+              <p className="text-sm text-gray-400 text-center">
+                No achievements available
+              </p>
+            )}
           </div>
         </Section>
 
@@ -639,14 +674,29 @@ function MediaCard({ post }) {
             controls
             onPlay={handleView}
             onClick={handleView}
-            className="w-full h-56 object-cover cursor-pointer"
+            className="
+  w-full
+  max-h-[500px]
+  object-contain
+
+  cursor-pointer
+"
           />
         ) : (
           <img
             src={post.url}
             alt=""
-            onClick={handleView}
-            className="w-full h-56 object-cover cursor-pointer"
+            onClick={() => {
+              handleView();
+              setOpenPreview(true);
+            }}
+            className="
+  w-full
+  max-h-[500px]
+  object-contain
+  
+  cursor-pointer
+"
           />
         )}
 
@@ -715,41 +765,65 @@ function MediaCard({ post }) {
           )}
         </div>
       </div>
-
+      {/* FULL SCREEN PREVIEW */}
+      {/* FULL SCREEN PREVIEW */}
       {/* FULL SCREEN PREVIEW */}
       {openPreview && (
-        <div className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-3">
+        <div className="fixed inset-0 z-[999] bg-black">
+          {/* CLOSE BUTTON */}
           <button
             onClick={() => setOpenPreview(false)}
-            className="absolute top-4 right-4 text-white text-3xl"
+            className="absolute top-4 right-4 z-50 
+                 w-10 h-10 rounded-full 
+                 bg-black/50 backdrop-blur-md
+                 flex items-center justify-center
+                 text-white text-2xl"
           >
             ✕
           </button>
 
-          <div className="w-full max-w-md">
+          {/* MAIN CONTENT */}
+          <div className="w-full h-full flex items-center justify-center overflow-hidden">
             {isReel ? (
               <video
                 src={post.url}
                 controls
                 autoPlay
-                className="w-full max-h-[80vh] object-contain rounded-2xl"
+                playsInline
+                className="
+            w-full h-full
+            object-contain
+            bg-black
+          "
               />
             ) : (
               <img
                 src={post.url}
                 alt=""
-                className="w-full max-h-[80vh] object-contain rounded-2xl"
+                className="
+            w-full h-full
+            object-contain
+            bg-black
+            select-none
+          "
               />
             )}
-
-            {post.title && (
-              <div className="mt-4 bg-white rounded-2xl p-4">
-                <p className="text-sm sm:text-base text-gray-800 leading-6 break-words whitespace-pre-wrap">
-                  {post.title}
-                </p>
-              </div>
-            )}
           </div>
+
+          {/* BOTTOM GLASS INFO */}
+          {post.title && (
+            <div
+              className="
+          absolute bottom-0 left-0 right-0
+          bg-gradient-to-t from-black/90 via-black/50 to-transparent
+          p-5 pt-12
+        "
+            >
+              <p className="text-white text-sm leading-6 whitespace-pre-wrap">
+                {post.title}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </>
@@ -775,11 +849,17 @@ function StatCard({ icon: Icon, label, value }) {
 }
 
 function AchievementRow({ title, g, s, b }) {
+  const formattedTitle =
+    title?.charAt(0).toUpperCase() + title?.slice(1).toLowerCase();
+
   return (
     <div className="grid grid-cols-4 py-2 border-b last:border-none text-sm">
-      <div className="font-medium text-gray-700">{title}</div>
+      <div className="font-medium text-gray-700">{formattedTitle}</div>
+
       <div className="text-yellow-500">🥇 {g}</div>
+
       <div className="text-gray-500">🥈 {s}</div>
+
       <div className="text-orange-700">🥉 {b}</div>
     </div>
   );

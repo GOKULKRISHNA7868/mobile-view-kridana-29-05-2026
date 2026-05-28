@@ -902,7 +902,7 @@ export default function StudentPerformanceReport() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   return (
-    <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="min-h-screen bg-white p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto pb-28 sm:pb-10">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -932,24 +932,67 @@ export default function StudentPerformanceReport() {
       {/* FILTERS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mt-6 items-center">
         <div className="relative">
-          <select
-            className={`${inputClass} appearance-none pr-8`}
-            value={selectedStudent}
-            onChange={(e) => setSelectedStudent(e.target.value)}
-          >
-            <option value="">Select Student Name*</option>
+          {/* MOBILE SEARCHABLE */}
+          <div className="block sm:hidden">
+            <input
+              type="text"
+              placeholder="Search Student Name..."
+              className={`${inputClass} mb-2`}
+              value={
+                filteredStudents.find((s) => s.id === selectedStudent)
+                  ? `${
+                      filteredStudents.find((s) => s.id === selectedStudent)
+                        ?.firstName
+                    } ${
+                      filteredStudents.find((s) => s.id === selectedStudent)
+                        ?.lastName
+                    }`
+                  : ""
+              }
+              onChange={(e) => {
+                const value = e.target.value.toLowerCase();
 
-            {filteredStudents?.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.firstName} {s.lastName}
-              </option>
-            ))}
-          </select>
+                const matchedStudent = filteredStudents.find((s) =>
+                  `${s.firstName} ${s.lastName}`.toLowerCase().includes(value),
+                );
 
-          <ChevronDown
-            size={18}
-            className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-          />
+                if (matchedStudent) {
+                  setSelectedStudent(matchedStudent.id);
+                } else {
+                  setSelectedStudent("");
+                }
+              }}
+              list="studentSuggestions"
+            />
+
+            <datalist id="studentSuggestions">
+              {filteredStudents.map((s) => (
+                <option key={s.id} value={`${s.firstName} ${s.lastName}`} />
+              ))}
+            </datalist>
+          </div>
+
+          {/* DESKTOP DROPDOWN */}
+          <div className="hidden sm:block">
+            <select
+              className={`${inputClass} appearance-none pr-8`}
+              value={selectedStudent}
+              onChange={(e) => setSelectedStudent(e.target.value)}
+            >
+              <option value="">Select Student Name*</option>
+
+              {filteredStudents?.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.firstName} {s.lastName}
+                </option>
+              ))}
+            </select>
+
+            <ChevronDown
+              size={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+            />
+          </div>
         </div>
 
         <div ref={categoryRef} className="relative">
@@ -1051,27 +1094,6 @@ export default function StudentPerformanceReport() {
             <option value="Senior Citizens">
               61 – 100 years Senior Citizens
             </option>
-          </select>
-
-          <ChevronDown
-            size={18}
-            className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-          />
-        </div>
-        <div className="relative">
-          <select
-            value={belt}
-            onChange={(e) => setBelt(e.target.value)}
-            className={`${inputClass} appearance-none pr-8`}
-          >
-            <option value="">Select Belt</option>
-            <option>White Belt</option>
-            <option>Yellow Belt</option>
-            <option>Orange Belt</option>
-            <option>Green Belt</option>
-            <option>Blue Belt</option>
-            <option>Brown Belt</option>
-            <option>Black Belt</option>
           </select>
 
           <ChevronDown
@@ -1226,7 +1248,7 @@ export default function StudentPerformanceReport() {
                           }
                         }}
                       />
-                      
+
                       <input
                         className="w-full mt-2 p-2 border border-orange-300 rounded-lg bg-white"
                         placeholder="Observation"

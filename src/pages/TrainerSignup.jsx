@@ -684,24 +684,24 @@ export default function TrainerSignup() {
   }, []);
 
   return (
-    <div className="min-h-screen flex justify-center bg-white py-10">
-      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12 rounded-md mt-4 mb-10">
-        {/* HEADER WITH PROFILE + CONTENT BESIDE */}
+    <div className="min-h-screen flex justify-center bg-white py-4 sm:py-6 md:py-10 overflow-x-hidden">
+      <div className="w-full max-w-6xl mx-auto px-3 sm:px-6 md:px-8 lg:px-12 rounded-md mt-2 sm:mt-4 mb-6 sm:mb-10 overflow-hidden">
         {/* HEADER */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-[#FF6A00] font-semibold mb-6"
+          className="flex items-center gap-2 text-[#FF6A00] font-semibold mb-4 sm:mb-6 text-sm sm:text-base"
         >
           <ArrowLeft size={18} />
           Back
         </button>
-        <div className="flex flex-col md:flex-row items-center justify-between mb-10 gap-6">
+
+        {/* HEADER SECTION */}
+        <div className="flex flex-col md:flex-row items-center justify-between mb-6 sm:mb-10 gap-4 sm:gap-6">
           {/* LEFT : Upload Profile */}
-          {/* LEFT : Upload Profile */}
-          <div className="flex flex-col items-center mt-6">
+          <div className="flex flex-col items-center mt-2 sm:mt-6">
             <div
               onClick={() => profileInputRef.current.click()}
-              className="w-24 h-24 rounded-full bg-orange-200 flex items-center justify-center cursor-pointer overflow-hidden"
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-orange-200 flex items-center justify-center cursor-pointer overflow-hidden flex-shrink-0"
             >
               {profilePreview ? (
                 <img
@@ -710,12 +710,11 @@ export default function TrainerSignup() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <User className="w-10 h-10 text-orange-600" />
+                <User className="w-8 h-8 sm:w-10 sm:h-10 text-orange-600" />
               )}
             </div>
 
-            {/* TEXT BELOW CIRCLE */}
-            <span className="text-sm text-orange-500 font-medium mt-2">
+            <span className="text-xs sm:text-sm text-orange-500 font-medium mt-2 text-center">
               Upload Profile
             </span>
 
@@ -725,27 +724,30 @@ export default function TrainerSignup() {
               className="hidden"
               onChange={handleProfileUpload}
             />
+
             {errors.profileImage && (
-              <p className="text-red-500 text-xs mt-2 text-center">
+              <p className="text-red-500 text-xs mt-2 text-center break-words max-w-[200px]">
                 {errors.profileImage}
               </p>
             )}
           </div>
 
-          {/* CENTER : Title + Step + Bars */}
-          <div className="flex-1 flex flex-col items-center">
-            <h2 className="text-3xl font-bold text-orange-500 ">
+          {/* CENTER */}
+          <div className="flex-1 flex flex-col items-center w-full">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-orange-500 text-center break-words px-2">
               Trainer’s Registration
             </h2>
 
-            <p className="text-md text-center mt-6">Step {step} to 2</p>
+            <p className="text-sm sm:text-md text-center mt-4 sm:mt-6">
+              Step {step} to 2
+            </p>
 
             {/* PROGRESS BARS */}
-            <div className="flex gap-3 sm:gap-4 mt-4 w-full max-w-[580px] px-2 sm:px-0">
+            <div className="flex gap-2 sm:gap-4 mt-4 w-full max-w-[580px] px-2 sm:px-0">
               {[1, 2].map((s) => (
                 <div
                   key={s}
-                  className={`h-3 flex-1 rounded-full ${
+                  className={`h-2 sm:h-3 flex-1 rounded-full ${
                     step >= s ? "bg-orange-500" : "bg-gray-300"
                   }`}
                 />
@@ -753,47 +755,56 @@ export default function TrainerSignup() {
             </div>
           </div>
 
-          {/* RIGHT : empty spacer (keeps center aligned) */}
-          <div className="mt-8" />
+          {/* RIGHT SPACER */}
+          <div className="hidden md:block w-24" />
         </div>
 
         {/* STEP 1 */}
         {step === 1 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-2">
             {[
               ["First Name*", "firstName"],
               ["Last Name*", "lastName"],
             ].map(([label, name]) => (
-              <div key={name} className="flex flex-col gap-3 mb-1">
-                <label className="text-sm font-semibold mb-0">{label}</label>
+              <div key={name} className="flex flex-col gap-2 mb-1">
+                <label className="text-sm font-semibold break-words">
+                  {label}
+                </label>
 
                 <input
                   name={name}
                   value={formData[name]}
                   onChange={handleChange}
-                  className={`${inputClass} ${
+                  className={`${inputClass} w-full min-w-0 text-sm sm:text-base ${
                     errors[name] ? "border-red-500" : ""
                   }`}
                 />
 
                 {errors[name] && (
-                  <p className="text-red-500 text-xs mt-1">{errors[name]}</p>
+                  <p className="text-red-500 text-xs mt-1 break-words">
+                    {errors[name]}
+                  </p>
                 )}
               </div>
             ))}
 
-            <div className="col-span-2 flex flex-col">
-              <label className="text-sm font-semibold mb-2">
+            {/* ORGANIZATION */}
+            <div className="md:col-span-2 flex flex-col">
+              <label className="text-sm font-semibold mb-2 break-words">
                 Add Association / Organization Name*
               </label>
+
               <input
                 name="organization"
                 value={formData.organization}
                 onChange={handleChange}
-                className={`${inputClass} ${errors.organization ? "border-red-500" : ""}`}
+                className={`${inputClass} w-full min-w-0 text-sm sm:text-base ${
+                  errors.organization ? "border-red-500" : ""
+                }`}
               />
+
               {errors.organization && (
-                <p className="text-red-500 text-xs mt-1">
+                <p className="text-red-500 text-xs mt-1 break-words">
                   {errors.organization}
                 </p>
               )}
@@ -804,7 +815,9 @@ export default function TrainerSignup() {
               ["Date Of Birth*", "dob", "date"],
             ].map(([label, name, type = "text"]) => (
               <div key={name} className="flex flex-col">
-                <label className="text-sm font-semibold mb-2">{label}</label>
+                <label className="text-sm font-semibold mb-2 break-words">
+                  {label}
+                </label>
 
                 <input
                   type={type}
@@ -816,19 +829,22 @@ export default function TrainerSignup() {
                       ? new Date().toISOString().split("T")[0]
                       : undefined
                   }
-                  className={`${inputClass} ${
+                  className={`${inputClass} w-full min-w-0 text-sm sm:text-base ${
                     errors[name] ? "border-red-500" : ""
                   }`}
                 />
 
                 {errors[name] && (
-                  <p className="text-red-500 text-xs mt-1">{errors[name]}</p>
+                  <p className="text-red-500 text-xs mt-1 break-words">
+                    {errors[name]}
+                  </p>
                 )}
               </div>
             ))}
 
+            {/* CATEGORY */}
             <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">
+              <label className="text-sm font-semibold mb-2 break-words">
                 Select Category*
               </label>
 
@@ -836,12 +852,17 @@ export default function TrainerSignup() {
                 <button
                   type="button"
                   onClick={() => setShowCategory(!showCategory)}
-                  className={`${inputClass} w-full flex justify-between items-center`}
+                  className={`${inputClass} w-full flex justify-between items-center gap-2 overflow-hidden text-sm sm:text-base`}
                 >
-                  <span>{formData.category || "Select Category"}</span>
+                  <span className="truncate text-left flex-1">
+                    {formData.category || "Select Category"}
+                  </span>
+
                   <ChevronDown
                     size={18}
-                    className={`transition-transform ${showCategory ? "rotate-180" : ""}`}
+                    className={`flex-shrink-0 transition-transform ${
+                      showCategory ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -856,10 +877,12 @@ export default function TrainerSignup() {
                             category: cat,
                             subCategory: "",
                           }));
+
                           setAvailableSubCategories(subCategoryMap[cat] || []);
+
                           setShowCategory(false);
                         }}
-                        className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
+                        className="px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm break-words"
                       >
                         {cat}
                       </div>
@@ -869,11 +892,15 @@ export default function TrainerSignup() {
               </div>
 
               {errors.category && (
-                <p className="text-red-500 text-xs mt-1">{errors.category}</p>
+                <p className="text-red-500 text-xs mt-1 break-words">
+                  {errors.category}
+                </p>
               )}
             </div>
+
+            {/* SUB CATEGORY */}
             <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">
+              <label className="text-sm font-semibold mb-2 break-words">
                 Select Sub – Category*
               </label>
 
@@ -882,19 +909,22 @@ export default function TrainerSignup() {
                   type="button"
                   disabled={!formData.category}
                   onClick={() => setShowSubCategory(!showSubCategory)}
-                  className={`${inputClass} w-full flex justify-between items-center ${
+                  className={`${inputClass} w-full flex justify-between items-center gap-2 overflow-hidden text-sm sm:text-base ${
                     !formData.category ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
-                  <span>
+                  <span className="truncate text-left flex-1">
                     {formData.subCategory ||
                       (formData.category
                         ? "Select Sub Category"
                         : "Select Category First")}
                   </span>
+
                   <ChevronDown
                     size={18}
-                    className={`transition-transform ${showSubCategory ? "rotate-180" : ""}`}
+                    className={`flex-shrink-0 transition-transform ${
+                      showSubCategory ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -908,9 +938,10 @@ export default function TrainerSignup() {
                             ...prev,
                             subCategory: sub,
                           }));
+
                           setShowSubCategory(false);
                         }}
-                        className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
+                        className="px-4 py-2 hover:bg-blue-100 cursor-pointer text-sm break-words"
                       >
                         {sub}
                       </div>
@@ -920,29 +951,37 @@ export default function TrainerSignup() {
               </div>
 
               {errors.subCategory && (
-                <p className="text-red-500 text-xs mt-1">
+                <p className="text-red-500 text-xs mt-1 break-words">
                   {errors.subCategory}
                 </p>
               )}
             </div>
 
-            {/* Experience */}
+            {/* EXPERIENCE */}
             <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">Experience*</label>
+              <label className="text-sm font-semibold mb-2 break-words">
+                Experience*
+              </label>
+
               <input
                 name="experience"
                 value={formData.experience}
                 onChange={handleChange}
-                className={`${inputClass} ${errors.experience ? "border-red-500" : ""}`}
+                className={`${inputClass} w-full min-w-0 text-sm sm:text-base ${
+                  errors.experience ? "border-red-500" : ""
+                }`}
               />
+
               {errors.experience && (
-                <p className="text-red-500 text-xs mt-1">{errors.experience}</p>
+                <p className="text-red-500 text-xs mt-1 break-words">
+                  {errors.experience}
+                </p>
               )}
             </div>
 
-            {/* Upload Certification – SAME ROW */}
+            {/* CERTIFICATIONS */}
             <div className="flex flex-col relative">
-              <label className="text-sm font-semibold mb-2">
+              <label className="text-sm font-semibold mb-2 break-words">
                 Upload Certification* / License Number
               </label>
 
@@ -954,18 +993,18 @@ export default function TrainerSignup() {
                     : ""
                 }
                 placeholder="Upload certification or licence images"
-                className={`${inputClass} pr-12`}
+                className={`${inputClass} w-full min-w-0 pr-12 truncate text-xs sm:text-sm`}
               />
 
               <button
                 type="button"
                 onClick={() => certificateInputRef.current.click()}
-                className="absolute right-3 top-[34px]"
+                className="absolute right-3 top-[38px] sm:top-[36px]"
               >
                 <img
                   src="/upload.png"
                   alt="upload"
-                  className="w-6 h-6 cursor-pointer"
+                  className="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer"
                 />
               </button>
 
@@ -977,11 +1016,13 @@ export default function TrainerSignup() {
                 className="hidden"
                 onChange={handleCertificateUpload}
               />
-              <p className="text-xs text-gray-500 mt-1">
+
+              <p className="text-xs text-gray-500 mt-1 break-words">
                 Upload certification or licence images (1–3 only)
               </p>
+
               {errors.certifications && (
-                <p className="text-red-500 text-xs mt-1">
+                <p className="text-red-500 text-xs mt-1 break-words">
                   {errors.certifications}
                 </p>
               )}
@@ -991,12 +1032,13 @@ export default function TrainerSignup() {
 
         {/* STEP 2 */}
         {step === 2 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mt-8">
-            {/* Phone Number */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-6 sm:mt-8">
+            {/* PHONE */}
             <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">
+              <label className="text-sm font-semibold mb-2 break-words">
                 Add Phone Number*
               </label>
+
               <input
                 name="phoneNumber"
                 value={formData.phoneNumber}
@@ -1004,97 +1046,124 @@ export default function TrainerSignup() {
                 pattern="[0-9]*"
                 onChange={handleChange}
                 maxLength={10}
-                className={`${inputClass} ${
+                className={`${inputClass} w-full min-w-0 text-sm sm:text-base ${
                   errors.phoneNumber ? "border-red-500" : ""
                 }`}
               />
+
               {errors.phoneNumber && (
-                <p className="text-red-500 text-xs mt-1">
+                <p className="text-red-500 text-xs mt-1 break-words">
                   {errors.phoneNumber}
                 </p>
               )}
             </div>
 
-            {/* City */}
+            {/* CITY */}
             <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">City*</label>
+              <label className="text-sm font-semibold mb-2 break-words">
+                City*
+              </label>
+
               <input
                 name="city"
                 value={formData.city}
                 onChange={handleChange}
-                className={`${inputClass} ${errors.city ? "border-red-500" : ""}`}
+                className={`${inputClass} w-full min-w-0 text-sm sm:text-base ${
+                  errors.city ? "border-red-500" : ""
+                }`}
               />
+
               {errors.city && (
-                <p className="text-red-500 text-xs mt-1">{errors.city}</p>
+                <p className="text-red-500 text-xs mt-1 break-words">
+                  {errors.city}
+                </p>
               )}
             </div>
 
-            {/* State */}
+            {/* STATE */}
             <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">State*</label>
+              <label className="text-sm font-semibold mb-2 break-words">
+                State*
+              </label>
+
               <input
                 name="state"
                 value={formData.state}
                 onChange={handleChange}
-                className={`${inputClass} ${errors.state ? "border-red-500" : ""}`}
+                className={`${inputClass} w-full min-w-0 text-sm sm:text-base ${
+                  errors.state ? "border-red-500" : ""
+                }`}
               />
+
               {errors.state && (
-                <p className="text-red-500 text-xs mt-1">{errors.state}</p>
+                <p className="text-red-500 text-xs mt-1 break-words">
+                  {errors.state}
+                </p>
               )}
             </div>
 
-            {/* Email */}
+            {/* EMAIL */}
             <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">
+              <label className="text-sm font-semibold mb-2 break-words">
                 Add E – Mail Id*
               </label>
+
               <input
                 type="email"
                 name="email"
                 onChange={handleChange}
-                className={inputClass}
+                className={`${inputClass} w-full min-w-0 text-sm sm:text-base`}
               />
+
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                <p className="text-red-500 text-xs mt-1 break-words">
+                  {errors.email}
+                </p>
               )}
             </div>
 
-            {/* Password */}
+            {/* PASSWORD */}
             <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">
+              <label className="text-sm font-semibold mb-2 break-words">
                 Create Password*
               </label>
+
               <input
                 type="password"
                 name="password"
                 onChange={handleChange}
-                className={inputClass}
+                className={`${inputClass} w-full min-w-0 text-sm sm:text-base`}
               />
+
               {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
+                <p className="text-red-500 text-xs mt-1 break-words">
+                  {errors.password}
+                </p>
               )}
             </div>
 
-            {/* Confirm Password */}
+            {/* CONFIRM PASSWORD */}
             <div className="flex flex-col">
-              <label className="text-sm font-semibold mb-2">
+              <label className="text-sm font-semibold mb-2 break-words">
                 Re – Enter Password*
               </label>
+
               <input
                 type="password"
                 name="confirmPassword"
                 onChange={handleChange}
-                className={inputClass}
+                className={`${inputClass} w-full min-w-0 text-sm sm:text-base`}
               />
+
               {errors.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">
+                <p className="text-red-500 text-xs mt-1 break-words">
                   {errors.confirmPassword}
                 </p>
               )}
             </div>
 
-            {/* Login link */}
-            <div className="col-span-2 text-sm mt-2">
+            {/* LOGIN */}
+            <div className="col-span-1 md:col-span-2 text-sm mt-2 break-words">
               Already Have an Account ?{" "}
               <span
                 className="text-orange-500 cursor-pointer font-medium"
@@ -1106,16 +1175,18 @@ export default function TrainerSignup() {
           </div>
         )}
 
-        <div className="h-24"></div>
-        {/* ✅ AGREEMENT SECTION */}
-        <div className="flex items-start gap-2 text-sm text-gray-700 mt-4">
+        <div className="h-14 sm:h-24"></div>
+
+        {/* AGREEMENT */}
+        <div className="flex items-start gap-2 text-xs sm:text-sm text-gray-700 mt-4 leading-relaxed">
           <input
             type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-1"
+            className="mt-1 flex-shrink-0"
           />
-          <p>
+
+          <p className="break-words">
             I agree to the{" "}
             <span
               onClick={() => navigate("/terms")}
@@ -1141,22 +1212,26 @@ export default function TrainerSignup() {
           </p>
         </div>
 
-        {/* BUTTONS */}
-        {/* SUBMIT ERROR MESSAGE */}
+        {/* SUBMIT ERROR */}
         {errors.submit && (
-          <p className="text-red-500 text-sm text-right mb-3">
+          <p className="text-red-500 text-sm text-right mb-3 mt-3 break-words">
             {errors.submit}
           </p>
         )}
-        <div className="flex justify-end gap-6 mt-4">
-          <button onClick={handleBack} className="text-orange-500 font-medium">
+
+        {/* BUTTONS */}
+        <div className="flex flex-wrap justify-end gap-3 sm:gap-6 mt-6">
+          <button
+            onClick={handleBack}
+            className="text-orange-500 font-medium text-sm sm:text-base whitespace-nowrap"
+          >
             Back
           </button>
 
           {step < 2 && (
             <button
               onClick={handleNext}
-              className="bg-orange-500 px-8 py-2 rounded-md font-semibold"
+              className="bg-orange-500 text-white px-6 sm:px-8 py-2 rounded-md font-semibold text-sm sm:text-base whitespace-nowrap"
             >
               Next
             </button>
@@ -1167,9 +1242,12 @@ export default function TrainerSignup() {
               type="button"
               onClick={handleSubmit}
               disabled={!agreed || loading}
-              className={`bg-orange-500 text-white px-8 py-2 rounded-md font-semibold
-    ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-orange-600"}
-  `}
+              className={`bg-orange-500 text-white px-6 sm:px-8 py-2 rounded-md font-semibold text-sm sm:text-base whitespace-nowrap
+              ${
+                loading
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-orange-600"
+              }`}
             >
               {loading ? "Saving..." : "Save"}
             </button>

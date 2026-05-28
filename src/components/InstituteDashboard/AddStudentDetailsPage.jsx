@@ -22,7 +22,9 @@ const DEFAULT_PASSWORD = "123456";
 export default function AddTrainerDetailsPage() {
   const { user, institute } = useAuth();
   const navigate = useNavigate();
-
+  const [availableBranches, setAvailableBranches] = useState([]);
+  const [showBranchDropdown, setShowBranchDropdown] = useState(false);
+  const branchRef = useRef(null);
   const [step, setStep] = useState(1);
   const [createLogin, setCreateLogin] = useState(true);
   const timeRef = useRef(null);
@@ -32,13 +34,13 @@ export default function AddTrainerDetailsPage() {
   const [showTimeDropdown, setShowTimeDropdown] = useState(false);
   const categoryRef = useRef(null);
   const subCategoryRef = useRef(null);
-
+  const [branchDropdownUp, setBranchDropdownUp] = useState(false);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [showSubCategoryDropdown, setShowSubCategoryDropdown] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   /* -------------------- REFS -------------------- */
   const profileInputRef = useRef(null);
-
+  const [branchesLoading, setBranchesLoading] = useState(true);
   const aadharInputRef = useRef(null);
   const [showRelationPopup, setShowRelationPopup] = useState(false);
   const [relationType, setRelationType] = useState("");
@@ -390,7 +392,51 @@ export default function AddTrainerDetailsPage() {
   });
 
   /* -------------------- UPLOAD HANDLERS -------------------- */
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        if (!user?.uid) return;
 
+        setBranchesLoading(true);
+
+        const instituteSnap = await getDoc(doc(db, "institutes", user.uid));
+
+        if (!instituteSnap.exists()) {
+          setBranchesLoading(false);
+          return;
+        }
+
+        const customerIds = instituteSnap.data()?.customers || [];
+
+        // ✅ FETCH ALL STUDENTS IN PARALLEL
+        const studentPromises = customerIds.map((id) =>
+          getDoc(doc(db, "students", id)),
+        );
+
+        const studentSnaps = await Promise.all(studentPromises);
+
+        const branchesSet = new Set();
+
+        studentSnaps.forEach((snap) => {
+          if (snap.exists()) {
+            const data = snap.data();
+
+            if (data.branch?.trim()) {
+              branchesSet.add(data.branch.trim());
+            }
+          }
+        });
+
+        setAvailableBranches([...branchesSet]);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setBranchesLoading(false);
+      }
+    };
+
+    fetchBranches();
+  }, [user]);
   const handleAadharUpload = (e) => {
     const newFiles = Array.from(e.target.files);
 
@@ -463,9 +509,7 @@ export default function AddTrainerDetailsPage() {
       if (createLogin && !formData.email) {
         newErrors.email = "Email is required";
       }
-      if (!registerNumber.trim()) {
-        newErrors.registerNumber = "Register number is required";
-      }
+
       if (!formData.branch) newErrors.branch = "Branch number is required";
     }
     /* DOB FUTURE CHECK */
@@ -675,6 +719,7 @@ export default function AddTrainerDetailsPage() {
       // ✅ UPDATE CUSTOMERS
       transaction.update(instituteRef, {
         customers: arrayUnion(customerUid),
+        lastRegisterNumber: registerNumber,
       });
 
       // ✅ UPDATE COUNTER INSIDE registerConfig
@@ -813,8 +858,8 @@ export default function AddTrainerDetailsPage() {
         // ✅ UPDATE CUSTOMERS
         transaction.update(instituteRef, {
           customers: arrayUnion(customerUid),
+          lastRegisterNumber: registerNumber,
         });
-
         // ✅ UPDATE COUNTER
 
         // ✅ UPDATE UI
@@ -863,6 +908,43 @@ Password: ${DEFAULT_PASSWORD}`);
     setShowRelationPopup(false);
   };
   useEffect(() => {
+    const fetchLastRegisterNumber = async () => {
+      try {
+        const instituteSnap = await getDoc(doc(db, "institutes", user.uid));
+
+        if (!instituteSnap.exists()) return;
+
+        const instituteData = instituteSnap.data();
+
+        const lastReg = instituteData?.lastRegisterNumber || "";
+
+        setRegisterPrefix(lastReg);
+
+        // AUTO INCREMENT
+        const match = lastReg.match(/(\d+)$/);
+
+        if (match) {
+          const numberPart = match[1];
+          const prefix = lastReg.slice(0, -numberPart.length);
+
+          const nextNumber = parseInt(numberPart, 10) + 1;
+
+          const newRegister = prefix + nextNumber;
+
+          setRegisterNumber(newRegister);
+        } else {
+          setRegisterNumber(lastReg + "1");
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    if (user?.uid) {
+      fetchLastRegisterNumber();
+    }
+  }, [user]);
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (timeRef.current && !timeRef.current.contains(e.target)) {
         setShowTimeDropdown(false);
@@ -886,13 +968,13 @@ Password: ${DEFAULT_PASSWORD}`);
 
   /* -------------------- UI -------------------- */
   return (
-    <div className="min-h-screen flex justify-center bg-white py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex justify-center bg-white pt-2 pb-24 sm:pb-10 px-3 sm:px-6 lg:px-8 overflow-x-hidden">
       <div className="w-full max-w-6xl">
         {/* HEADER */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-10 text-center lg:text-left">
           {/* PROFILE */}
           {/* LEFT : Upload Profile */}
-          <div className="flex flex-col items-center mt-6 w-full lg:w-auto">
+          <div className="flex flex-col items-center w-full lg:w-auto">
             <div
               onClick={() => profileInputRef.current.click()}
               className="w-24 h-24 rounded-full bg-orange-200 flex items-center justify-center cursor-pointer overflow-hidden"
@@ -923,22 +1005,22 @@ Password: ${DEFAULT_PASSWORD}`);
           </div>
           <div className="flex flex-col">
             <label className="text-sm font-semibold mb-2">
-              Registration Number<span className="text-red-500">*</span>
+              Registration Number
             </label>
 
             <input
               type="text"
               className={inputClass}
               value={registerNumber}
-              placeholder="Enter Register Number"
+              placeholder="Auto generated register number"
               onChange={(e) => {
-                setRegisterNumber(e.target.value); // ✅ no restriction
+                setRegisterNumber(e.target.value);
               }}
             />
 
-            {!registerNumber && (
-              <span className="text-red-500 text-xs mt-1">
-                Register number is required
+            {registerPrefix && (
+              <span className="text-xs text-gray-500 mt-1">
+                Previous Register Number: {registerPrefix}
               </span>
             )}
           </div>
@@ -953,8 +1035,9 @@ Password: ${DEFAULT_PASSWORD}`);
               {[1, 2].map((s) => (
                 <div
                   key={s}
-                  className={`h-3 flex-1 rounded-full ${step >= s ? "bg-orange-500" : "bg-gray-300"
-                    }`}
+                  className={`h-3 flex-1 rounded-full ${
+                    step >= s ? "bg-orange-500" : "bg-gray-300"
+                  }`}
                 />
               ))}
             </div>
@@ -983,7 +1066,7 @@ Password: ${DEFAULT_PASSWORD}`);
                     .map((word) =>
                       word
                         ? word.charAt(0).toUpperCase() +
-                        word.slice(1).toLowerCase()
+                          word.slice(1).toLowerCase()
                         : "",
                     )
                     .join(" ");
@@ -1014,7 +1097,7 @@ Password: ${DEFAULT_PASSWORD}`);
                     .map((word) =>
                       word
                         ? word.charAt(0).toUpperCase() +
-                        word.slice(1).toLowerCase()
+                          word.slice(1).toLowerCase()
                         : "",
                     )
                     .join(" ");
@@ -1122,12 +1205,12 @@ Password: ${DEFAULT_PASSWORD}`);
                 min={
                   formData.dateOfBirth
                     ? new Date(
-                      new Date(formData.dateOfBirth).setDate(
-                        new Date(formData.dateOfBirth).getDate() + 1,
-                      ),
-                    )
-                      .toISOString()
-                      .split("T")[0]
+                        new Date(formData.dateOfBirth).setDate(
+                          new Date(formData.dateOfBirth).getDate() + 1,
+                        ),
+                      )
+                        .toISOString()
+                        .split("T")[0]
                     : "1900-01-01"
                 }
                 max={new Date().toISOString().split("T")[0]}
@@ -1177,8 +1260,9 @@ Password: ${DEFAULT_PASSWORD}`);
 
                   <ChevronDown
                     size={18}
-                    className={`ml-2 flex-shrink-0 transition-transform ${showCategoryDropdown ? "rotate-180" : ""
-                      }`}
+                    className={`ml-2 flex-shrink-0 transition-transform ${
+                      showCategoryDropdown ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -1230,21 +1314,23 @@ Password: ${DEFAULT_PASSWORD}`);
                     formData.category &&
                     setShowSubCategoryDropdown(!showSubCategoryDropdown)
                   }
-                  className={`${inputClass} w-full flex items-center justify-between text-left ${!formData.category && "bg-gray-100 cursor-not-allowed"
-                    }`}
+                  className={`${inputClass} w-full flex items-center justify-between text-left ${
+                    !formData.category && "bg-gray-100 cursor-not-allowed"
+                  }`}
                 >
                   <span>
                     {formData.subCategory
                       ? formData.subCategory
                       : formData.category
-                        ? "Select Sub Category"
-                        : "Select Category First"}
+                      ? "Select Sub Category"
+                      : "Select Category First"}
                   </span>
 
                   <ChevronDown
                     size={18}
-                    className={`ml-2 flex-shrink-0 transition-transform ${showSubCategoryDropdown ? "rotate-180" : ""
-                      }`}
+                    className={`ml-2 flex-shrink-0 transition-transform ${
+                      showSubCategoryDropdown ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
                 {showSubCategoryDropdown && (
@@ -1358,14 +1444,15 @@ Password: ${DEFAULT_PASSWORD}`);
                   <span>
                     {formData.timings
                       ? timeSlots.find((t) => t.value === formData.timings)
-                        ?.label
+                          ?.label
                       : "Select Time"}
                   </span>
 
                   <ChevronDown
                     size={18}
-                    className={`ml-2 flex-shrink-0 transition-transform ${showTimeDropdown ? "rotate-180" : ""
-                      }`}
+                    className={`ml-2 flex-shrink-0 transition-transform ${
+                      showTimeDropdown ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -1458,25 +1545,123 @@ Password: ${DEFAULT_PASSWORD}`);
                 )}
               </div>
             )}
-            <div className="flex flex-col">
+            <div className="flex flex-col w-full">
               <label className="text-sm font-semibold mb-2">
                 Branch Number or Name<span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                className={inputClass}
-                value={formData.branch}
-                placeholder="Enter branch name or number"
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^A-Za-z0-9\s-]/g, "");
-                  // allows letters, numbers, space, dash
 
-                  setFormData((prev) => ({
-                    ...prev,
-                    branch: value,
-                  }));
-                }}
-              />
+              <div ref={branchRef} className="relative w-full">
+                {/* SELECT BUTTON */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!showBranchDropdown && branchRef.current) {
+                      const rect = branchRef.current.getBoundingClientRect();
+
+                      const spaceBelow = window.innerHeight - rect.bottom;
+                      const dropdownHeight = 320;
+
+                      setBranchDropdownUp(spaceBelow < dropdownHeight);
+                    }
+
+                    setShowBranchDropdown(!showBranchDropdown);
+                  }}
+                  className={`${inputClass} w-full min-h-[44px] flex items-center justify-between text-left text-sm sm:text-base`}
+                >
+                  <span className="truncate">
+                    {formData.branch || "Select or Enter Branch"}
+                  </span>
+
+                  <ChevronDown
+                    size={18}
+                    className={`flex-shrink-0 transition-transform ${
+                      showBranchDropdown ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* DROPDOWN */}
+                {showBranchDropdown && (
+                  <div
+                    className={`
+absolute z-50 w-full
+bg-white border border-orange-200
+rounded-xl shadow-lg
+overflow-hidden
+max-w-[100vw]
+`}
+                  >
+                    {/* EXISTING BRANCHES */}
+                    <div className="max-h-60 sm:max-h-52overflow-y-auto">
+                      {branchesLoading ? (
+                        <div className="flex items-center justify-center py-6">
+                          <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      ) : availableBranches.length > 0 ? (
+                        availableBranches.map((branch) => (
+                          <button
+                            type="button"
+                            key={branch}
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                branch,
+                              }));
+
+                              setShowBranchDropdown(false);
+                            }}
+                            className="
+                  w-full text-left
+                  px-4 py-3
+                  text-sm sm:text-base
+                  hover:bg-orange-100
+                  transition
+                "
+                          >
+                            {branch}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="text-sm text-gray-400 px-4 py-3">
+                          No branches available
+                        </p>
+                      )}
+                    </div>
+
+                    {/* ADD NEW BRANCH */}
+                    <div className="border-t p-3 bg-gray-50">
+                      <p className="text-xs text-gray-500 mb-2">
+                        Add New Branch
+                      </p>
+
+                      <input
+                        type="text"
+                        placeholder="Enter new branch"
+                        value={formData.branch}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(
+                            /[^A-Za-z0-9\s-]/g,
+                            "",
+                          );
+
+                          setFormData((prev) => ({
+                            ...prev,
+                            branch: value,
+                          }));
+                        }}
+                        className="
+              h-11 px-3 w-full
+              border border-orange-300
+              rounded-lg bg-white
+              outline-none
+              focus:border-2 focus:border-orange-500
+              text-sm
+            "
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {errors.branch && (
                 <span className="text-red-500 text-xs mt-1">
@@ -1489,7 +1674,7 @@ Password: ${DEFAULT_PASSWORD}`);
 
         {step === 2 && (
           <div className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Monthly Fee */}
               <div className="flex flex-col">
                 <label className="text-sm font-semibold mb-2">
@@ -1657,7 +1842,7 @@ Password: ${DEFAULT_PASSWORD}`);
 
         {/* BUTTONS */}
         {step === 1 && (
-          <div className="flex flex-col sm:flex-row justify-end gap-6 mt-12">
+          <div className="flex flex-col sm:flex-row justify-end gap-1 mt-10 pb-24 sm:pb-10">
             <button
               type="button"
               onClick={handleNext}

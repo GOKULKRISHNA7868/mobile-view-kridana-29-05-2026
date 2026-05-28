@@ -17,7 +17,18 @@ import { getCurrentUserLocation } from "../utils/location";
 import { db } from "../firebase";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Trophy,
+  Dribbble,
+  Users,
+  Dumbbell,
+  ArrowRight,
+  Globe,
+  UserCheck,
+  Activity,
+} from "lucide-react";
 import {
   FaFistRaised,
   FaFootballBall,
@@ -65,6 +76,7 @@ const categories = [
   { name: "Wellness", path: "/services/wellness", icon: FaSpa },
   { name: "Dance", path: "/services/dance", icon: FaMusic },
 ];
+
 /* ================= DISTANCE ================= */
 const getDistance = (lat1, lon1, lat2, lon2) => {
   const toRad = (v) => (v * Math.PI) / 180;
@@ -92,16 +104,12 @@ const Landing = () => {
   const [trainers, setTrainers] = useState([]);
   const [institutes, setInstitutes] = useState([]);
   const [reels, setReels] = useState([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
+
   const [showCommentsFor, setShowCommentsFor] = useState(null);
   const [commentsList, setCommentsList] = useState([]);
   const [showReelViewer, setShowReelViewer] = useState(false);
   const [activeReelIndex, setActiveReelIndex] = useState(0);
-  const slides = [
-    "/images/slide1.jpg",
-    "/images/slide2.jpg",
-    "/images/slide3.jpg",
-  ];
+
   const [userLocation, setUserLocation] = useState(null);
 
   const [suggestedProfiles, setSuggestedProfiles] = useState([]);
@@ -492,71 +500,154 @@ const Landing = () => {
   }, []);
 
   return (
-    <div className="w-full font-sans pb-20 md:pb-0">
+    <div className="w-full font-sans">
       {/* 3px white line */}
       <div className="w-full h-[6px] bg-white"></div>
 
-      {/* ================================================= */}
-      {/* ================= HERO SECTION =================== */}
-      {/* ================================================= */}
-      <section className="w-full bg-white pb-5">
-        <div className="w-full max-w-[1440px] mx-auto px-3 sm:px-0">
-          <div className="relative overflow-hidden h-[170px] sm:h-[300px] md:h-[420px] lg:h-[520px] xl:h-[620px]">
-            {/* SLIDER */}
-            <motion.div
-              drag="x"
-              dragConstraints={{ left: 0, right: 0 }}
-              onDragEnd={(e, info) => {
-                if (info.offset.x < -80) {
-                  setCurrentSlide((prev) =>
-                    prev === slides.length - 1 ? 0 : prev + 1,
-                  );
-                } else if (info.offset.x > 80) {
-                  setCurrentSlide((prev) =>
-                    prev === 0 ? slides.length - 1 : prev - 1,
-                  );
-                }
-              }}
-              animate={{
-                x: `-${currentSlide * 100}%`,
-              }}
-              transition={{ duration: 0.45 }}
-              className="flex h-full cursor-grab active:cursor-grabbing"
-            >
-              {slides.map((img, index) => (
-                <div
-                  key={index}
-                  className="min-w-full h-full shrink-0 rounded-2xl overflow-hidden"
-                >
-                  <img
-                    src={img}
-                    alt={`slide-${index}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </motion.div>
+      <section className="w-full bg-[#FFFBF8] border-b border-orange-100 py-8 md:py-20 overflow-hidden">
+        {/* ==================== MOBILE VIEW ===================== */}
+        <div className="flex md:hidden flex-col px-4 gap-6">
+          {/* Top Tagline Badge */}
+          <div>
+            <span className="inline-flex items-center gap-1 bg-[#FFF5EE] border border-[#FF6A00] px-3 py-1 rounded-full text-[11px] font-semibold text-[#FF6A00]">
+              <Trophy className="w-3 h-3" /> DISCOVER YOUR SPORT
+            </span>
           </div>
 
-          {/* DOTS BELOW */}
-          <div className="flex justify-center items-center gap-2 mt-4">
-            {slides.map((_, index) => (
+          {/* Main Headings */}
+          <div className="flex flex-col gap-1">
+            <h1 className="text-[32px] font-extrabold text-[#0B0B0B] leading-tight tracking-tight">
+              Search your <br />
+              favourite <span className="text-[#FF6A00]">Sports</span>
+            </h1>
+            <h2 className="text-[20px] font-bold text-[#0B0B0B] mt-1">
+              Train hard. <span className="text-[#FF6A00]">Enjoy & Sweat.</span>
+            </h2>
+            <p className="mt-3 text-[14px] text-gray-600 font-normal leading-relaxed">
+              Find indoor or outdoor sports, connect with expert trainers and
+              track your progress — all in one place.
+            </p>
+          </div>
+
+          {/* Main Image Asset Showcase */}
+          <div className="w-full flex justify-center py-4 relative">
+            <img
+              src="/image.png" // Replace with your complete right-side compiled banner asset
+              alt="Sports dashboard composite"
+              className="w-[85%] h-auto object-contain drop-shadow-xl"
+            />
+          </div>
+
+          {/* Features Minimal Feature Cards Block */}
+
+          {/* Action Call to Action Buttons */}
+          <div className="flex flex-col gap-3 mt-4 w-full">
+            <button
+              onClick={() => navigate("/categories")}
+              className="w-full bg-[#FF6A00] hover:bg-orange-600 transition-colors text-white py-3.5 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 shadow-md shadow-orange-500/20"
+            >
+              Explore Sports <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* ==================== DESKTOP VIEW ===================== */}
+        <div className="hidden md:flex max-w-[1280px] mx-auto items-center justify-between px-8 gap-8">
+          {/* LEFT TEXT PANEL */}
+          <div className="w-[50%] flex flex-col items-start">
+            {/* Top Tagline Badge */}
+            <div className="mb-6">
+              <span className="inline-flex items-center gap-1.5 bg-[#FFF5EE] border border-[#FF6A00] text-[#FF6A00] px-4 py-1.5 rounded-full text-[13px] font-bold uppercase tracking-wider">
+                <Trophy className="w-3.5 h-3.5" /> DISCOVER YOUR SPORT
+              </span>
+            </div>
+
+            {/* Core App Headings */}
+            <h1 className="text-[56px] font-black text-[#0B0B0B] leading-[1.1] tracking-tight">
+              Search your <br />
+              favourite <span className="text-[#FF6A00]">Sports</span>
+            </h1>
+
+            <h2 className="text-[32px] font-extrabold text-[#0B0B0B] mt-3">
+              Train hard. <span className="text-[#FF6A00]">Enjoy & Sweat.</span>
+            </h2>
+
+            {/* Subtext Description */}
+            <p className="text-gray-600 mt-5 text-[16px] leading-[1.6] max-w-[500px] font-medium">
+              Find indoor or outdoor sports, connect with expert trainers and
+              track your progress — all in one place.
+            </p>
+
+            {/* Feature Grid Quick Metrics */}
+            <div className="grid grid-cols-4 gap-4 mt-8 w-full max-w-[540px]">
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 bg-[#FFF5EE] rounded-xl flex items-center justify-center text-[#FF6A00] mb-2.5">
+                  <Trophy className="w-5 h-5" />
+                </div>
+                <span className="text-[13px] font-bold text-[#0B0B0B] whitespace-nowrap">
+                  Indoor Sports
+                </span>
+              </div>
+
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 bg-[#FFF5EE] rounded-xl flex items-center justify-center text-[#FF6A00] mb-2.5">
+                  <Globe className="w-5 h-5" />
+                </div>
+                <span className="text-[13px] font-bold text-[#0B0B0B] whitespace-nowrap">
+                  Outdoor Sports
+                </span>
+              </div>
+
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 bg-[#FFF5EE] rounded-xl flex items-center justify-center text-[#FF6A00] mb-2.5">
+                  <UserCheck className="w-5 h-5" />
+                </div>
+                <span className="text-[13px] font-bold text-[#0B0B0B] whitespace-nowrap">
+                  Expert Trainers
+                </span>
+              </div>
+
+              <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 bg-[#FFF5EE] rounded-xl flex items-center justify-center text-[#FF6A00] mb-2.5">
+                  <Activity className="w-5 h-5" />
+                </div>
+                <span className="text-[13px] font-bold text-[#0B0B0B] whitespace-nowrap">
+                  Stay Fit
+                </span>
+              </div>
+            </div>
+
+            {/* Action Trigger Buttons */}
+            <div className="flex items-center gap-4 mt-8">
               <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`rounded-full transition-all duration-300 ${
-                  currentSlide === index
-                    ? "w-7 h-2 bg-orange-500"
-                    : "w-2 h-2 bg-gray-300"
-                }`}
-              />
-            ))}
+                onClick={() => navigate("/book")}
+                className="bg-[#FF6A00] hover:bg-orange-600 transition-colors text-white px-8 py-3.5 rounded-xl text-[15px] font-bold flex items-center gap-2 shadow-lg shadow-orange-500/10"
+              >
+                Explore Sports <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => navigate("/features")}
+                className="border border-[#FF6A00] hover:bg-[#FFF5EE] transition-colors text-[#FF6A00] px-8 py-3.5 rounded-xl text-[15px] font-bold flex items-center gap-2 bg-white"
+              >
+                Join Community <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE GRAPHICS WRAPPER */}
+          <div className="w-[50%] flex justify-end relative">
+            <img
+              src="/hero.png" // Point this image route directly to your UI asset layout
+              alt="Comprehensive Sports Dashboard Showcase"
+              className="w-full max-w-[560px] h-auto object-contain drop-shadow-2xl"
+            />
           </div>
         </div>
       </section>
       {/* ================= CATEGORIES ================= */}
       <section className="px-4 py-6 bg-gray-50">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <h2 className="text-xl font-bold">Categories</h2>
           <button
             onClick={() => navigate("/MobileCategoriesPage")}
@@ -818,9 +909,9 @@ const Landing = () => {
       {/* ================= TOP TRAINERS =================== */}
       {/* ================================================= */}
 
-      <section className="px-6 md:px-20 py-16 bg-white">
+      <section className="px-2 md:px-4 md:px-20 py-16 bg-white">
         {/* Header Row */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
+        <div className="flex flex-col sm:flex-row md:flex-row md:items-center md:justify-between gap-4 mb-10">
           <h2 className="text-3xl md:text-4xl font-bold">Top Trainers</h2>
 
           {/* Filter Buttons */}
@@ -1109,7 +1200,7 @@ const Landing = () => {
         </div>
       </section>
       {/* ================= FULLSCREEN REEL VIEWER ================= */}
-      <section className="py-10 sm:py-12 md:py-14 px-4 sm:px-6 md:px-12 lg:px-16 bg-gray-50 overflow-hidden">
+      <section className="py-10 sm:py-12 md:py-14 px-4 sm:px-6 md:px-12 lg:px-16 bg-gray-50 overflow-hidden pb-10 md:pb-16">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 mb-6">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight">

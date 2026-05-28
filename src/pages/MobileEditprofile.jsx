@@ -1,45 +1,160 @@
 import React, { useEffect, useState } from "react";
-import { ArrowLeft, Camera, Trash2, UploadCloud } from "lucide-react";
+
+import {
+  ArrowLeft,
+  Camera,
+  Trash2,
+  UploadCloud,
+  User,
+  Mail,
+  Phone,
+  Calendar,
+} from "lucide-react";
+
 import { useNavigate } from "react-router-dom";
+
 import { auth, db } from "../firebase";
-import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
+
+import { doc, getDoc, updateDoc } from "firebase/firestore";
 
 export default function EditProfile() {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("profile");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
   const [uploading, setUploading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState("");
 
-  const [role, setRole] = useState(null);
-  const [uid, setUid] = useState(null);
+  const [role, setRole] = useState("");
+  const [collectionName, setCollectionName] = useState("");
+
+  const [uid, setUid] = useState("");
+
+  const [activeTab, setActiveTab] = useState("profile");
 
   const [form, setForm] = useState({
+    // COMMON
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
     phoneNumber: "",
+    profileImageUrl: "",
+
+    // STUDENT
+    gender: "",
+    age: "",
+    address: "",
+    branch: "",
+    category: "",
+    subCategory: "",
+    belt: "",
+    sessions: "",
+    timings: "",
+    joiningDate: "",
+    monthlyFee: "",
+    monthlyDate: "",
+    registernumber: "",
+    registerNumber: "",
+    skillLevel: "",
+    dateOfBirth: "",
+
+    // TRAINER
+    designation: "",
+    organization: "",
+    yearsExperience: "",
+    experience: "",
     dob: "",
+
+    // INSTITUTE
+    instituteName: "",
+    founderName: "",
+    organizationType: "",
     city: "",
+    district: "",
     state: "",
     country: "",
-    instituteName: "",
-    profileImageUrl: "",
-    media: [],
+    landmark: "",
+    zipCode: "",
+    description: "",
+    websiteLink: "",
+    yearFounded: "",
+
+    // MEDIA
+    certifications: [],
+    trainingImages: [],
+    reels: [],
   });
 
+  // =========================================================
+  // HANDLE CHANGE
+  // =========================================================
   const handleChange = (e) => {
-    setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+    setForm((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  // ================= CLOUDINARY UPLOAD =================
+  // =========================================================
+  // FETCH USER
+  // =========================================================
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = auth.currentUser;
+
+        if (!currentUser) return;
+
+        setUid(currentUser.uid);
+
+        const collections = [
+          "students",
+          "trainerstudents",
+          "institutes",
+          "trainers",
+          "users",
+        ];
+
+        for (const col of collections) {
+          const ref = doc(db, col, currentUser.uid);
+
+          const snap = await getDoc(ref);
+
+          if (snap.exists()) {
+            const data = snap.data();
+
+            setCollectionName(col);
+
+            setRole(data.role || col);
+
+            setForm((prev) => ({
+              ...prev,
+              ...data,
+            }));
+
+            break;
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+
+      setLoading(false);
+    };
+
+    fetchUser();
+  }, []);
+
+  // =========================================================
+  // CLOUDINARY
+  // =========================================================
   const uploadToCloudinary = async (file, type) => {
     setUploading(true);
-    setUploadMsg("");
 
     const data = new FormData();
+
     data.append("file", file);
     data.append("upload_preset", "kridana_upload");
 
@@ -55,21 +170,45 @@ export default function EditProfile() {
       const result = await res.json();
 
       if (!result.secure_url) {
-        throw new Error(result.error?.message || "Upload failed");
+        throw new Error("Upload Failed");
       }
 
       setUploadMsg("Upload Success");
+
       return result.secure_url;
     } catch (err) {
-      console.error(err);
-      alert("Upload Failed: " + err.message);
+      alert(err.message);
       return "";
     } finally {
       setUploading(false);
-      setTimeout(() => setUploadMsg(""), 2000);
+
+      setTimeout(() => {
+        setUploadMsg("");
+      }, 2000);
     }
   };
 
+  // =========================================================
+  // PROFILE IMAGE
+  // =========================================================
+  const handleProfileImageChange = async (e) => {
+    const file = e.target.files[0];
+
+    if (!file) return;
+
+    const url = await uploadToCloudinary(file, "image");
+
+    if (url) {
+      setForm((prev) => ({
+        ...prev,
+        profileImageUrl: url,
+      }));
+    }
+  };
+
+  // =========================================================
+  // MULTIPLE FILES
+  // =========================================================
   const handleFileUpload = async (e, field, type) => {
     const files = Array.from(e.target.files || []);
 
@@ -85,322 +224,711 @@ export default function EditProfile() {
     }
   };
 
-  const removeMediaItem = (field, url) => {
+  // =========================================================
+  // REMOVE MEDIA
+  // =========================================================
+  const removeMedia = (field, url) => {
     setForm((prev) => ({
       ...prev,
       [field]: prev[field].filter((item) => item !== url),
     }));
   };
 
-  // ================= FETCH USER / ROLE =================
-  useEffect(() => {
-    const fetchData = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+  // =========================================================
+  // ROLE CHECKS
+  // =========================================================
+  const isStudent =
+    collectionName === "students" || collectionName === "trainerstudents";
 
-      setUid(user.uid);
+  const isTrainer = collectionName === "trainers";
 
-      const paths = ["users", "trainers", "institutes"];
+  const isInstitute = collectionName === "institutes";
 
-      for (let path of paths) {
-        const ref = doc(db, path, user.uid);
-        const snap = await getDoc(ref);
-
-        if (snap.exists()) {
-          const data = snap.data();
-
-          setRole(data.role || path.slice(0, -1));
-
-          setForm((prev) => ({
-            ...prev,
-            ...data,
-          }));
-
-          break;
-        }
-      }
-
-      setLoading(false);
-    };
-
-    fetchData();
-  }, []);
-
-  // ================= SAVE PROFILE =================
+  // =========================================================
+  // SAVE
+  // =========================================================
   const handleSave = async () => {
-    if (!uid) return;
-
-    setSaving(true);
-
     try {
-      const collectionName =
-        role === "trainer"
-          ? "trainers"
-          : role === "institute"
-            ? "institutes"
-            : "users";
+      setSaving(true);
 
       const ref = doc(db, collectionName, uid);
-      const snap = await getDoc(ref);
 
-      if (snap.exists()) {
-        await updateDoc(ref, {
-          ...form,
+      let updateData = {};
+
+      // =====================================================
+      // STUDENTS -> ONLY PERSONAL DETAILS
+      // =====================================================
+      if (isStudent) {
+        updateData = {
+          firstName: form.firstName || "",
+          lastName: form.lastName || "",
+          email: form.email || "",
+          phone: form.phone || "",
+          gender: form.gender || "",
+          address: form.address || "",
+          dateOfBirth: form.dateOfBirth || "",
+          profileImageUrl: form.profileImageUrl || "",
           updatedAt: new Date(),
-        });
-      } else {
-        await setDoc(ref, {
-          ...form,
-          role,
-          createdAt: new Date(),
-        });
+        };
       }
 
-      alert("Profile updated successfully!");
+      // =====================================================
+      // TRAINERS / INSTITUTES / USERS -> FULL EDIT
+      // =====================================================
+      else {
+        updateData = {
+          ...form,
+          updatedAt: new Date(),
+        };
+      }
+
+      await updateDoc(ref, updateData);
+
+      alert("Profile Updated Successfully");
     } catch (err) {
-      console.error(err);
-      alert("Error updating profile");
+      console.log(err);
+      alert("Failed To Update");
     }
 
     setSaving(false);
   };
 
-  // ================= PROFILE IMAGE UPDATE =================
-  const handleProfileImageChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const url = await uploadToCloudinary(file, "image");
-
-    if (url) {
-      setForm((p) => ({ ...p, profileImageUrl: url }));
-    }
-  };
-
-  const removeProfileImage = () => {
-    setForm((p) => ({ ...p, profileImageUrl: "" }));
-  };
-
-  // ================= LOADING =================
+  // =========================================================
+  // LOADING
+  // =========================================================
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FFF9F5]">
-        <p className="text-gray-500">Loading profile...</p>
+      <div className="min-h-screen bg-[#FFF8F3] flex items-center justify-center">
+        <p className="text-gray-500">Loading Profile...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FFF9F5] flex items-center justify-center px-4 md:px-8 py-10">
-      <div className="w-full max-w-xl">
-        {/* BACK */}
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-[#FF6A00] font-semibold mb-6"
-        >
-          <ArrowLeft size={18} />
-          Back
+    <div className="min-h-screen bg-[#FFF8F3] pb-32">
+      {/* =====================================================
+          HEADER
+      ===================================================== */}
+      <div className="sticky top-0 z-40 bg-white border-b px-4 py-4 flex items-center gap-3">
+        <button onClick={() => navigate(-1)}>
+          <ArrowLeft />
         </button>
 
-        {/* PROFILE IMAGE */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="relative">
-            <img
-              src={form.profileImageUrl || "https://via.placeholder.com/100"}
-              className="w-28 h-28 rounded-full object-cover border-2 border-[#FF6A00]"
-              alt="profile"
-            />
+        <div>
+          <h1 className="font-bold text-lg">Edit Profile</h1>
 
-            {/* upload */}
-            <label className="absolute bottom-1 right-1 bg-white p-1 rounded-full shadow cursor-pointer">
-              <Camera size={16} className="text-[#FF6A00]" />
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleProfileImageChange}
+          <p className="text-xs text-gray-500 capitalize">{collectionName}</p>
+        </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 py-5">
+        {/* =====================================================
+            PROFILE CARD
+        ===================================================== */}
+        <div className="bg-white rounded-3xl shadow-sm p-5 mb-5">
+          <div className="flex flex-col items-center">
+            {/* IMAGE */}
+            <div className="relative">
+              <img
+                src={
+                  form.profileImageUrl ||
+                  "https://ui-avatars.com/api/?name=User"
+                }
+                alt="profile"
+                className="w-32 h-32 rounded-full object-cover border-4 border-[#FF6A00]"
               />
-            </label>
+
+              <label className="absolute bottom-1 right-1 bg-[#FF6A00] text-white p-2 rounded-full cursor-pointer">
+                <Camera size={18} />
+
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleProfileImageChange}
+                />
+              </label>
+            </div>
+
+            <h2 className="mt-4 text-xl font-bold">
+              {form.firstName || form.instituteName || form.name}{" "}
+              {form.lastName}
+            </h2>
+
+            <p className="text-sm text-gray-500 capitalize">{role}</p>
           </div>
+        </div>
 
-          <p className="text-gray-400 mt-2 text-sm">
-            Upload your profile photo
-          </p>
+        {/* =====================================================
+            TABS
+        ===================================================== */}
+        <div className="bg-white rounded-2xl shadow-sm p-2 flex mb-5">
+          <button
+            onClick={() => setActiveTab("profile")}
+            className={`flex-1 py-3 rounded-xl font-semibold transition ${
+              activeTab === "profile"
+                ? "bg-[#FF6A00] text-white"
+                : "text-gray-700"
+            }`}
+          >
+            Profile
+          </button>
 
-          {form.profileImageUrl && (
+          {!isStudent && (
             <button
-              onClick={removeProfileImage}
-              className="text-red-500 text-sm flex items-center gap-1 mt-2"
+              onClick={() => setActiveTab("media")}
+              className={`flex-1 py-3 rounded-xl font-semibold transition ${
+                activeTab === "media"
+                  ? "bg-[#FF6A00] text-white"
+                  : "text-gray-700"
+              }`}
             >
-              <Trash2 size={14} />
-              Remove
+              Media
             </button>
           )}
         </div>
 
-        {/* TABS */}
-        <div className="flex border-b border-gray-300 mb-6">
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`w-1/2 py-3 font-bold ${
-              activeTab === "profile"
-                ? "text-[#FF6A00] border-b-2 border-[#FF6A00]"
-                : "text-black"
-            }`}
-          >
-            Edit Profile
-          </button>
+        {/* =====================================================
+            PROFILE TAB
+        ===================================================== */}
+        {activeTab === "profile" && (
+          <div className="space-y-5">
+            {/* =================================================
+                STUDENT
+            ================================================= */}
+            {isStudent && (
+              <Section title="Personal Information">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    icon={<User size={16} />}
+                    label="First Name"
+                    name="firstName"
+                    value={form.firstName}
+                    onChange={handleChange}
+                  />
 
-          <button
-            onClick={() => setActiveTab("media")}
-            className={`w-1/2 py-3 font-bold ${
-              activeTab === "media"
-                ? "text-[#FF6A00] border-b-2 border-[#FF6A00]"
-                : "text-black"
-            }`}
-          >
-            Pictures / Videos
-          </button>
-        </div>
+                  <Input
+                    icon={<User size={16} />}
+                    label="Last Name"
+                    name="lastName"
+                    value={form.lastName}
+                    onChange={handleChange}
+                  />
 
-        {/* PROFILE FORM */}
-        {activeTab === "profile" ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="First Name"
-                name="firstName"
-                value={form.firstName}
-                onChange={handleChange}
-              />
-              <Input
-                label="Last Name"
-                name="lastName"
-                value={form.lastName}
-                onChange={handleChange}
-              />
-            </div>
+                  <Input
+                    icon={<Mail size={16} />}
+                    label="Email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                  />
 
-            <Input
-              label="Email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-            />
-            <Input
-              label="Phone Number"
-              name="phoneNumber"
-              value={form.phoneNumber}
-              onChange={handleChange}
-            />
-            <Input
-              label="DOB"
-              name="dob"
-              value={form.dob}
-              onChange={handleChange}
-            />
-            <Input
-              label="City"
-              name="city"
-              value={form.city}
-              onChange={handleChange}
-            />
-            <Input
-              label="State"
-              name="state"
-              value={form.state}
-              onChange={handleChange}
-            />
-            <Input
-              label="Country"
-              name="country"
-              value={form.country}
-              onChange={handleChange}
-            />
-            <Input
-              label="Institute Name"
-              name="instituteName"
-              value={form.instituteName}
-              onChange={handleChange}
-            />
+                  <Input
+                    icon={<Phone size={16} />}
+                    label="Phone Number"
+                    name="phone"
+                    value={form.phone}
+                    onChange={handleChange}
+                  />
 
+                  <Input
+                    icon={<Calendar size={16} />}
+                    label="Date Of Birth"
+                    type="date"
+                    name="dateOfBirth"
+                    value={form.dateOfBirth}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Gender"
+                    name="gender"
+                    value={form.gender}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <TextArea
+                    label="Address"
+                    name="address"
+                    value={form.address}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                {/* =============================================
+                    READ ONLY DETAILS
+                ============================================= */}
+                <div className="mt-8">
+                  <h3 className="font-bold text-lg mb-4">Sports Information</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <ReadOnlyInput label="Category" value={form.category} />
+
+                    <ReadOnlyInput
+                      label="Sport"
+                      value={form.subCategory || form.sports?.[0]?.subCategory}
+                    />
+
+                    <ReadOnlyInput label="Belt" value={form.belt} />
+
+                    <ReadOnlyInput label="Session" value={form.sessions} />
+
+                    <ReadOnlyInput
+                      label="Timing"
+                      value={form.timings || form.sports?.[0]?.timings}
+                    />
+
+                    <ReadOnlyInput
+                      label="Skill Level"
+                      value={form.skillLevel}
+                    />
+
+                    <ReadOnlyInput
+                      label="Monthly Fee"
+                      value={`₹${form.monthlyFee || 0}`}
+                    />
+
+                    <ReadOnlyInput
+                      label="Monthly Date"
+                      value={form.monthlyDate}
+                    />
+
+                    <ReadOnlyInput
+                      label="Joining Date"
+                      value={form.joiningDate}
+                    />
+
+                    <ReadOnlyInput
+                      label="Register Number"
+                      value={form.registernumber || form.registerNumber}
+                    />
+
+                    <ReadOnlyInput label="Branch" value={form.branch} />
+                  </div>
+
+                  <div className="mt-5 bg-orange-50 border border-orange-200 rounded-2xl p-4 text-sm text-orange-700">
+                    Sports information and fee details can only be updated by
+                    institute or trainer.
+                  </div>
+                </div>
+              </Section>
+            )}
+
+            {/* =================================================
+                TRAINER
+            ================================================= */}
+            {isTrainer && (
+              <Section title="Trainer Details">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="First Name"
+                    name="firstName"
+                    value={form.firstName}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Last Name"
+                    name="lastName"
+                    value={form.lastName}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Phone Number"
+                    name="phoneNumber"
+                    value={form.phoneNumber}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Designation"
+                    name="designation"
+                    value={form.designation}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Organization"
+                    name="organization"
+                    value={form.organization}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Experience"
+                    name="experience"
+                    value={form.experience}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Years Experience"
+                    name="yearsExperience"
+                    value={form.yearsExperience}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Category"
+                    name="category"
+                    value={form.category}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Sub Category"
+                    name="subCategory"
+                    value={form.subCategory}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="DOB"
+                    type="date"
+                    name="dob"
+                    value={form.dob}
+                    onChange={handleChange}
+                  />
+                </div>
+              </Section>
+            )}
+
+            {/* =================================================
+                INSTITUTE
+            ================================================= */}
+            {isInstitute && (
+              <Section title="Institute Details">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Institute Name"
+                    name="instituteName"
+                    value={form.instituteName}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Founder Name"
+                    name="founderName"
+                    value={form.founderName}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Organization Type"
+                    name="organizationType"
+                    value={form.organizationType}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Year Founded"
+                    name="yearFounded"
+                    value={form.yearFounded}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Email"
+                    name="email"
+                    value={form.email}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Phone Number"
+                    name="phoneNumber"
+                    value={form.phoneNumber}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="City"
+                    name="city"
+                    value={form.city}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="District"
+                    name="district"
+                    value={form.district}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="State"
+                    name="state"
+                    value={form.state}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Country"
+                    name="country"
+                    value={form.country}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Landmark"
+                    name="landmark"
+                    value={form.landmark}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Zip Code"
+                    name="zipCode"
+                    value={form.zipCode}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Website"
+                    name="websiteLink"
+                    value={form.websiteLink}
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="mt-4">
+                  <TextArea
+                    label="Description"
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                  />
+                </div>
+              </Section>
+            )}
+
+            {/* =================================================
+                USERS
+            ================================================= */}
+            {!isStudent && !isTrainer && !isInstitute && (
+              <Section title="User Details">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input
+                    label="Name"
+                    name="name"
+                    value={form.name}
+                    onChange={handleChange}
+                  />
+
+                  <Input
+                    label="Email / Phone"
+                    name="emailOrPhone"
+                    value={form.emailOrPhone}
+                    onChange={handleChange}
+                  />
+                </div>
+              </Section>
+            )}
+
+            {/* SAVE BUTTON */}
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-[#FF6A00] text-white font-bold py-3 rounded-md"
+              className="w-full bg-[#FF6A00] hover:bg-[#e65f00] text-white font-bold py-4 rounded-2xl transition"
             >
-              {saving ? "Saving..." : "Save"}
+              {saving ? "Saving..." : "Save Changes"}
             </button>
-          </div>
-        ) : (
-          /* MEDIA */
-          <div className="space-y-5">
-            {/* IMAGES */}
-            <div className="bg-white border p-4 rounded-lg">
-              <p className="font-semibold mb-2">Images</p>
-
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={(e) => handleFileUpload(e, "media", "image")}
-              />
-
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                {form.media?.map((url, i) => (
-                  <div key={i} className="relative">
-                    <img
-                      src={url}
-                      className="w-full h-20 object-cover rounded"
-                    />
-                    <button
-                      onClick={() => removeMediaItem("media", url)}
-                      className="absolute top-1 right-1 text-red-500"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* VIDEOS */}
-            <div className="bg-white border p-4 rounded-lg">
-              <p className="font-semibold mb-2">Videos</p>
-
-              <input
-                type="file"
-                multiple
-                accept="video/*"
-                onChange={(e) => handleFileUpload(e, "media", "video")}
-              />
-            </div>
           </div>
         )}
 
+        {/* =====================================================
+            MEDIA TAB
+        ===================================================== */}
+        {!isStudent && activeTab === "media" && (
+          <div className="space-y-5">
+            <MediaSection
+              title="Certifications"
+              field="certifications"
+              data={form.certifications}
+              type="image"
+              handleFileUpload={handleFileUpload}
+              removeMedia={removeMedia}
+            />
+
+            <MediaSection
+              title="Training Images"
+              field="trainingImages"
+              data={form.trainingImages}
+              type="image"
+              handleFileUpload={handleFileUpload}
+              removeMedia={removeMedia}
+            />
+
+            <MediaSection
+              title="Videos / Reels"
+              field="reels"
+              data={form.reels}
+              type="video"
+              handleFileUpload={handleFileUpload}
+              removeMedia={removeMedia}
+            />
+          </div>
+        )}
+
+        {/* UPLOAD STATUS */}
         {uploading && (
-          <p className="text-center text-orange-500 mt-4">Uploading...</p>
+          <div className="fixed bottom-24 right-4 bg-black text-white px-4 py-2 rounded-xl">
+            Uploading...
+          </div>
         )}
 
         {uploadMsg && (
-          <p className="text-center text-green-500 mt-2">{uploadMsg}</p>
+          <div className="fixed bottom-24 right-4 bg-green-600 text-white px-4 py-2 rounded-xl">
+            {uploadMsg}
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-/* INPUT COMPONENT */
-function Input({ label, name, value, onChange }) {
+/* =========================================================
+   SECTION
+========================================================= */
+function Section({ title, children }) {
+  return (
+    <div className="bg-white rounded-3xl shadow-sm p-5">
+      <h2 className="font-bold text-lg mb-5">{title}</h2>
+
+      {children}
+    </div>
+  );
+}
+
+/* =========================================================
+   INPUT
+========================================================= */
+function Input({ label, name, value, onChange, type = "text", icon }) {
   return (
     <div>
-      <label className="text-[#FF6A00] text-sm font-medium">{label}</label>
+      <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+        {icon}
+        {label}
+      </label>
+
       <input
+        type={type}
         name={name}
         value={value || ""}
         onChange={onChange}
-        className="w-full mt-1 border border-gray-300 rounded-md p-3"
+        className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:border-[#FF6A00]"
       />
+    </div>
+  );
+}
+
+/* =========================================================
+   TEXTAREA
+========================================================= */
+function TextArea({ label, name, value, onChange }) {
+  return (
+    <div>
+      <label className="text-sm font-semibold text-gray-700 mb-2 block">
+        {label}
+      </label>
+
+      <textarea
+        rows={4}
+        name={name}
+        value={value || ""}
+        onChange={onChange}
+        className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:border-[#FF6A00]"
+      />
+    </div>
+  );
+}
+
+/* =========================================================
+   READ ONLY INPUT
+========================================================= */
+function ReadOnlyInput({ label, value }) {
+  return (
+    <div>
+      <label className="text-sm font-semibold text-gray-700 mb-2 block">
+        {label}
+      </label>
+
+      <div className="w-full border border-gray-200 bg-gray-100 rounded-2xl px-4 py-3 text-gray-600 text-sm">
+        {value || "-"}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   MEDIA SECTION
+========================================================= */
+function MediaSection({
+  title,
+  field,
+  data,
+  type,
+  handleFileUpload,
+  removeMedia,
+}) {
+  return (
+    <div className="bg-white rounded-3xl shadow-sm p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-bold text-lg">{title}</h2>
+
+        <label className="flex items-center gap-2 bg-[#FF6A00] text-white px-4 py-2 rounded-xl cursor-pointer">
+          <UploadCloud size={16} />
+          Upload
+          <input
+            type="file"
+            className="hidden"
+            multiple
+            accept={type === "video" ? "video/*" : "image/*"}
+            onChange={(e) => handleFileUpload(e, field, type)}
+          />
+        </label>
+      </div>
+
+      {data?.length === 0 ? (
+        <div className="text-sm text-gray-400">No Files Uploaded</div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {data?.map((url, index) => (
+            <div key={index} className="relative">
+              {type === "video" ? (
+                <video
+                  src={typeof url === "string" ? url : url.url}
+                  controls
+                  className="w-full h-40 object-cover rounded-2xl"
+                />
+              ) : (
+                <img
+                  src={typeof url === "string" ? url : url.url}
+                  alt=""
+                  className="w-full h-40 object-cover rounded-2xl"
+                />
+              )}
+
+              <button
+                onClick={() => removeMedia(field, url)}
+                className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

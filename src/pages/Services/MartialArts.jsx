@@ -44,40 +44,15 @@ const MartialArtsPage = () => {
   };
 
   const categories = [
-    { name: "Karate", icon: Swords },
-    { name: "Kung Fu", icon: Hand },
-    { name: "Taekwondo", icon: Swords },
-    { name: "Muay Thai", icon: Flame },
-    { name: "Kickboxing", icon: Swords },
-    { name: "Boxing", icon: Hand },
-    { name: "Savate", icon: Swords },
-    { name: "Lethwei", icon: Flame },
-
-    { name: "Judo", icon: Users },
-    { name: "Wrestling", icon: Users },
-    { name: "Brazilian Jiu-Jitsu", icon: Shield },
-    { name: "Sambo", icon: Shield },
-    { name: "Aikido", icon: Circle },
-    { name: "Hapkido", icon: Circle },
-
-    { name: "Wing Chun", icon: Hand },
-    { name: "Shaolin", icon: Swords },
-    { name: "Wushu", icon: Activity },
-    { name: "Kalaripayattu", icon: Sword },
-    { name: "Silat", icon: Sword },
-    { name: "Ninjutsu", icon: Eye },
-
-    { name: "Shotokan", icon: Swords },
-    { name: "Kyokushin", icon: Flame },
-    { name: "Goju-ryu", icon: Activity },
-    { name: "Shorinji Kempo", icon: Shield },
-
-    { name: "Capoeira", icon: Activity },
-    { name: "Jeet Kune Do", icon: Target },
-    { name: "Krav Maga", icon: Shield },
-    { name: "Bajiquan", icon: Flame },
-    { name: "Hung Gar", icon: Activity },
-    { name: "Praying Mantis Kung Fu", icon: Eye },
+    { name: "Karate", image: "/martialarts/karate icon.png" },
+    { name: "Kung Fu", image: "/martialarts/kungfu.png" },
+    { name: "Taekwondo", image: "/martialarts/taekwondo.png" },
+    { name: "Boxing", image: "/martialarts/Boxing F.png" },
+    { name: "Judo", image: "/martialarts/judo F.png" },
+    { name: "Kickboxing", image: "/martialarts/kickboxing F.png" },
+    { name: "Aikido", image: "/martialarts/Aikido F.png" },
+    { name: "Capoeira", image: "/martialarts/Capoeira F.png" },
+    { name: "Kalaripayattu", image: "/martialarts/Kalaripayattu F.png" },
   ];
 
   const filteredCategories = categories.filter((item) =>
@@ -113,9 +88,6 @@ const MartialArtsPage = () => {
         </div>
 
         {/* Profile */}
-        <div className="w-10 h-10 rounded-full bg-[#FF6A00] text-white flex items-center justify-center">
-          <User size={18} />
-        </div>
       </div>
 
       {/* Title */}
@@ -139,7 +111,11 @@ const MartialArtsPage = () => {
             }}
             className="h-[120px] rounded-2xl bg-white shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition active:scale-95"
           >
-            <item.icon size={26} className="text-[#FF6A00]" />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-[90px] h-[90px] object-contain"
+            />
 
             <p className="text-xs text-gray-700 text-center px-1 font-medium leading-tight">
               {item.name}

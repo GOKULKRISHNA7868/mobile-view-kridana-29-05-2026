@@ -40,18 +40,15 @@ const IceSports = () => {
   };
 
   const categories = [
-    { name: "Ice Skating", icon: Snowflake },
-    { name: "Figure Skating", icon: Snowflake },
-    { name: "Ice Hockey", icon: Activity },
-    { name: "Speed Skating", icon: Wind },
-    { name: "Ice Dance", icon: Users },
-    { name: "Synchronized Skating", icon: Users },
-    { name: "Curling", icon: Circle },
-    { name: "Broomball", icon: Activity },
-    { name: "Bobsleigh", icon: Zap },
-    { name: "Skiboarding", icon: Snowflake },
-    { name: "Ice Dragon Boat Racing", icon: Users },
-    { name: "Ice Cross Downhill", icon: Zap },
+    { name: "Ice Skating", image: "/icesports/Ice Skating F.png" },
+
+    { name: "Figure Skating", image: "/icesports/figure skating F.png" },
+
+    { name: "Ice Hockey", image: "/icesports/Ice hockey F.png" },
+
+    { name: "Speed Skating", image: "/icesports/speed skating F.png" },
+    { name: "Skiboarding", image: "/icesports/skiboarding F.png" },
+    { name: "Curling", image: "/icesports/curling F.png" },
   ];
 
   const filteredCategories = categories.filter((item) =>
@@ -87,9 +84,6 @@ const IceSports = () => {
         </div>
 
         {/* Profile */}
-        <div className="w-10 h-10 rounded-full bg-[#FF6A00] text-white flex items-center justify-center">
-          <User size={18} />
-        </div>
       </div>
 
       {/* Title */}
@@ -113,7 +107,11 @@ const IceSports = () => {
             }}
             className="h-[115px] rounded-2xl bg-white shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition active:scale-95"
           >
-            <item.icon size={28} className="text-[#FF6A00]" />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-[90px] h-[90px] object-contain"
+            />
 
             <p className="text-xs text-gray-700 text-center px-1 font-medium leading-tight">
               {item.name}

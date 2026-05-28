@@ -42,28 +42,17 @@ const Racket = () => {
   };
 
   const categories = [
-    { name: "Tennis", icon: Circle },
-    { name: "Table Tennis", icon: Table },
-    { name: "Badminton", icon: Activity },
-    { name: "Squash", icon: Move },
-    { name: "Racquetball", icon: Target },
-    { name: "Padel", icon: Circle },
-    { name: "Pickleball", icon: Circle },
-    { name: "Platform Tennis", icon: Layers },
-    { name: "Real Tennis", icon: CircleDot },
-    { name: "Soft Tennis", icon: Circle },
-    { name: "Frontenis", icon: Target },
-    { name: "Speedminton (Crossminton)", icon: Zap },
-    { name: "Paddle Tennis (POP Tennis)", icon: Circle },
-    { name: "Speed-ball", icon: Zap },
-    { name: "Chaza", icon: Activity },
-    { name: "Totem Tennis (Swingball)", icon: Move },
-    { name: "Matkot", icon: Activity },
-    { name: "Jombola", icon: Circle },
+    { name: "Tennis", image: "/racket/Tennis F.png" },
+    { name: "Table Tennis", image: "/racket/Table tennis F.png" },
+    { name: "Badminton", image: "/racket/badminton.png" },
+    { name: "Squash", image: "/racket/Squash F.png" },
+    //{ name: "Racquetball", image: "/racket/racquetball.png" },
+    { name: "Padel", image: "/racket/padel F.png" },
+    { name: "Pickleball", image: "/racket/Pickel ball F.png" },
   ];
 
   const filteredCategories = categories.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -95,9 +84,6 @@ const Racket = () => {
         </div>
 
         {/* Profile */}
-        <div className="w-10 h-10 rounded-full bg-[#FF6A00] text-white flex items-center justify-center">
-          <User size={18} />
-        </div>
       </div>
 
       {/* Title */}
@@ -121,7 +107,11 @@ const Racket = () => {
             }}
             className="h-[120px] rounded-2xl bg-white shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-md transition active:scale-95"
           >
-            <item.icon size={26} className="text-[#FF6A00]" />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-[90px] h-[90px] object-contain"
+            />
 
             <p className="text-xs text-gray-700 text-center px-1 font-medium leading-tight">
               {item.name}
@@ -145,8 +135,8 @@ const Racket = () => {
                 onClick={() => {
                   navigate(
                     `/viewtrainers?category=Racket&subCategory=${encodeURIComponent(
-                      selectedSubCategory
-                    )}`
+                      selectedSubCategory,
+                    )}`,
                   );
                 }}
                 className="bg-[#FF6A00] text-white py-3 rounded-xl font-semibold"
@@ -158,8 +148,8 @@ const Racket = () => {
                 onClick={() => {
                   navigate(
                     `/viewinstitutes?category=Racket&subCategory=${encodeURIComponent(
-                      selectedSubCategory
-                    )}`
+                      selectedSubCategory,
+                    )}`,
                   );
                 }}
                 className="border border-[#FF6A00] text-[#FF6A00] py-3 rounded-xl font-semibold"

@@ -10,8 +10,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-
-import { ArrowLeft } from "lucide-react";
 export default function Plans() {
   const navigate = useNavigate();
   const [billing, setBilling] = useState("monthly");
@@ -87,13 +85,16 @@ export default function Plans() {
       }
 
       // ✅ CREATE ORDER
-      const res = await fetch("http://localhost:5000/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: Number(amount) * 100,
-        }),
-      });
+      const res = await fetch(
+        "https://kridana-razorpay-backend.onrender.com/create-order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: Number(amount) * 100,
+          }),
+        },
+      );
 
       const order = await res.json();
 
@@ -118,7 +119,7 @@ export default function Plans() {
         handler: async function (response) {
           try {
             const verifyRes = await fetch(
-              "http://localhost:5000/verify-payment",
+              "https://kridana-razorpay-backend.onrender.com/verify-payment",
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -180,14 +181,6 @@ export default function Plans() {
   };
   return (
     <div className="min-h-screen bg-white flex flex-col items-center py-16">
-      <button
-        onClick={() => navigate("/")}
-        className="absolute left-2 top-5 flex items-center gap-2 
-    text-white bg-[#FF6A00] px-3 py-1.5 rounded-md backdrop-blur-sm"
-      >
-        <ArrowLeft size={18} />
-        <span className="text-sm">Back</span>
-      </button>
       <h1 className="text-3xl font-bold mb-2">Get Started</h1>
       <p className="text-gray-500 mb-6">
         Start for free, pick a plan later. Ready to be part of the future
@@ -249,10 +242,13 @@ export default function Plans() {
 
             <button
               onClick={() =>
-                startPaidSubscription(
-                  "TRAINER",
-                  billing === "monthly" ? "1.00" : "2388.00",
-                )
+                navigate("/PaymentMethodPage", {
+                  state: {
+                    planType: "TRAINER",
+                    amount: billing === "monthly" ? "199.00" : "2388.00",
+                    billing,
+                  },
+                })
               }
               disabled={loadingPlan === "TRAINER"}
               className={`mt-6 w-full py-2 rounded font-semibold flex items-center justify-center gap-2 ${
@@ -304,10 +300,13 @@ export default function Plans() {
 
             <button
               onClick={() =>
-                startPaidSubscription(
-                  "INSTITUTE",
-                  billing === "monthly" ? "499.00" : "5994.00",
-                )
+                navigate("/PaymentMethodPage", {
+                  state: {
+                    planType: "INSTITUTE",
+                    amount: billing === "monthly" ? "499.00" : "5988.00",
+                    billing,
+                  },
+                })
               }
               disabled={loadingPlan === "INSTITUTE"}
               className={`mt-6 w-full py-2 rounded font-semibold flex items-center justify-center gap-2 ${

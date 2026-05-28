@@ -21,29 +21,19 @@ const TeamBallPage = () => {
   const [searchTerm, setSearchTerm] = React.useState("");
 
   const categories = [
-    { name: "Football / Soccer", icon: Footprints },
-    { name: "Basketball", icon: Dribbble },
-    { name: "Handball", icon: Circle },
-    { name: "Rugby", icon: Shield },
-    { name: "Futsal", icon: Footprints },
-    { name: "Field Hockey", icon: Target },
-    { name: "Lacrosse", icon: Target },
-    { name: "Gaelic Football", icon: Footprints },
-    { name: "Volleyball", icon: Volleyball },
-    { name: "Beach Volleyball", icon: Volleyball },
-    { name: "Sepak Takraw", icon: Circle },
-    { name: "Roundnet (Spikeball)", icon: Circle },
-    { name: "Netball", icon: Circle },
-    { name: "Cricket", icon: Trophy },
-    { name: "Baseball", icon: Circle },
-    { name: "Softball", icon: Circle },
-    { name: "Wheelchair Rugby", icon: Shield },
-    { name: "Dodgeball", icon: Circle },
-    { name: "Korfball", icon: Users },
+    { name: "Football / Soccer", image: "/teamball/foot ball F.png" },
+    { name: "Basketball", image: "/teamball/Basket ball F.png" },
+    { name: "Baseball", image: "/teamball/Baseball F.png" },
+    //{ name: "Handball", image: "/teamball/handball.png" },
+    { name: "Rugby", image: "/teamball/rugby F.png" },
+    { name: "Volleyball", image: "/teamball/volley ball F.png" },
+    { name: "Cricket", image: "/teamball/cricket F.png" },
+    //{ name: "Futsal", image: "/teamball/futsal.png" },
+    { name: "Field Hockey", image: "/teamball/Field hockey F.png" },
   ];
 
   const filteredCategories = categories.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   /* Swipe Back */
@@ -99,10 +89,6 @@ const TeamBallPage = () => {
             className="w-full outline-none bg-transparent text-sm"
           />
         </div>
-
-        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-          👤
-        </div>
       </div>
 
       {/* COUNT */}
@@ -121,7 +107,11 @@ const TeamBallPage = () => {
             }}
             className="h-[120px] rounded-2xl bg-white shadow-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-lg transition active:scale-95"
           >
-            <item.icon size={26} className="text-[#FF6A00]" />
+            <img
+              src={item.image}
+              alt={item.name}
+              className="w-[90px] h-[90px] object-contain"
+            />
 
             <p className="text-xs text-gray-700 text-center px-1 font-medium">
               {item.name}
@@ -143,8 +133,8 @@ const TeamBallPage = () => {
                 onClick={() => {
                   navigate(
                     `/viewtrainers?category=${category}&subCategory=${encodeURIComponent(
-                      selectedSubCategory
-                    )}`
+                      selectedSubCategory,
+                    )}`,
                   );
                   setShowChoice(false);
                 }}
@@ -157,8 +147,8 @@ const TeamBallPage = () => {
                 onClick={() => {
                   navigate(
                     `/viewinstitutes?category=${category}&subCategory=${encodeURIComponent(
-                      selectedSubCategory
-                    )}`
+                      selectedSubCategory,
+                    )}`,
                   );
                   setShowChoice(false);
                 }}

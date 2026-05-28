@@ -48,10 +48,7 @@ const PaymentOverview = () => {
       document.body.appendChild(script);
     });
   };
-  const API_URL =
-    window.location.hostname === "localhost"
-      ? "http://localhost:5000"
-      : "https://kridana-razorpay-backend.onrender.com";
+  const API_URL = "https://kridana-razorpay-backend.onrender.com";
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (!u) {
@@ -134,7 +131,9 @@ const PaymentOverview = () => {
             });
 
             const year = tempDate.getFullYear();
-            const monthKey = `${year}-${String(tempDate.getMonth() + 1).padStart(2, "0")}`;
+            const monthKey = `${year}-${String(
+              tempDate.getMonth() + 1,
+            ).padStart(2, "0")}`;
 
             const isPaid = history.some(
               (item) =>
@@ -369,9 +368,6 @@ const PaymentOverview = () => {
 
                   // 🔥 PAY NOW HANDLER
                   const handlePayNow = async () => {
-                    if (processing) return;
-                    setProcessing(true);
-
                     const unpaidRecords = student.sports
                       .map((sport) => {
                         const record = feeHistory.find(
@@ -398,87 +394,17 @@ const PaymentOverview = () => {
                       0,
                     );
 
-                    if (totalAmount <= 0) {
-                      alert("Invalid amount");
-                      setProcessing(false);
-                      return;
-                    }
-
-                    const isLoaded = await loadRazorpayScript();
-                    if (!isLoaded) {
-                      alert("Razorpay SDK failed");
-                      setProcessing(false);
-                      return;
-                    }
-
-                    try {
-                      const res = await fetch(`${API_URL}/create-order`, {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ amount: totalAmount * 100 }), // ✅ FIX
-                      });
-
-                      const order = await res.json();
-
-                      const options = {
-                        key: "rzp_live_SUjQtjkrUIwaHm",
-                        amount: order.amount,
-                        currency: "INR",
-                        name: "Kridana Sports",
-                        description: `Fee Payment - ${item.month}`,
-                        order_id: order.id,
-
-                        prefill: {
-                          name: `${student.firstName} ${student.lastName}`,
-                          email: student.email || "",
-                          contact: student.phone || "",
-                        },
-
-                        handler: async function (response) {
-                          console.log("✅ PAYMENT SUCCESS:", response);
-
-                          // 🔐 VERIFY
-                          await fetch(`${API_URL}/verify-payment`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(response),
-                          });
-
-                          const paymentData = {
-                            studentId: activeStudentId,
-                            month: item.key,
-                            items: unpaidRecords,
-                            totalAmount,
-                            ...response,
-                            status: "success",
-                            createdAt: new Date(),
-                          };
-
-                          navigate("/feepaymentsuccess", {
-                            state: paymentData,
-                          });
-                        },
-
-                        theme: {
-                          color: "#2563eb",
-                        },
-                      };
-
-                      const rzp = new window.Razorpay(options);
-
-                      rzp.on("payment.failed", function (response) {
-                        console.error("❌ FAILED:", response);
-                        alert("Payment failed");
-                        setProcessing(false);
-                      });
-
-                      rzp.open();
-                    } catch (err) {
-                      console.error("❌ ERROR:", err);
-                      setProcessing(false);
-                    }
+                    navigate("/trainerpaymentselection", {
+                      state: {
+                        totalAmount,
+                        studentId: activeStudentId,
+                        studentName: `${student.firstName} ${student.lastName}`,
+                        month: item.key,
+                        items: unpaidRecords,
+                        student,
+                        instituteId: student.instituteId || "",
+                      },
+                    });
                   };
 
                   return (

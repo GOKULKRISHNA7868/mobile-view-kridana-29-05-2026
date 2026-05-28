@@ -94,9 +94,9 @@ const sidebarSections = [
     icon: "account",
     items: [
       "Customer & Management Settings",
-      "My Account",
+      "Edit My Account",
       "Complete KYC",
-      "Payment & Subscription",
+      //"Payment & Subscription",
     ],
   },
 ];
@@ -273,7 +273,7 @@ const InstituteDashboard = () => {
         return <Timetable />;
       case "Chat Box":
         return <ChatBox />;
-      case "My Account":
+      case "Edit My Account":
         return <MyAccountLayout />;
       case "Customer & Management Settings":
         return <MyAccountPage setActiveMenu={setActiveMenu} />;
@@ -283,8 +283,8 @@ const InstituteDashboard = () => {
       //return <AddSportsFacilitiesPage />;
       case "Paid Recipets":
         return <PaidRecipet />;
-      case "Payment & Subscription":
-        return <PaymentsSubscriptionPage />;
+      //case "Payment & Subscription":
+      //return <PaymentsSubscriptionPage />;
       case "Complete KYC":
         return <KYC />;
       case "RegisterNumber":

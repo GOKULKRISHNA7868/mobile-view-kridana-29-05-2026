@@ -61,6 +61,7 @@ const Navbar = () => {
   const [highlight, setHighlight] = useState(true);
   const [unreadChats, setUnreadChats] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   useEffect(() => {
     const timer = setTimeout(() => {
       setHighlight(false);
@@ -72,6 +73,24 @@ const Navbar = () => {
   // REPLACE your current follower notification useEffect with this
 
   // ================= FOLLOW NOTIFICATION REALTIME =================
+  useEffect(() => {
+    const initialHeight = window.innerHeight;
+
+    const handleResize = () => {
+      // keyboard usually reduces height by 150px+
+      if (window.innerHeight < initialHeight - 150) {
+        setKeyboardOpen(true);
+      } else {
+        setKeyboardOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
   useEffect(() => {
     let unsubAuth = null;
     let unsubFollowers = null;
@@ -126,6 +145,7 @@ const Navbar = () => {
       if (unsubFollowers) unsubFollowers();
     };
   }, []);
+
   /* ================= FETCH USER ROLE & PLAN ================= */
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
@@ -368,24 +388,54 @@ const Navbar = () => {
   };
   /* REPLACE THIS useEffect BODY FOR PERFECT PAGE GAP */
 
+  /* ================= MOBILE FOOTER SAFE SPACE ================= */
+  /* ================= MOBILE SAFE FOOTER SPACE ================= */
+  /* ================= GLOBAL MOBILE SAFE FOOTER SPACE ================= */
   useEffect(() => {
-    const setBottomGap = () => {
-      if (window.innerWidth < 768) {
-        document.body.style.paddingBottom = "92px";
+    const updateBottomSpacing = () => {
+      const isMobile = window.innerWidth < 768;
+
+      if (isMobile) {
+        // navbar height + safe area + extra gap
+        const safeBottom = "calc(95px + env(safe-area-inset-bottom) + 12px)";
+
+        // body spacing
+        document.body.style.paddingBottom = safeBottom;
+
+        // root spacing
+        document.documentElement.style.paddingBottom = safeBottom;
+
+        // prevent content hiding
+        document.body.style.boxSizing = "border-box";
+        document.documentElement.style.boxSizing = "border-box";
+
+        // IMPORTANT
+        // allows scrolling above navbar
+        document.body.style.minHeight = "100dvh";
+        document.documentElement.style.minHeight = "100dvh";
       } else {
         document.body.style.paddingBottom = "0px";
+        document.documentElement.style.paddingBottom = "0px";
+
+        document.body.style.minHeight = "";
+        document.documentElement.style.minHeight = "";
       }
     };
 
-    setBottomGap();
+    updateBottomSpacing();
 
-    window.addEventListener("resize", setBottomGap);
-    window.addEventListener("orientationchange", setBottomGap);
+    window.addEventListener("resize", updateBottomSpacing);
+    window.addEventListener("orientationchange", updateBottomSpacing);
 
     return () => {
-      window.removeEventListener("resize", setBottomGap);
-      window.removeEventListener("orientationchange", setBottomGap);
+      window.removeEventListener("resize", updateBottomSpacing);
+      window.removeEventListener("orientationchange", updateBottomSpacing);
+
       document.body.style.paddingBottom = "0px";
+      document.documentElement.style.paddingBottom = "0px";
+
+      document.body.style.minHeight = "";
+      document.documentElement.style.minHeight = "";
     };
   }, []);
   return (
@@ -558,81 +608,62 @@ const Navbar = () => {
         {/* ✅ MOBILE BOTTOM NAVBAR */}
         {/* ✅ MOBILE BOTTOM NAVBAR */}
       </nav>
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-orange-500 z-[9999] rounded-t-2xl shadow-lg">
-        <div className="flex justify-around items-center py-2">
-          <div className="grid grid-cols-6 items-center space-2 gap-3 text-center">
+      {/* ================= MOBILE APP FOOTER NAVBAR ================= */}
+      <div
+        className={`
+    md:hidden
+    fixed
+    bottom-0
+    left-0
+    right-0
+    z-[9999]
+    bg-orange-500
+    border-t border-orange-400
+    shadow-[0_-4px_20px_rgba(0,0,0,0.18)]
+    transition-transform duration-300
+    ${keyboardOpen ? "translate-y-full" : "translate-y-0"}
+  `}
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+          height: "53px",
+        }}
+      >
+        <div className="w-full max-w-screen-md mx-auto">
+          <div className="grid grid-cols-5 items-center h-[58px] px-1">
             {/* HOME */}
             <button
               onClick={() => navigate("/")}
-              className="flex flex-col items-center justify-center text-black"
+              className="flex flex-col items-center justify-center text-black active:scale-95 transition"
             >
-              <Home size={28} strokeWidth={2.2} />
-              <span className="text-[11px] font-semibold mt-1">Home</span>
+              <Home size={24} strokeWidth={2.2} />
+
+              <span className="text-[10px] sm:text-[11px] font-semibold mt-1">
+                Home
+              </span>
             </button>
 
             {/* DASHBOARD */}
             <button
               onClick={handleDashboardNavigation}
-              className="flex flex-col items-center justify-center text-black"
+              className="flex flex-col items-center justify-center text-black active:scale-95 transition"
             >
-              <Grid size={28} strokeWidth={2.2} />
-              <span className="text-[11px] font-semibold mt-1">Dashboard</span>
-            </button>
+              <Grid size={24} strokeWidth={2.2} />
 
-            {/* MORE */}
-
-            {/* ANALYTICS */}
-            <button
-              onClick={async () => {
-                const currentUser = auth.currentUser;
-
-                // If not logged in
-                if (!currentUser) {
-                  setMenuOpen(true);
-                  return;
-                }
-
-                try {
-                  /* TRAINER */
-                  const trainerSnap = await getDoc(
-                    doc(db, "trainers", currentUser.uid),
-                  );
-
-                  if (trainerSnap.exists()) {
-                    navigate("/components/TrainersDashboard/Reelsdata");
-                    return;
-                  }
-
-                  /* INSTITUTE */
-                  const instituteSnap = await getDoc(
-                    doc(db, "institutes", currentUser.uid),
-                  );
-
-                  if (instituteSnap.exists()) {
-                    navigate("/components/InstituteDashboard/Reelsdata");
-                    return;
-                  }
-
-                  /* STUDENT / USER */
-                  navigate("/analytics");
-                } catch (error) {
-                  console.log(error);
-                  navigate("/analytics");
-                }
-              }}
-              className="flex flex-col items-center justify-center text-black"
-            >
-              <TrendingUp size={28} strokeWidth={2.2} />
-              <span className="text-[11px] font-semibold mt-1">Analytics</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold mt-1">
+                Dashboard
+              </span>
             </button>
 
             {/* CATEGORIES */}
             <button
               onClick={() => navigate("/MobileCategoriesPage")}
-              className="flex flex-col items-center justify-center text-black"
+              className="flex flex-col items-center justify-center text-black active:scale-95 transition"
             >
-              <LayoutGrid size={28} strokeWidth={2.2} />
-              <span className="text-[11px] font-semibold mt-1">Categories</span>
+              <LayoutGrid size={24} strokeWidth={2.2} />
+
+              <span className="text-[10px] sm:text-[11px] font-semibold mt-1 text-center leading-tight">
+                Categories
+              </span>
             </button>
 
             {/* CHAT */}
@@ -646,9 +677,6 @@ const Navbar = () => {
                 }
 
                 try {
-                  /* =========================
-         1. INSTITUTE OWNER FIRST
-         ========================= */
                   const instituteSnap = await getDoc(
                     doc(db, "institutes", currentUser.uid),
                   );
@@ -658,9 +686,6 @@ const Navbar = () => {
                     return;
                   }
 
-                  /* =========================
-         2. TRAINER DIRECT LOGIN
-         ========================= */
                   const trainerSnap = await getDoc(
                     doc(db, "trainers", currentUser.uid),
                   );
@@ -670,9 +695,15 @@ const Navbar = () => {
                     return;
                   }
 
-                  /* =========================
-         3. STUDENT LOGIN
-         ========================= */
+                  const trainerStudentSnap = await getDoc(
+                    doc(db, "trainerstudents", currentUser.uid),
+                  );
+
+                  if (trainerStudentSnap.exists()) {
+                    navigate("/components/UserDashboard/ChatBoxTS");
+                    return;
+                  }
+
                   const studentSnap = await getDoc(
                     doc(db, "students", currentUser.uid),
                   );
@@ -682,9 +713,6 @@ const Navbar = () => {
                     return;
                   }
 
-                  /* =========================
-         4. INSTITUTE TRAINER
-         ========================= */
                   const trainerQuery = query(
                     collection(db, "InstituteTrainers"),
                     where("trainerUid", "==", currentUser.uid),
@@ -697,47 +725,63 @@ const Navbar = () => {
                     return;
                   }
 
-                  /* =========================
-         5. DEFAULT
-         ========================= */
                   navigate("/components/UserDashboard/ChatBox");
                 } catch (error) {
-                  console.log("Chat redirect error:", error);
+                  console.log(error);
                   navigate("/components/UserDashboard/ChatBox");
                 }
               }}
-              className="flex flex-col items-center justify-center text-black relative"
+              className="flex flex-col items-center justify-center text-black relative active:scale-95 transition"
             >
-              <MessageSquareText size={28} strokeWidth={2.2} />
+              <div className="relative">
+                <MessageSquareText size={24} strokeWidth={2.2} />
 
-              {unreadChats && (
-                <span className="absolute top-0 right-4 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
-                </span>
-              )}
+                {unreadChats && (
+                  <>
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
 
-              <span className="text-[11px] font-semibold mt-1">Chat</span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+                    </span>
+
+                    {totalUnread > 0 && (
+                      <span className="absolute -top-2 -right-3 min-w-[16px] h-[16px] px-1 rounded-full bg-red-600 text-white text-[9px] flex items-center justify-center font-bold">
+                        {totalUnread > 99 ? "99+" : totalUnread}
+                      </span>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <span className="text-[10px] sm:text-[11px] font-semibold mt-1">
+                Chat
+              </span>
             </button>
+
+            {/* MORE */}
             <button
-              onClick={() => {
-                setMenuOpen(true);
-              }}
-              className="flex flex-col items-center justify-center text-black relative"
+              onClick={() => setMenuOpen(true)}
+              className="flex flex-col items-center justify-center text-black relative active:scale-95 transition"
             >
-              <MoreHorizontal size={28} strokeWidth={2.2} />
+              <div className="relative">
+                <MoreHorizontal size={24} strokeWidth={2.2} />
 
-              {newFollowerAlert && (
-                <span className="absolute top-0 right-3 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
-                </span>
-              )}
+                {newFollowerAlert && (
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
 
-              <span className="text-[11px] font-semibold mt-1">More</span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+                  </span>
+                )}
+              </div>
+
+              <span className="text-[10px] sm:text-[11px] font-semibold mt-1">
+                More
+              </span>
             </button>
           </div>
         </div>
+
         {/* ================= MORE MENU PANEL ================= */}
 
         {menuOpen && (
