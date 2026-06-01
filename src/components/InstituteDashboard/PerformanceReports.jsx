@@ -1171,7 +1171,7 @@ export default function StudentPerformanceReport() {
                   max="10"
                   step="0.1"
                   className="w-full mt-2 p-2 border border-orange-300 rounded-lg"
-                  placeholder="Score (1-10)"
+                  placeholder=" Maximum Score"
                   value={metrics[key]}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -1184,7 +1184,7 @@ export default function StudentPerformanceReport() {
                 />
                 <input
                   className="w-full mt-2 p-2 border border-orange-300 rounded-lg"
-                  placeholder="Add Observation"
+                  placeholder="Achieved Score"
                   value={metricObservations[key]}
                   onChange={(e) =>
                     setMetricObservations({

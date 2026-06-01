@@ -141,7 +141,7 @@ const TrainersDashboard = () => {
       items: [
         { label: "Time Table", value: "Time Table" },
         { label: "Add Events", value: "Add Events" },
-        { label: "Chat Box", value: "Chat Box" },
+        //{ label: "Chat Box", value: "Chat Box" },
       ],
     },
     {

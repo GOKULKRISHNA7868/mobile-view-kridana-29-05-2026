@@ -109,7 +109,7 @@ const PaymentOverview = () => {
         // =========================
         // Generate months
         // =========================
-        if (studentData.createdAt) {
+        if (studentData?.createdAt) {
           const startDate = studentData.createdAt.toDate();
           const today = new Date();
 
@@ -124,28 +124,25 @@ const PaymentOverview = () => {
           while (
             tempDate.getFullYear() < today.getFullYear() ||
             (tempDate.getFullYear() === today.getFullYear() &&
-              tempDate.getMonth() < today.getMonth()) // 🔴 exclude current month
+              tempDate.getMonth() <= today.getMonth())
           ) {
-            const monthName = tempDate.toLocaleString("default", {
-              month: "long",
-            });
-
             const year = tempDate.getFullYear();
-            const monthKey = `${year}-${String(
-              tempDate.getMonth() + 1,
-            ).padStart(2, "0")}`;
+            const monthIndex = tempDate.getMonth();
 
-            const isPaid = history.some(
-              (item) =>
-                item.month ===
-                `${year}-${String(tempDate.getMonth() + 1).padStart(2, "0")}`,
-            );
+            const monthKey = `${year}-${String(monthIndex + 1).padStart(
+              2,
+              "0",
+            )}`;
+
+            const isPaid = history.some((item) => item.month === monthKey);
 
             monthsArray.push({
-              month: monthName,
+              month: tempDate.toLocaleString("default", { month: "long" }),
               year,
               key: monthKey,
               paid: isPaid,
+              current:
+                year === today.getFullYear() && monthIndex === today.getMonth(),
             });
 
             tempDate.setMonth(tempDate.getMonth() + 1);
@@ -338,6 +335,11 @@ const PaymentOverview = () => {
                 <div>
                   <p className="font-medium">
                     {item.month} {item.year}
+                    {item.current && (
+                      <span className="ml-2 text-xs bg-blue-500 text-white px-2 py-0.5 rounded">
+                        Current
+                      </span>
+                    )}
                   </p>
                   <p className="text-gray-500 text-xs">
                     Due Date: {item.month} {student.monthlyDate}

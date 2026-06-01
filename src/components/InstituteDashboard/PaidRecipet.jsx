@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 
 const PaymentHistory = () => {
   const { user } = useAuth();
-  const [dateFilter, setDateFilter] = useState("");
+
   const [payments, setPayments] = useState([]);
   const [filtered, setFiltered] = useState([]);
 
@@ -96,29 +96,44 @@ const PaymentHistory = () => {
     }
 
     // 📅 MONTH FILTER (YYYY-MM)
+    // 📅 FILTER BY PAID DATE MONTH (YYYY-MM)
     if (monthFilter) {
       temp = temp.filter((p) => {
-        // priority 1: payment level
-        if (p.month === monthFilter) return true;
+        if (!p.date) return false;
 
-        // priority 2: item level (future safe)
-        return p.items?.some((item) => item.month === monthFilter);
+        try {
+          let paymentDate;
+
+          if (p.date.includes("/")) {
+            const parts = p.date.split("/");
+
+            // DD/MM/YYYY
+            if (parseInt(parts[0]) > 12) {
+              paymentDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            } else {
+              // MM/DD/YYYY
+              paymentDate = new Date(p.date);
+            }
+          } else {
+            paymentDate = new Date(p.date);
+          }
+
+          if (isNaN(paymentDate)) return false;
+
+          const year = paymentDate.getFullYear();
+          const month = String(paymentDate.getMonth() + 1).padStart(2, "0");
+
+          return `${year}-${month}` === monthFilter;
+        } catch {
+          return false;
+        }
       });
     }
 
     // 📆 DATE FILTER (based on saved date string)
-    if (dateFilter) {
-      temp = temp.filter((p) => {
-        if (!p.date) return false;
-
-        // convert both to same format
-        const paymentDate = new Date(p.date).toISOString().slice(0, 10);
-        return paymentDate === dateFilter;
-      });
-    }
 
     setFiltered(temp);
-  }, [search, monthFilter, dateFilter, payments]);
+  }, [search, monthFilter, payments]);
 
   if (loading) {
     return <div className="p-6 text-center">Loading...</div>;
@@ -166,121 +181,146 @@ const PaymentHistory = () => {
     }
   };
   return (
-    <div className="min-h-screen bg-gray-100 p-3 sm:p-4 md:p-6 lg:p-8 w-full">
-      <h1 className="text-2xl font-bold mb-4">Payment History</h1>
+    <div
+      className="
+      fixed
+      top-10
+      bottom-16
+      left-0
+      right-0
+      flex
+      flex-col
+      bg-gray-100
+      overflow-hidden
+    "
+    >
+      {/* FIXED HEADER */}
+      <div className="flex-shrink-0 bg-gray-100 border-b p-3">
+        <h1 className="text-2xl font-bold mb-4">Payment History</h1>
 
-      {/* 🔍 SEARCH + FILTER */}
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 mb-6 w-full">
-        <input
-          type="text"
-          placeholder="Search by student name..."
-          className="border p-2 rounded w-full"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="flex flex-col gap-3">
+          <input
+            type="text"
+            placeholder="Search by student name..."
+            className="border p-2 rounded w-full"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-        <input
-          type="month"
-          className="border p-2 rounded w-full sm:w-auto"
-          value={monthFilter}
-          onChange={(e) => setMonthFilter(e.target.value)}
-        />
-
-        {/* ✅ DATE FILTER (you forgot to render it) */}
-      </div>
-
-      {/* 💳 PAYMENTS */}
-      {filtered.length === 0 ? (
-        <div className="text-center py-10 text-gray-500">
-          No payments found ❌
+          <input
+            type="month"
+            className="border p-2 rounded w-full"
+            value={monthFilter}
+            onChange={(e) => setMonthFilter(e.target.value)}
+          />
         </div>
-      ) : (
-        <div className="grid gap-5">
-          {filtered.map((p) => (
-            <div key={p.id} className="bg-white p-5 rounded-xl shadow">
-              {/* HEADER */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                <div>
-                  <h2 className="text-base sm:text-lg md:text-xl font-semibold text-green-600">
-                    ₹{p.totalAmount}
-                  </h2>
-                  <p className="text-sm text-gray-500">
-                    Paid on: {formatPaymentDateTime(p.date, p.time)}
+      </div>
+      {/* SCROLLABLE PAYMENT LIST */}
+      <div
+        className="
+        flex-1
+        overflow-y-auto
+        px-3
+        sm:px-4
+        md:px-6
+        pb-28
+      "
+      >
+        {filtered.length === 0 ? (
+          <div className="text-center py-10 text-gray-500">
+            No payments found ❌
+          </div>
+        ) : (
+          <div className="grid gap-5 py-4">
+            {filtered.map((p) => (
+              <div key={p.id} className="bg-white p-5 rounded-xl shadow">
+                {/* HEADER */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div>
+                    <h2 className="text-base sm:text-lg md:text-xl font-semibold text-green-600">
+                      ₹{p.totalAmount}
+                    </h2>
+
+                    <p className="text-sm text-gray-500">
+                      Paid on: {formatPaymentDateTime(p.date, p.time)}
+                    </p>
+                  </div>
+
+                  <p className="text-xs sm:text-sm font-medium text-green-600 capitalize">
+                    {p.status}
                   </p>
                 </div>
 
-                <p className="text-xs sm:text-sm font-medium text-green-600 capitalize">
-                  {p.status}
-                </p>
-              </div>
+                <hr className="my-3" />
 
-              <hr className="my-3" />
+                {/* DETAILS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+                  <p>
+                    <b>Student:</b> {p.studentName}
+                  </p>
 
-              {/* DETAILS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
-                <p>
-                  <b>Student:</b> {p.studentName}
-                </p>
-                <p>
-                  <b>Order ID:</b> {p.orderId}
-                </p>
-                <p>
-                  <b>Payment ID:</b> {p.paymentId}
-                </p>
-              </div>
+                  <p>
+                    <b>Order ID:</b> {p.orderId}
+                  </p>
 
-              <hr className="my-3" />
+                  <p>
+                    <b>Payment ID:</b> {p.paymentId}
+                  </p>
+                </div>
 
-              {/* ITEMS */}
-              <div>
-                <h3 className="font-semibold mb-2">Items Paid:</h3>
+                <hr className="my-3" />
 
-                {p.items?.map((item, i) => {
-                  let paidMonth = "N/A";
+                {/* ITEMS */}
+                <div>
+                  <h3 className="font-semibold mb-2">Items Paid:</h3>
 
-                  let rawMonth = item?.month || p.month;
+                  {p.items?.map((item, i) => {
+                    let paidMonth = "N/A";
 
-                  if (rawMonth) {
-                    try {
-                      const [year, month] = rawMonth.split("-");
+                    let rawMonth = item?.month || p.month;
 
-                      const monthName = new Date(
-                        year,
-                        parseInt(month) - 1,
-                      ).toLocaleString("en-IN", { month: "long" });
+                    if (rawMonth) {
+                      try {
+                        const [year, month] = rawMonth.split("-");
 
-                      paidMonth = `${monthName} ${year}`;
-                    } catch {
-                      paidMonth = rawMonth;
+                        const monthName = new Date(
+                          year,
+                          parseInt(month) - 1,
+                        ).toLocaleString("en-IN", {
+                          month: "long",
+                        });
+
+                        paidMonth = `${monthName} ${year}`;
+                      } catch {
+                        paidMonth = rawMonth;
+                      }
                     }
-                  }
 
-                  return (
-                    <div
-                      key={i}
-                      className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-2 text-xs sm:text-sm border-b py-2"
-                    >
-                      <div>
-                        <p className="break-words">
-                          {item.category} - {item.subCategory}
-                        </p>
+                    return (
+                      <div
+                        key={i}
+                        className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-2 text-xs sm:text-sm border-b py-2"
+                      >
+                        <div>
+                          <p>
+                            {item.category} - {item.subCategory}
+                          </p>
 
-                        <p className="text-xs text-gray-500">
-                          For Month: <b>{paidMonth}</b>
-                        </p>
+                          <p className="text-xs text-gray-500">
+                            For Month: <b>{paidMonth}</b>
+                          </p>
+                        </div>
+
+                        <span className="font-medium">₹{item.amount}</span>
                       </div>
-
-                      <span className="font-medium text-right sm:text-left">
-                        ₹{item.amount}
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

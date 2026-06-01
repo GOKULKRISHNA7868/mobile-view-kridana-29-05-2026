@@ -42,7 +42,11 @@ import {
   FaSpa,
   FaMusic,
 } from "react-icons/fa";
-
+import {
+  AdMob,
+  BannerAdPosition,
+  BannerAdSize,
+} from "@capacitor-community/admob";
 const categories = [
   { name: "Martial Arts", path: "/services/martial-arts", icon: FaFistRaised },
   {
@@ -124,6 +128,19 @@ const Landing = () => {
   /* ===================================================== */
   /* ================= FETCH SUGGESTED =================== */
   /* ===================================================== */
+  const showBanner = async () => {
+    try {
+      await AdMob.showBanner({
+        adId: "ca-app-pub-3940256099942544/9214589741",
+        adSize: BannerAdSize.BANNER,
+        position: BannerAdPosition.BOTTOM_CENTER,
+        margin: 0,
+        isTesting: true,
+      });
+    } catch (err) {
+      console.log(err);
+    }
+  };
   const openComments = async (item) => {
     const mainCol = item.type === "trainer" ? "trainers" : "institutes";
 
@@ -141,6 +158,13 @@ const Landing = () => {
     setCommentsList(list);
     setShowCommentsFor(item);
   };
+  useEffect(() => {
+    showBanner();
+
+    return () => {
+      AdMob.hideBanner();
+    };
+  }, []);
   useEffect(() => {
     const loadSuggested = async () => {
       const trainerSnap = await getDocs(collection(db, "trainers"));
@@ -1243,6 +1267,39 @@ const Landing = () => {
               </div>
             </motion.div>
           ))}
+        </div>
+      </section>
+      <section className="px-4 py-4 bg-gray-50">
+        <div className="max-w-md mx-auto">
+          {/* Small Professional Label */}
+          <div className="flex items-center gap-2 mb-9">
+            <div className="h-px flex-1 bg-gray-200"></div>
+            <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">
+              Sponsored
+            </span>
+            <div className="h-px flex-1 bg-gray-200"></div>
+          </div>
+
+          {/* Google Ad Container */}
+          <div
+            className="
+             sticky
+    bottom-10
+        bg-white
+        border
+        border-gray-200
+        rounded-xl
+        overflow-hidden
+        min-h-[120px]
+        flex
+        items-center
+        justify-center
+        shadow-sm
+      "
+          >
+            {/* Google Adsense Code Here */}
+            <span className="text-xs text-gray-400">Advertisement</span>
+          </div>
         </div>
       </section>
 

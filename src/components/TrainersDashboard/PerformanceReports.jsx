@@ -437,9 +437,7 @@ export default function StudentPerformanceReport() {
     console.log("[FILTER BY MONTH] START");
     const month = dayjs(selectedMonth);
     const filtered = [...students]
-      .sort((a, b) =>
-        (a.firstName || "").localeCompare(b.firstName || "")
-      )
+      .sort((a, b) => (a.firstName || "").localeCompare(b.firstName || ""))
       .filter((s) => {
         if (!s.createdAt) {
           console.log("[NO CREATEDAT]", s.id);
@@ -942,8 +940,9 @@ export default function StudentPerformanceReport() {
 
             <ChevronDown
               size={18}
-              className={`ml-2 transition-transform ${showCategoryDropdown ? "rotate-180" : ""
-                }`}
+              className={`ml-2 transition-transform ${
+                showCategoryDropdown ? "rotate-180" : ""
+              }`}
             />
           </button>
 
@@ -978,21 +977,23 @@ export default function StudentPerformanceReport() {
               selectedCategory &&
               setShowSubCategoryDropdown(!showSubCategoryDropdown)
             }
-            className={`${inputClass} flex items-center justify-between text-left ${!selectedCategory && "bg-gray-100 cursor-not-allowed"
-              }`}
+            className={`${inputClass} flex items-center justify-between text-left ${
+              !selectedCategory && "bg-gray-100 cursor-not-allowed"
+            }`}
           >
             <span>
               {selectedSubCategory
                 ? selectedSubCategory
                 : selectedCategory
-                  ? "Select Sub Category"
-                  : "Select Category First"}
+                ? "Select Sub Category"
+                : "Select Category First"}
             </span>
 
             <ChevronDown
               size={18}
-              className={`ml-2 transition-transform ${showSubCategoryDropdown ? "rotate-180" : ""
-                }`}
+              className={`ml-2 transition-transform ${
+                showSubCategoryDropdown ? "rotate-180" : ""
+              }`}
             />
           </button>
 
@@ -1022,16 +1023,6 @@ export default function StudentPerformanceReport() {
           <option>21 – 45 years Adults</option>
           <option>45 – 60 years Middle Age</option>
           <option>61 – 100 years Senior Citizens</option>
-        </select>
-        <select className={inputClass}>
-          <option value="">Select Belt</option>
-          <option>White</option>
-          <option>Yellow</option>
-          <option>Orange</option>
-          <option>Blue</option>
-          <option>Brown</option>
-          <option>Black</option>
-          <option>Green</option>
         </select>
       </div>
       {loadingReport && (
@@ -1102,7 +1093,7 @@ export default function StudentPerformanceReport() {
                   min="0"
                   max="10"
                   className="w-full mt-2 p-2 border border-orange-300 rounded-lg"
-                  placeholder="Score Rating (0 - 10)"
+                  placeholder="Maximum Score Rating (0 - 10)"
                   value={metrics[key]}
                   onChange={(e) =>
                     setMetrics({ ...metrics, [key]: e.target.value })
@@ -1110,7 +1101,7 @@ export default function StudentPerformanceReport() {
                 />
                 <input
                   className="w-full mt-2 p-2 border border-orange-300 rounded-lg"
-                  placeholder="Add Observation"
+                  placeholder="Achived Score"
                   value={metricObservations[key]}
                   onChange={(e) =>
                     setMetricObservations({
@@ -1206,10 +1197,11 @@ export default function StudentPerformanceReport() {
           onClick={handleSave}
           disabled={savingReport}
           className={`px-6 py-2 rounded-lg font-semibold w-full sm:w-auto transition-all
-    ${savingReport
-              ? "bg-gray-400 text-white cursor-not-allowed"
-              : "bg-orange-500 text-white hover:bg-orange-600"
-            }
+    ${
+      savingReport
+        ? "bg-gray-400 text-white cursor-not-allowed"
+        : "bg-orange-500 text-white hover:bg-orange-600"
+    }
   `}
         >
           {savingReport ? "Saving..." : "Save"}

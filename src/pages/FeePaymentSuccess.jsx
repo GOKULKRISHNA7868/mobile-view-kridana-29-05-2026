@@ -104,7 +104,9 @@ const PaymentSuccess = () => {
         if (state.razorpay_payment_id)
           data.paymentId = state.razorpay_payment_id;
         if (state.status) data.paymentStatus = state.status;
-
+        if (state.paymentMethod === "upi") {
+          data.utrNumber = state.utrNumber || "";
+        }
         const safeData = cleanData(data);
 
         // ✅ Save per student

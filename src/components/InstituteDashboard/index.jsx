@@ -83,7 +83,7 @@ const sidebarSections = [
     items: [
       "Time Table",
       "Add Events",
-      "Chat Box",
+      //"Chat Box",
       "Analytics",
       //"BookingsList",
       //"AddSportsFacilitiesPage",

@@ -229,10 +229,6 @@ export default function TrainerDetailsPage() {
               <Phone size={15} />
               Call
             </a>
-
-            <button className="bg-[#FF6B00] text-white py-2 rounded-xl text-sm font-semibold">
-              Book Slot
-            </button>
           </div>
 
           {/* STATS */}

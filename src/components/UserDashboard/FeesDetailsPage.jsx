@@ -252,7 +252,7 @@ const PaymentOverview = () => {
   ];
 
   return (
-    <div className="bg-white min-h-screen px-3 sm:px-5 md:px-8 py-4 md:py-8">
+    <div className="bg-white flex flex-col h-full max-h-full overflow-hidden px-3 sm:px-5 md:px-8 py-4 md:py-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
@@ -285,241 +285,245 @@ const PaymentOverview = () => {
           ))}
         </select>
       </div>
-      {/* Cards Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
-        <div className="bg-white border border-orange-400 rounded-lg w-full">
-          {/* Top Section */}
-          <div className="p-5 border-b border-orange-300">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold">
-                  Customer 01 : {student.firstName} {student.lastName}
-                </h3>
-                <p className="text-xs text-gray-500">
-                  {(student.sports || []).map((sport, i) => (
-                    <span key={i}>
-                      {sport.category} - {sport.subCategory}
-                      {i !== student.sports.length - 1 && ", "}
-                    </span>
-                  ))}
-                </p>
-              </div>
-              <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
-            </div>
-
-            <div className="mt-6">
-              <p className="text-sm text-gray-600">Due Amount</p>
-              <p className="text-red-500 font-semibold text-lg">
-                ₹{monthlyFee}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                To be paid :Every Month {student.monthlyDate}th
-              </p>
-            </div>
-          </div>
-
-          {/* Payment History */}
-          {/* Payment History */}
-          <div className="p-5 border-b border-orange-300">
-            <h4 className="font-semibold mb-3">Payment History</h4>
-
-            {generatedMonths.length === 0 && (
-              <p className="text-xs text-gray-400">No payments found</p>
-            )}
-
-            {generatedMonths.map((item, index) => (
-              <div
-                key={index}
-                className="flex flex-col sm:flex-row justify-between text-sm mb-3 gap-2"
-              >
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {/* Cards Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 h-full min-h-0 overflow-hidden">
+          <div className="bg-white border border-orange-400 rounded-lg w-full flex flex-col h-full min-h-0 overflow-hidden">
+            {/* Top Section */}
+            <div className="p-5 border-b border-orange-300">
+              <div className="flex justify-between items-start">
                 <div>
-                  <p className="font-medium">
-                    {item.month} {item.year}
-                  </p>
-                  <p className="text-gray-500 text-xs">
-                    Due Date: {item.month} {student.monthlyDate}
+                  <h3 className="font-semibold">
+                    Customer 01 : {student.firstName} {student.lastName}
+                  </h3>
+                  <p className="text-xs text-gray-500">
+                    {(student.sports || []).map((sport, i) => (
+                      <span key={i}>
+                        {sport.category} - {sport.subCategory}
+                        {i !== student.sports.length - 1 && ", "}
+                      </span>
+                    ))}
                   </p>
                 </div>
-
-                {(() => {
-                  const records = student.sports.map((sport) => {
-                    const record = feeHistory.find(
-                      (f) =>
-                        f.month === item.key &&
-                        f.category === sport.category &&
-                        f.subCategory === sport.subCategory,
-                    );
-
-                    return {
-                      category: sport.category,
-                      subCategory: sport.subCategory,
-                      amount: Number(sport.fee || 0), // ✅ attach fee HERE
-                      paidAmount: record?.paidAmount || 0,
-                      paid: record && Number(record.paidAmount) > 0,
-                    };
-                  });
-
-                  const hasPending = records.some(
-                    (r) => !r.paid || r.paidAmount === 0,
-                  );
-
-                  // 🔥 PAY NOW HANDLER
-                  const handlePayNow = () => {
-                    const unpaidRecords = student.sports
-                      .map((sport) => {
-                        const record = feeHistory.find(
-                          (f) =>
-                            f.month === item.key &&
-                            f.category === sport.category &&
-                            f.subCategory === sport.subCategory,
-                        );
-
-                        if (record && Number(record.paidAmount) > 0)
-                          return null;
-
-                        return {
-                          category: sport.category,
-                          subCategory: sport.subCategory,
-                          amount: Number(sport.fee || 0),
-                        };
-                      })
-                      .filter(Boolean);
-
-                    const totalAmount = unpaidRecords.reduce(
-                      (sum, r) => sum + r.amount,
-                      0,
-                    );
-
-                    navigate("/PaymentSelection", {
-                      state: {
-                        paymentType: "multiple",
-
-                        studentId: activeStudentId,
-
-                        studentName: `${student.firstName} ${student.lastName}`,
-
-                        month: item.key,
-
-                        items: unpaidRecords,
-
-                        totalAmount,
-
-                        student,
-                      },
-                    });
-                  };
-
-                  return (
-                    <div className="text-left sm:text-right">
-                      {records.map((r, i) => {
-                        const handleSinglePayment = () => {
-                          navigate("/PaymentSelection", {
-                            state: {
-                              paymentType: "single",
-
-                              studentId: activeStudentId,
-
-                              studentName: `${student.firstName} ${student.lastName}`,
-
-                              month: item.key,
-
-                              items: [
-                                {
-                                  category: r.category,
-                                  subCategory: r.subCategory,
-                                  amount: r.amount,
-                                },
-                              ],
-
-                              totalAmount: r.amount,
-
-                              student,
-                            },
-                          });
-                        };
-
-                        return (
-                          <div key={i} className="mb-3 border-b pb-2">
-                            <p className="text-xs font-medium">
-                              {r.category} - {r.subCategory}
-                            </p>
-
-                            {r.paid ? (
-                              <p className="text-green-600 text-xs">
-                                Paid ₹{r.paidAmount}
-                              </p>
-                            ) : (
-                              <>
-                                <p className="text-red-600 text-xs mb-1">
-                                  Unpaid ₹{r.amount}
-                                </p>
-
-                                <button
-                                  onClick={handleSinglePayment}
-                                  className="bg-blue-600 text-white px-3 py-1 rounded text-xs w-full sm:w-auto hover:bg-blue-700"
-                                >
-                                  Pay Now
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
+                <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
               </div>
-            ))}
-          </div>
 
-          {/* Bottom Summary */}
-          <div className="p-5 text-sm font-medium">
-            <div className="flex justify-between mb-2">
-              <p>Total Fees</p>
-              <p>₹{expectedTotalFee}</p>
+              <div className="mt-6">
+                <p className="text-sm text-gray-600">Due Amount</p>
+                <p className="text-red-500 font-semibold text-lg">
+                  ₹{monthlyFee}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  To be paid :Every Month {student.monthlyDate}th
+                </p>
+              </div>
             </div>
 
-            <div className="flex justify-between mb-2">
-              <p>Fees Paid</p>
-              <p className="text-green-600">₹{totalPaid}</p>
+            {/* Payment History */}
+            {/* Payment History */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-5 border-b border-orange-300">
+              <h4 className="font-semibold mb-3 sticky top-0 bg-white z-10 pb-2">
+                Payment History
+              </h4>
+
+              {generatedMonths.length === 0 && (
+                <p className="text-xs text-gray-400">No payments found</p>
+              )}
+
+              {generatedMonths.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col sm:flex-row justify-between text-sm mb-3 gap-2"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {item.month} {item.year}
+                    </p>
+                    <p className="text-gray-500 text-xs">
+                      Due Date: {item.month} {student.monthlyDate}
+                    </p>
+                  </div>
+
+                  {(() => {
+                    const records = student.sports.map((sport) => {
+                      const record = feeHistory.find(
+                        (f) =>
+                          f.month === item.key &&
+                          f.category === sport.category &&
+                          f.subCategory === sport.subCategory,
+                      );
+
+                      return {
+                        category: sport.category,
+                        subCategory: sport.subCategory,
+                        amount: Number(sport.fee || 0), // ✅ attach fee HERE
+                        paidAmount: record?.paidAmount || 0,
+                        paid: record && Number(record.paidAmount) > 0,
+                      };
+                    });
+
+                    const hasPending = records.some(
+                      (r) => !r.paid || r.paidAmount === 0,
+                    );
+
+                    // 🔥 PAY NOW HANDLER
+                    const handlePayNow = () => {
+                      const unpaidRecords = student.sports
+                        .map((sport) => {
+                          const record = feeHistory.find(
+                            (f) =>
+                              f.month === item.key &&
+                              f.category === sport.category &&
+                              f.subCategory === sport.subCategory,
+                          );
+
+                          if (record && Number(record.paidAmount) > 0)
+                            return null;
+
+                          return {
+                            category: sport.category,
+                            subCategory: sport.subCategory,
+                            amount: Number(sport.fee || 0),
+                          };
+                        })
+                        .filter(Boolean);
+
+                      const totalAmount = unpaidRecords.reduce(
+                        (sum, r) => sum + r.amount,
+                        0,
+                      );
+
+                      navigate("/PaymentSelection", {
+                        state: {
+                          paymentType: "multiple",
+
+                          studentId: activeStudentId,
+
+                          studentName: `${student.firstName} ${student.lastName}`,
+
+                          month: item.key,
+
+                          items: unpaidRecords,
+
+                          totalAmount,
+
+                          student,
+                        },
+                      });
+                    };
+
+                    return (
+                      <div className="text-left sm:text-right">
+                        {records.map((r, i) => {
+                          const handleSinglePayment = () => {
+                            navigate("/PaymentSelection", {
+                              state: {
+                                paymentType: "single",
+
+                                studentId: activeStudentId,
+
+                                studentName: `${student.firstName} ${student.lastName}`,
+
+                                month: item.key,
+
+                                items: [
+                                  {
+                                    category: r.category,
+                                    subCategory: r.subCategory,
+                                    amount: r.amount,
+                                  },
+                                ],
+
+                                totalAmount: r.amount,
+
+                                student,
+                              },
+                            });
+                          };
+
+                          return (
+                            <div key={i} className="mb-3 border-b pb-2">
+                              <p className="text-xs font-medium">
+                                {r.category} - {r.subCategory}
+                              </p>
+
+                              {r.paid ? (
+                                <p className="text-green-600 text-xs">
+                                  Paid ₹{r.paidAmount}
+                                </p>
+                              ) : (
+                                <>
+                                  <p className="text-red-600 text-xs mb-1">
+                                    Unpaid ₹{r.amount}
+                                  </p>
+
+                                  <button
+                                    onClick={handleSinglePayment}
+                                    className="bg-blue-600 text-white px-3 py-1 rounded text-xs w-full sm:w-auto hover:bg-blue-700"
+                                  >
+                                    Pay Now
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ))}
             </div>
 
-            <div className="flex justify-between">
-              <p>Pending Fees</p>
-              <p className="text-red-600">₹{pendingFee}</p>
+            {/* Bottom Summary */}
+            <div className="p-5 text-sm font-medium">
+              <div className="flex justify-between mb-2">
+                <p>Total Fees</p>
+                <p>₹{expectedTotalFee}</p>
+              </div>
+
+              <div className="flex justify-between mb-2">
+                <p>Fees Paid</p>
+                <p className="text-green-600">₹{totalPaid}</p>
+              </div>
+
+              <div className="flex justify-between">
+                <p>Pending Fees</p>
+                <p className="text-red-600">₹{pendingFee}</p>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* 🔴 Reminder Popup */}
+        {showReminder && (
+          <div className="fixed top-5 right-5 z-50 animate-bounce">
+            <div className="bg-red-600 text-white px-6 py-4 rounded-lg shadow-lg">
+              <p className="font-semibold">Payment Reminder 🔔</p>
+              <p className="text-sm mt-1">
+                Your fee is due on {student.monthlyDate}
+              </p>
+            </div>
+          </div>
+        )}
+        {processing && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="bg-white px-6 py-5 rounded-xl shadow-lg flex flex-col items-center gap-3">
+              {/* Spinner */}
+              <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+
+              {/* Text */}
+              <p className="text-sm font-semibold text-gray-700">
+                Processing Payment...
+              </p>
+
+              <p className="text-xs text-gray-400">
+                Please don’t close this page
+              </p>
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* 🔴 Reminder Popup */}
-      {showReminder && (
-        <div className="fixed top-5 right-5 z-50 animate-bounce">
-          <div className="bg-red-600 text-white px-6 py-4 rounded-lg shadow-lg">
-            <p className="font-semibold">Payment Reminder 🔔</p>
-            <p className="text-sm mt-1">
-              Your fee is due on {student.monthlyDate}
-            </p>
-          </div>
-        </div>
-      )}
-      {processing && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="bg-white px-6 py-5 rounded-xl shadow-lg flex flex-col items-center gap-3">
-            {/* Spinner */}
-            <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-
-            {/* Text */}
-            <p className="text-sm font-semibold text-gray-700">
-              Processing Payment...
-            </p>
-
-            <p className="text-xs text-gray-400">
-              Please don’t close this page
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

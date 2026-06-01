@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MoreVertical, Smile, Send, Mic } from "lucide-react";
+import { MoreVertical, Smile, Send, Mic, ArrowLeft } from "lucide-react";
 import { db, auth } from "../firebase";
 import {
   collection,
@@ -18,7 +18,7 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 
 const ChatBox = () => {
   const [activeTab, setActiveTab] = useState("chats");
@@ -35,7 +35,7 @@ const ChatBox = () => {
   const [activeChat, setActiveChat] = useState(null);
   const [activeChatName, setActiveChatName] = useState("");
   const [text, setText] = useState("");
-
+  const navigate = useNavigate();
   const [groupName, setGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [unreadCounts, setUnreadCounts] = useState({});
@@ -377,319 +377,156 @@ const ChatBox = () => {
     )
     .filter(Boolean);
   return (
-    <div className="flex h-screen w-full bg-[#f3f3f3] overflow-hidden">
-      <div className="flex flex-col flex-1">
-        {/* HEADER */}
-        <div className="bg-[#efb082] px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Conversations</h1>
-        </div>
-
-        {/* TABS */}
-        <div className="px-4 py-3 flex gap-3 bg-[#f3f3f3]">
+    <div className="h-[95dvh] bg-[#f5f5f5] flex flex-col overflow-hidden touch-none">
+      {/* HEADER */}
+      <div
+        className="
+  bg-[#efb082]
+  px-4
+  py-3
+  flex
+  items-center
+  justify-between
+  shadow-sm
+  "
+      >
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => {
-              setActiveTab("chats");
-              setScreen("chat");
-            }}
-            className={`px-5 py-1 rounded-full text-sm font-medium ${
-              activeTab === "chats"
-                ? "bg-orange-500 text-white"
-                : "bg-white border"
-            }`}
+            onClick={() => navigate(-1)}
+            className="
+      flex
+      items-center
+      justify-center
+      w-9
+      h-9
+      rounded-full
+      hover:bg-black/10
+      transition
+      "
           >
-            Chats
+            <ArrowLeft size={22} />
           </button>
 
-          <button
-            onClick={() => {
-              setActiveTab("group");
-              setScreen("chat");
-            }}
-            className={`px-5 py-1 rounded-full text-sm font-medium ${
-              activeTab === "group"
-                ? "bg-orange-500 text-white"
-                : "bg-white border"
-            }`}
-          >
-            Group
-          </button>
-        </div>
+          <div>
+            <h2 className="font-semibold text-[16px]">
+              {activeChatName || "Conversation"}
+            </h2>
 
-        {/* TOP MENU */}
-        <div className="flex items-center justify-between bg-[#efb082] mx-4 rounded-md px-4 py-3">
-          <span className="font-medium">{activeChatName || "Chat"}</span>
-
-          <div className="relative">
-            <MoreVertical
-              onClick={() => setShowMenu(!showMenu)}
-              className="cursor-pointer"
-            />
-
-            {showMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md border z-50">
-                <button
-                  onClick={() => {
-                    setScreen("createGroup");
-                    setShowMenu(false);
-                  }}
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                >
-                  ➕ Create Group
-                </button>
-
-                {activeChat?.type === "group" && (
-                  <>
-                    <button
-                      onClick={() => {
-                        setScreen("participants");
-                        setShowMenu(false);
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                    >
-                      👥 View Participants
-                    </button>
-
-                    {isAdmin() && (
-                      <>
-                        <button
-                          onClick={() => {
-                            setRenameValue(activeChatName);
-                            setShowMenu(false);
-                          }}
-                          className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
-                        >
-                          ✏ Rename Group
-                        </button>
-
-                        <button
-                          onClick={deleteGroup}
-                          className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600"
-                        >
-                          🗑 Delete Group
-                        </button>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+            <p className="text-xs opacity-70">Chat</p>
           </div>
         </div>
 
-        {/* RENAME INPUT */}
-        {renameValue !== "" && isAdmin() && (
-          <div className="px-4 py-2 flex gap-2 bg-white mx-4 mt-2 rounded border">
-            <input
-              value={renameValue}
-              onChange={(e) => setRenameValue(e.target.value)}
-              className="flex-1 border px-3 py-1 rounded text-sm"
-              placeholder="New group name"
-            />
-            <button
-              onClick={renameGroup}
-              className="bg-orange-500 text-white px-3 rounded text-sm"
-            >
-              Save
-            </button>
-          </div>
-        )}
-
-        {/* ================= CREATE GROUP ================= */}
-        {screen === "createGroup" && (
-          <div className="flex-1 p-6 overflow-y-auto">
-            <h2 className="font-semibold mb-3">Create Group</h2>
-
-            <input
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Group Name"
-              className="w-full border px-3 py-2 rounded mb-4"
-            />
-
-            <h3 className="font-semibold mt-2">Students</h3>
-            {users
-              .filter((u) => u.role === "student")
-              .map((u) => (
-                <label key={u.uid} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    onChange={(e) => {
-                      setSelectedMembers((p) =>
-                        e.target.checked
-                          ? [...p, u.uid]
-                          : p.filter((id) => id !== u.uid),
-                      );
-                    }}
-                  />
-                  {u.name}
-                </label>
-              ))}
-
-            <h3 className="font-semibold mt-4">Trainers</h3>
-            {users
-              .filter((u) => u.role === "trainer")
-              .map((u) => (
-                <label key={u.uid} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    onChange={(e) => {
-                      setSelectedMembers((p) =>
-                        e.target.checked
-                          ? [...p, u.uid]
-                          : p.filter((id) => id !== u.uid),
-                      );
-                    }}
-                  />
-                  {u.name}
-                </label>
-              ))}
-
-            <button
-              onClick={submitCreateGroup}
-              className="mt-5 bg-orange-500 text-white px-5 py-2 rounded"
-            >
-              Create Group
-            </button>
-          </div>
-        )}
-
-        {/* ================= PARTICIPANTS ================= */}
-        {screen === "participants" && (
-          <div className="flex-1 p-6 overflow-y-auto">
-            <h2 className="font-semibold mb-4">Participants</h2>
-
-            {memberObjects.map((m) => (
-              <div
-                key={m.uid}
-                className="flex justify-between items-center border-b py-2"
-              >
-                <span>
-                  {m.name} ({m.role})
-                </span>
-
-                {isAdmin() && m.uid !== user.uid && (
-                  <button
-                    onClick={() => removeParticipant(m.uid)}
-                    className="text-red-500 text-sm"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ================= CHAT ================= */}
-        {screen === "chat" && (
-          <>
-            <div className="flex-1 px-4 py-6 space-y-4 overflow-y-auto">
-              {messages.map((m) => {
-                const sender = users.find((u) => u.uid === m.senderId);
-
-                return m.senderId === user?.uid ? (
-                  <div key={m.id} className="flex justify-end">
-                    <div className="bg-orange-500 text-white px-4 py-2 rounded-xl text-sm flex flex-col gap-1 max-w-[75%]">
-                      {activeChat?.type === "group" && (
-                        <span className="text-[10px] opacity-80 text-right">
-                          You
-                        </span>
-                      )}
-
-                      <span>{m.text}</span>
-
-                      {m.readBy?.length > 1 && (
-                        <span className="text-[10px] opacity-80 text-right">
-                          ✓✓
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div key={m.id} className="flex">
-                    <div className="bg-gray-300 px-4 py-2 rounded-xl text-sm flex flex-col gap-1 max-w-[75%]">
-                      {activeChat?.type === "group" && (
-                        <span className="text-[10px] font-semibold text-gray-700">
-                          {sender?.name || "User"}
-                        </span>
-                      )}
-
-                      <span>{m.text}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="px-4 pb-4">
-              <div className="flex items-center gap-3 border rounded-full px-4 py-2 bg-white">
-                <input
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Type message..."
-                  className="flex-1 outline-none text-sm"
-                />
-                <Send
-                  onClick={sendMessage}
-                  className="w-5 h-5 text-orange-500 cursor-pointer"
-                />
-              </div>
-            </div>
-          </>
-        )}
+        <MoreVertical size={20} className="cursor-pointer" />
       </div>
 
-      {/* ================= RIGHT SIDEBAR ================= */}
-      <div className="hidden lg:flex w-80 border-l bg-white flex-col">
-        <div className="px-4 py-4 font-semibold border-b">Recent Chats</div>
+      {/* CHAT AREA */}
+      <div
+        className="
+      flex-1
+      overflow-y-auto
+      px-3
+      py-4
+      space-y-3
+      "
+      >
+        {messages.map((m) => {
+          const isMe = m.senderId === user?.uid;
 
-        <div className="flex-1 overflow-y-auto">
-          {activeTab === "group"
-            ? groups.map((g) => (
-                <div
-                  key={g.id}
-                  onClick={() => {
-                    setActiveChat({ id: g.id, type: "group" });
-                    setActiveChatName(g.name);
-                    setScreen("chat");
-                  }}
-                  className="px-4 py-3 border-b hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-orange-200 flex items-center justify-center font-bold text-orange-700">
-                      {g.name?.charAt(0).toUpperCase()}
-                    </div>
-                    <span>{g.name}</span>
+          const sender = users.find((u) => u.uid === m.senderId);
+
+          return (
+            <div
+              key={m.id}
+              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+            >
+              <div
+                className={`
+              max-w-[80%]
+              rounded-2xl
+              px-4
+              py-2
+              shadow-sm
+              ${isMe ? "bg-orange-500 text-white" : "bg-white"}
+              `}
+              >
+                {!isMe && (
+                  <div className="text-[11px] font-semibold mb-1">
+                    {sender?.name || "User"}
                   </div>
+                )}
 
-                  {unreadCounts[g.id] > 0 && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                      {unreadCounts[g.id]}
-                    </span>
-                  )}
-                </div>
-              ))
-            : users.map((u) => (
-                <div
-                  key={u.uid}
-                  onClick={() => startChat(u)}
-                  className="px-4 py-3 border-b hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={getValidImage(u.profileImageUrl, u.name)}
-                      className="w-9 h-9 rounded-full object-cover"
-                    />
-                    <span>{u.name}</span>
-                  </div>
+                <div className="text-sm break-words">{m.text}</div>
 
-                  {unreadCounts[[user?.uid, u.uid].sort().join("_")] > 0 && (
-                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                      {unreadCounts[[user?.uid, u.uid].sort().join("_")]}
-                    </span>
-                  )}
-                </div>
-              ))}
+                {isMe && m.readBy?.length > 1 && (
+                  <div className="text-[10px] text-right mt-1">✓✓</div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* INPUT */}
+      <div
+        className="
+      bg-white
+         bottom-10
+      border-t
+      px-3
+      py-2
+      pb-[calc(env(safe-area-inset-bottom)+8px)]
+      "
+      >
+        <div
+          className="
+        flex
+     
+        items-center
+        gap-2
+        bg-[#f8f8f8]
+        rounded-full
+        px-3
+        py-2
+        "
+        >
+          <Smile size={20} className="text-gray-500" />
+
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Type a message..."
+            className="
+          flex-1
+          bg-transparent
+          outline-none
+          text-sm
+          "
+          />
+
+          {text.trim() ? (
+            <button
+              onClick={sendMessage}
+              className="
+            bg-orange-500
+            text-white
+            p-2
+            rounded-full
+            "
+            >
+              <Send size={18} />
+            </button>
+          ) : (
+            <button
+              className="
+            bg-orange-500
+            text-white
+            p-2
+            rounded-full
+            "
+            >
+              <Mic size={18} />
+            </button>
+          )}
         </div>
       </div>
     </div>

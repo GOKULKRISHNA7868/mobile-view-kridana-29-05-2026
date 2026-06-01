@@ -730,11 +730,11 @@ const MyAccountPage = ({ setActiveMenu }) => {
       prev.map((s) =>
         s.id === selectedStudent.id
           ? {
-            ...s,
-            status: "Left",
-            leftReason: leaveReason,
-            leftDate: serverTimestamp(),
-          }
+              ...s,
+              status: "Left",
+              leftReason: leaveReason,
+              leftDate: serverTimestamp(),
+            }
           : s,
       ),
     );
@@ -779,11 +779,11 @@ const MyAccountPage = ({ setActiveMenu }) => {
       prev.map((s) =>
         s.id === student.id
           ? {
-            ...s,
-            status: "Left",
-            leftReason: reason,
-            leftDate: serverTimestamp(),
-          }
+              ...s,
+              status: "Left",
+              leftReason: reason,
+              leftDate: serverTimestamp(),
+            }
           : s,
       ),
     );
@@ -837,341 +837,95 @@ const MyAccountPage = ({ setActiveMenu }) => {
 
   return (
     <div className="px-4 sm:px-6 md:px-8 lg:px-10 py-6 bg-[#FAFAFA] min-h-screen">
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
+      {/* ================= HEADER ================= */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-black">My Account</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-black">
+            My Account
+          </h1>
           <p className="text-orange-500 text-sm">
-            Manage your team, and customers
+            Manage your team and customers
           </p>
         </div>
 
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-6">
-          {/* PROFILE IMAGE */}
-          <div className="flex items-center gap-4">
-            {profile.profileImage ? (
-              <img
-                src={profile.profileImage}
-                className="w-24 h-24 rounded-xl object-cover border shadow"
-              />
-            ) : (
-              <div className="w-24 h-24 bg-gray-200 rounded-xl flex items-center justify-center">
-                <User />
-              </div>
-            )}
-
-            <div className="flex flex-col gap-1">
-              <label className="cursor-pointer bg-orange-500 text-white px-3 py-1 rounded text-sm text-center">
-                Change
-                <input
-                  type="file"
-                  className="hidden"
-                  onChange={handleProfileUpload}
-                />
-              </label>
-
-              {profile.profileImage && (
-                <button
-                  onClick={removeProfileImage}
-                  className="text-red-500 text-sm"
-                >
-                  Remove
-                </button>
-              )}
+        {/* PROFILE */}
+        <div className="flex items-center gap-4">
+          {profile.profileImage ? (
+            <img
+              src={profile.profileImage}
+              className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-cover border shadow"
+            />
+          ) : (
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-200 rounded-xl flex items-center justify-center">
+              <User />
             </div>
+          )}
+
+          <div className="flex flex-col gap-2">
+            <label className="cursor-pointer bg-orange-500 text-white px-3 py-1 rounded text-sm text-center">
+              Change
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleProfileUpload}
+              />
+            </label>
+
+            {profile.profileImage && (
+              <button
+                onClick={removeProfileImage}
+                className="text-red-500 text-sm"
+              >
+                Remove
+              </button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* TABS */}
-      <div className="flex flex-wrap gap-4 sm:gap-8 border-b pb-2 mb-6 overflow-x-auto">
+      {/* ================= TABS ================= */}
+      <div className="flex gap-4 border-b pb-2 mb-6 overflow-x-auto">
         <button
           onClick={() => setActiveTab("customers")}
-          className={`flex items-center gap-2 pb-2 border-b-2 ${activeTab === "customers"
-            ? "text-orange-500 border-orange-500 font-semibold"
-            : "text-gray-600 border-transparent"
-            }`}
+          className={`flex items-center gap-2 pb-2 border-b-2 whitespace-nowrap ${
+            activeTab === "customers"
+              ? "text-orange-500 border-orange-500 font-semibold"
+              : "text-gray-600 border-transparent"
+          }`}
         >
           <Users size={18} /> Customers
         </button>
       </div>
 
-      {/* PROFILE CARD */}
-
-      {/* MANAGEMENT TAB */}
-
-      {/* EDIT TRAINER MODAL */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 lg:pl-[160px]">
-          <div className="bg-white w-[95%] sm:w-[700px] rounded-2xl shadow-xl overflow-hidden">
-            <div className="max-h-[75vh] overflow-y-auto">
-              {/* HEADER */}
-              <div className="flex items-center justify-between px-6 py-4 border-b">
-                <h2 className="text-xl font-semibold text-gray-800">
-                  Edit Management Details
-                </h2>
-
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="text-gray-400 hover:text-red-500 text-xl"
-                >
-                  ✖
-                </button>
-              </div>
-
-              {/* FORM */}
-              <div className="p-5 space-y-5">
-                <div className="grid grid-cols-2 gap-6">
-                  {/* Name */}
-                  <div>
-                    <label className="text-sm font-medium">Name*</label>
-                    <input
-                      value={editingTrainer.firstName}
-                      onChange={(e) =>
-                        setEditingTrainer({
-                          ...editingTrainer,
-                          firstName: e.target.value,
-                        })
-                      }
-                      className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-
-                  {/* Role */}
-                  <div>
-                    <label className="text-sm font-medium">Role*</label>
-                    <input
-                      value={editingTrainer.designation}
-                      onChange={(e) => {
-                        let value = e.target.value.replace(/[^A-Za-z ]/g, "");
-
-                        if (value.length > 0) {
-                          value =
-                            value.charAt(0).toUpperCase() + value.slice(1);
-                        }
-
-                        setEditingTrainer({
-                          ...editingTrainer,
-                          designation: value,
-                        });
-                      }}
-                      className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <label className="text-sm font-medium">E - Mail*</label>
-                    <input
-                      value={editingTrainer.email || ""}
-                      onChange={(e) =>
-                        setEditingTrainer({
-                          ...editingTrainer,
-                          email: e.target.value,
-                        })
-                      }
-                      className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <label className="text-sm font-medium">Phone Number*</label>
-                    <input
-                      value={editingTrainer.phone}
-                      onChange={(e) =>
-                        setEditingTrainer({
-                          ...editingTrainer,
-                          phone: e.target.value,
-                        })
-                      }
-                      className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-
-                  {/* Bio */}
-                  <div className="col-span-2">
-                    <label className="text-sm font-medium">Bio*</label>
-                    <textarea
-                      value={editingTrainer.experience}
-                      onChange={(e) =>
-                        setEditingTrainer({
-                          ...editingTrainer,
-                          experience: e.target.value,
-                        })
-                      }
-                      className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-
-                  {/* Joined Date */}
-                  <div>
-                    <label className="text-sm font-medium">Joined Date*</label>
-                    <input
-                      type="date"
-                      value={editingTrainer.joinedDate || ""}
-                      onChange={(e) =>
-                        setEditingTrainer({
-                          ...editingTrainer,
-                          joinedDate: e.target.value,
-                        })
-                      }
-                      className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    />
-                  </div>
-                </div>
-
-                {/* ACHIEVEMENTS */}
-                <div className="border-t pt-6">
-                  <h3 className="text-xl font-semibold mb-4">Achievements</h3>
-
-                  {(editingTrainer.achievements || []).map((a, index) => (
-                    <div key={index} className="flex items-center gap-3 mb-3">
-                      <input
-                        value={a}
-                        onChange={(e) => {
-                          const updated = [...editingTrainer.achievements];
-                          updated[index] = e.target.value;
-                          setEditingTrainer({
-                            ...editingTrainer,
-                            achievements: updated,
-                          });
-                        }}
-                        className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                      />
-
-                      <button
-                        onClick={() => {
-                          const updated = editingTrainer.achievements.filter(
-                            (_, i) => i !== index,
-                          );
-                          setEditingTrainer({
-                            ...editingTrainer,
-                            achievements: updated,
-                          });
-                        }}
-                        className="text-red-500"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  ))}
-
-                  <button
-                    onClick={() =>
-                      setEditingTrainer({
-                        ...editingTrainer,
-                        achievements: [
-                          ...(editingTrainer.achievements || []),
-                          "",
-                        ],
-                      })
-                    }
-                    className="w-full bg-orange-500 text-white py-3 rounded-md mt-3"
-                  >
-                    + Add Achievements
-                  </button>
-                </div>
-              </div>
-
-              {/* FOOTER */}
-              <div className="flex justify-end gap-4 px-6 py-4 border-t">
-                <button onClick={() => setShowEditModal(false)}>Cancel</button>
-
-                <button
-                  onClick={handleUpdateTrainer}
-                  className="bg-orange-500 text-white px-6 py-2 rounded-md"
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      {showTrainerDeleteModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white w-[90%] sm:w-[400px] rounded-2xl shadow-xl p-6">
-            <h2 className="text-center font-semibold text-lg mb-4">
-              Please Provide the reason for deleting the details
-            </h2>
-
-            <label className="text-sm text-gray-600">Enter your Reason</label>
-
-            <input
-              value={deleteReason}
-              onChange={(e) => setDeleteReason(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 mt-2 mb-6"
-            />
-
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => {
-                  setShowTrainerDeleteModal(false);
-                  setDeleteReason("");
-                  setTrainerToDelete(null);
-                }}
-                className="bg-gray-300 px-6 py-2 rounded-md"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={confirmDeleteTrainer}
-                className="bg-red-500 text-white px-6 py-2 rounded-md"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* ================= CUSTOMERS ================= */}
       {activeTab === "customers" && (
-        <div className="bg-white border rounded-lg p-6 shadow-sm">
-          {/* ===== SUMMARY CARDS ===== */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-            <div className="border border-orange-200 rounded-lg p-4 bg-[#FFFDF9]">
+        <div className="bg-white border rounded-lg p-4 sm:p-6 shadow-sm">
+          {/* SUMMARY CARDS */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div className="border rounded-lg p-4 bg-[#FFFDF9]">
               <p className="text-sm text-gray-500">Active Customers</p>
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-orange-500 text-lg font-semibold">
-                  {activeCount}
-                </span>
-                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-                  ↗
-                </div>
-              </div>
+              <p className="text-orange-500 text-lg font-semibold">
+                {activeCount}
+              </p>
             </div>
 
-            <div className="border border-orange-200 rounded-lg p-4 bg-[#FFFDF9]">
+            <div className="border rounded-lg p-4 bg-[#FFFDF9]">
               <p className="text-sm text-gray-500">Left Customers</p>
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-orange-500 text-lg font-semibold">
-                  {leftCount}
-                </span>
-                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center text-black">
-                  ↘
-                </div>
-              </div>
+              <p className="text-orange-500 text-lg font-semibold">
+                {leftCount}
+              </p>
             </div>
 
-            <div className="border border-orange-200 rounded-lg p-4 bg-[#FFFDF9]">
+            <div className="border rounded-lg p-4 bg-[#FFFDF9]">
               <p className="text-sm text-gray-500">New (30 days)</p>
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-orange-500 text-lg font-semibold">
-                  {newCount}
-                </span>
-                <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-                  ●
-                </div>
-              </div>
+              <p className="text-orange-500 text-lg font-semibold">
+                {newCount}
+              </p>
             </div>
           </div>
 
-          {/* HEADER */}
-          {/* HEADER */}
-          <div className="flex justify-between items-start mb-5">
+          {/* HEADER ACTIONS */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
             <div>
               <h2 className="text-orange-500 text-lg font-semibold">
                 Customer Management
@@ -1183,46 +937,33 @@ const MyAccountPage = ({ setActiveMenu }) => {
 
             <button
               onClick={() => setActiveMenu("Customer Details")}
-              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md font-medium"
+              className="bg-orange-500 text-white px-4 py-2 rounded-md"
             >
               + Add Customer
             </button>
           </div>
 
-          {/* SEARCH + FILTER ROW */}
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-4">
-            {/* SEARCH BOX */}
+          {/* SEARCH + FILTER */}
+          <div className="flex flex-col md:flex-row gap-3 mb-4">
             <div className="relative w-full md:w-[320px]">
               <input
-                type="text"
-                placeholder="Search Customer..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-orange-300 rounded-md
-      focus:outline-none focus:border-orange-400 bg-white"
+                placeholder="Search Customer..."
+                className="w-full pl-10 pr-3 py-2 border rounded-md"
               />
-
-              {/* SEARCH ICON */}
-              <span className="absolute left-3 top-1/2 -translate-y-1/2">
-                <img
-                  src="/search-icon.png"
-                  alt="search"
-                  className="w-4 h-4 object-contain opacity-60"
-                />
-              </span>
             </div>
 
-            {/* FILTER BUTTONS */}
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {["All", "Active", "Left"].map((item) => (
                 <button
                   key={item}
                   onClick={() => setStatusFilter(item)}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition
-        ${statusFilter === item
+                  className={`px-4 py-1.5 rounded-md text-sm ${
+                    statusFilter === item
                       ? "bg-orange-500 text-white"
-                      : "bg-gray-200 text-gray-700"
-                    }`}
+                      : "bg-gray-200"
+                  }`}
                 >
                   {item}
                 </button>
@@ -1230,212 +971,131 @@ const MyAccountPage = ({ setActiveMenu }) => {
             </div>
           </div>
 
-          {/* TABLE */}
-          <div className="w-full rounded-lg border bg-white overflow-hidden">
-            {/* TABLE HEADER */}
-            <div
-              className={`grid ${statusFilter === "Left"
-                ? "grid-cols-[2.2fr_.8fr_.8fr_1fr_1.2fr_1fr_1fr_.8fr]"
-                : "grid-cols-[2.22fr_.92fr_.8fr_1fr_1.2fr_1fr_.8fr]"
-                } bg-[#1F2937] text-orange-400 font-semibold px-2 sm:px-4 md:px-6 py-3 text-[10px] sm:text-sm items-center`}
-            >
-              <p className="min-w-[200px] md:min-w-[240px]">Name</p>
-              <p className="min-w-[85px] md:min-w-[100px] text-center">Age</p>
+          {/* ================= DESKTOP TABLE ================= */}
+          <div className="hidden md:block overflow-x-auto rounded-lg border">
+            <div className="grid grid-cols-[2fr_.8fr_.8fr_1fr_1.2fr_1fr_1fr_.8fr] bg-gray-900 text-orange-400 text-sm font-semibold px-4 py-3">
+              <p>Name</p>
+              <p className="text-center">Age</p>
               <p>Belt</p>
               <p>Status</p>
               {statusFilter === "Left" && <p>Reason</p>}
-              <p className="text-center">Added Date</p>
-              <p className="text-center">Left Date</p>
+              <p className="text-center">Added</p>
+              <p className="text-center">Left</p>
               <p className="text-center">Action</p>
             </div>
 
-            {/* TABLE BODY */}
             {filteredStudents.map((student, index) => (
               <div
                 key={student.id}
-                className={`grid ${statusFilter === "Left"
-                    ? "grid-cols-[2.08fr_.92fr_.8fr_1fr_1.2fr_1fr_1fr_.8fr"
-                    : "grid-cols-[2.3fr_.8fr_.8fr_1fr_1.2fr_1fr_.8fr]"
-                  } px-2 sm:px-4 md:px-6 py-3 text-[10px] sm:text-sm items-center border-t`}
+                className="grid grid-cols-[2fr_.8fr_.8fr_1fr_1.2fr_1fr_1fr_.8fr] px-4 py-3 border-t text-sm items-center"
               >
-              <p className="grid grid-cols-[16px_1fr] sm:grid-cols-[22px_1fr] gap-1 items-start leading-5 sm:leading-7">
-                  <span>{index + 1}.</span>
-
-                  <span className="break-words">
-                    {student.firstName} {student.lastName}
-                  </span>
+                <p>
+                  {index + 1}. {student.firstName} {student.lastName}
                 </p>
-               <p className="whitespace-nowrap text-center">
-                  {student.age} years
-                </p>
+                <p className="text-center">{student.age}</p>
                 <p>{student.sports?.[0]?.belt || "-"}</p>
 
-                {/* STATUS BADGE */}
                 <p>
                   <span
-                    className={`px-3 py-1 rounded-full text-sm ${student.status === "Left"
-                      ? "bg-red-400 text-white"
-                      : "bg-green-400 text-black"
-                      }`}
+                    className={`px-2 py-1 rounded text-xs ${
+                      student.status === "Left"
+                        ? "bg-red-500 text-white"
+                        : "bg-green-500 text-white"
+                    }`}
                   >
                     {student.status}
                   </span>
                 </p>
-                {statusFilter === "Left" && (
-                  <p className="text-sm text-gray-600">
-                    {student.leftReason || "-"}
-                  </p>
-                )}
 
-                <p className="flex justify-center">
-                  {student.createdAt?.toDate?.().toLocaleDateString?.() || "-"}
+                {statusFilter === "Left" && <p>{student.leftReason || "-"}</p>}
+
+                <p className="text-center">
+                  {student.createdAt?.toDate?.().toLocaleDateString() || "-"}
                 </p>
 
-                <p className="flex justify-center">
-                  {student.leftDate?.toDate
-                    ? student.leftDate.toDate().toLocaleDateString()
-                    : "-"}
+                <p className="text-center">
+                  {student.leftDate?.toDate?.().toLocaleDateString() || "-"}
                 </p>
 
-                {/* ACTION BUTTON */}
-                <div className="flex items-center justify-center gap-3 h-full">
-                  {/* EDIT BUTTON */}
-                  {/* EDIT BUTTON */}
+                <div className="flex justify-center gap-2">
                   <button
                     onClick={() => {
-                      setEditingStudent({
-                        ...student,
-                        sports: student.sports || [
-                          {
-                            category: "",
-                            subCategory: "",
-                            belt: "",
-                            sessions: "",
-                            timings: "",
-                          },
-                        ],
-                      });
-
+                      setEditingStudent(student);
                       setShowEditStudentModal(true);
                     }}
-                    className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-md transition"
-                    title="Edit Student"
                   >
-                    <img
-                      src="/edit-icon.png"
-                      alt="edit"
-                      className="w-4 h-4 opacity-70"
-                    />
+                    ✏️
                   </button>
+                  <button
+                    onClick={() =>
+                      statusFilter === "Left"
+                        ? permanentlyDeleteStudent(student)
+                        : markAsLeftConfirm(student)
+                    }
+                  >
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
 
-                  {/* DELETE BUTTON */}
-                  {statusFilter === "Left" ? (
-                    <button
-                      onClick={() => permanentlyDeleteStudent(student)}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-md transition"
-                      title="Delete Permanently"
-                    >
-                      <img
-                        src="/delete-icon.png"
-                        alt="delete"
-                        className="w-4 h-4 opacity-70"
-                      />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => markAsLeftConfirm(student)}
-                      className="w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-md transition"
-                      title="Mark as Left"
-                    >
-                      <img
-                        src="/delete-icon.png"
-                        alt="delete"
-                        className="w-4 h-4 opacity-70"
-                      />
-                    </button>
-                  )}
+          {/* ================= MOBILE CARDS ================= */}
+          <div className="md:hidden space-y-3">
+            {filteredStudents.map((student, index) => (
+              <div
+                key={student.id}
+                className="border rounded-lg p-4 bg-white shadow-sm"
+              >
+                <div className="flex justify-between">
+                  <p className="font-semibold">
+                    {index + 1}. {student.firstName} {student.lastName}
+                  </p>
+
+                  <span
+                    className={`text-xs px-2 py-1 rounded ${
+                      student.status === "Left"
+                        ? "bg-red-500 text-white"
+                        : "bg-green-500 text-white"
+                    }`}
+                  >
+                    {student.status}
+                  </span>
+                </div>
+
+                <p className="text-sm text-gray-600 mt-1">Age: {student.age}</p>
+
+                <p className="text-sm">
+                  Belt: {student.sports?.[0]?.belt || "-"}
+                </p>
+
+                <div className="flex justify-end gap-3 mt-3">
+                  <button
+                    onClick={() => {
+                      setEditingStudent(student);
+                      setShowEditStudentModal(true);
+                    }}
+                  >
+                    ✏️
+                  </button>
+                  <button
+                    onClick={() =>
+                      statusFilter === "Left"
+                        ? permanentlyDeleteStudent(student)
+                        : markAsLeftConfirm(student)
+                    }
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
+
       {/* ================= UPLOAD TYPE MODAL ================= */}
-      {showUploadTypeModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white w-[90%] sm:w-[360px] rounded-xl p-6 shadow-xl">
-            <h3 className="text-lg font-semibold text-center mb-4">
-              Select Media Type
-            </h3>
 
-            <div className="grid grid-cols-3 gap-3 mb-5">
-              <button
-                onClick={() => setSelectedUploadType("image")}
-                className={`py-2 rounded border ${selectedUploadType === "image"
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-100"
-                  }`}
-              >
-                Image
-              </button>
-
-              <button
-                onClick={() => setSelectedUploadType("video")}
-                className={`py-2 rounded border ${selectedUploadType === "video"
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-100"
-                  }`}
-              >
-                Video
-              </button>
-
-              <button
-                onClick={() => setSelectedUploadType("reel")}
-                className={`py-2 rounded border ${selectedUploadType === "reel"
-                  ? "bg-orange-500 text-white"
-                  : "bg-gray-100"
-                  }`}
-              >
-                Reel
-              </button>
-            </div>
-
-            {/* Upload Status */}
-            {uploading && (
-              <p className="text-center text-sm text-orange-500 mb-3 animate-pulse">
-                ⏳ Please wait, media file is uploading...
-              </p>
-            )}
-
-            {uploadMsg && (
-              <p className="text-center text-sm text-green-600 mb-3">
-                {uploadMsg}
-              </p>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowUploadTypeModal(false);
-                  setPendingFile(null);
-                  setSelectedUploadType("");
-                }}
-                className="flex-1 border rounded py-2"
-              >
-                Cancel
-              </button>
-
-              <button
-                disabled={!selectedUploadType || uploading}
-                onClick={handleUpload}
-                className="flex-1 bg-orange-500 text-white rounded py-2 disabled:opacity-50"
-              >
-                Upload
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {showEditStudentModal && editingStudent && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 lg:pl-[220px]">
           <div className="bg-white w-[95%] max-w-[700px] sm:max-w-[800px] md:max-w-[900px] rounded-2xl shadow-2xl mx-auto">
@@ -1905,11 +1565,8 @@ const MyAccountPage = ({ setActiveMenu }) => {
               </div>
 
               {/* FOOTER */}
-              <div className="flex justify-end gap-4 px-6 py-4 border-t bg-gray-50 rounded-b-2xl">
-                <button
-                  onClick={() => setShowEditStudentModal(false)}
-                  className="px-5 py-2 border rounded-md"
-                >
+              <div className="p-4 border-t flex justify-end gap-3">
+                <button onClick={() => setShowEditStudentModal(false)}>
                   Cancel
                 </button>
 
@@ -1928,9 +1585,9 @@ const MyAccountPage = ({ setActiveMenu }) => {
 
                     setShowEditStudentModal(false);
                   }}
-                  className="bg-orange-500 text-white px-6 py-2 rounded-md shadow"
+                  className="bg-orange-500 text-white px-4 py-2 rounded"
                 >
-                  Save Changes
+                  Save
                 </button>
               </div>
             </div>

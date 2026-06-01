@@ -319,7 +319,7 @@ const RazorpayKYC = () => {
                 {/* EDIT BUTTON */}
                 <button
                   onClick={() => setEditing(true)}
-                  className="mt-8 w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 transition text-white font-semibold flex items-center justify-center gap-2"
+                  className="mt-8 w-full h-12 rounded-2xl bg-orange-500 hover:bg-orange-600 transition text-white font-semibold flex items-center justify-center gap-2"
                 >
                   <Pencil size={18} />
                   Edit Details

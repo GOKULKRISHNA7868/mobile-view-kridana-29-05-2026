@@ -257,16 +257,16 @@ const EmployeeAttendancePage = () => {
 
   /* 🔹 Filter + Sort by name */
   const filteredEmployees = useMemo(() => {
+    const searchText = search.toLowerCase();
+
     return employees
       .filter((emp) =>
-        `${emp.firstName} ${emp.lastName}`
-          .toLowerCase()
-          .includes(search.toLowerCase()),
+        `${emp.firstName} ${emp.lastName}`.toLowerCase().includes(searchText),
       )
       .sort((a, b) =>
-        `${a.firstName} ${a.lastName}`
-          .toLowerCase()
-          .localeCompare(`${b.firstName} ${b.lastName}`.toLowerCase()),
+        `${a.firstName} ${a.lastName}`.localeCompare(
+          `${b.firstName} ${b.lastName}`,
+        ),
       );
   }, [employees, search]);
 
@@ -324,11 +324,12 @@ const EmployeeAttendancePage = () => {
     // revert changes
   };
 
-  const hasChanges =
-    JSON.stringify(draftAttendance) !== JSON.stringify(attendance);
+  const hasChanges = useMemo(() => {
+    return JSON.stringify(draftAttendance) !== JSON.stringify(attendance);
+  }, [draftAttendance, attendance]);
 
   return (
-    <div className="p-6 bg-[#f3f4f6] h-screen flex flex-col overflow-hidden">
+    <div className="bg-[#f3f4f6] h-[calc(100vh-80px)] flex flex-col overflow-hidden pt-10 pb-10 px-4 md:px-6">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold">Employee Attendance</h1>
@@ -381,7 +382,7 @@ const EmployeeAttendancePage = () => {
       {/* ================= RESPONSIVE ATTENDANCE TABLE ================= */}
       <div className="border-2 border-orange-300 rounded-xl overflow-hidden bg-white">
         {/* ================= DESKTOP VIEW ================= */}
-        <div className="hidden lg:block max-h-[45vh] overflow-y-auto overscroll-y-contain">
+        <div className="hidden lg:block flex-1 overflow-y-auto scrollbar-thin">
           {/* HEADER */}
           <div className="grid grid-cols-5 bg-black text-orange-500 font-semibold px-6 py-3 text-sm">
             <div>Employee Name</div>
@@ -460,7 +461,7 @@ const EmployeeAttendancePage = () => {
         </div>
 
         {/* ================= MOBILE VIEW ================= */}
-        <div className="lg:hidden divide-y max-h-[45vh] overflow-y-auto overscroll-y-contain">
+        <div className="lg:hidden flex-1 overflow-y-auto divide-y">
           {filteredEmployees.map((emp, index) => {
             const record = draftAttendance[emp.uid];
 
@@ -468,7 +469,7 @@ const EmployeeAttendancePage = () => {
               <div
                 key={emp.uid}
                 onClick={() => setSelectedEmployee(emp)}
-                className={`p-4 transition ${
+                className={`p-3 transition ${
                   selectedEmployee?.uid === emp.uid
                     ? "bg-orange-50"
                     : "hover:bg-gray-50"
@@ -492,7 +493,7 @@ const EmployeeAttendancePage = () => {
                 </div>
 
                 {/* Attendance Buttons */}
-                <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="grid grid-cols-2 gap-2 mt-3">
                   <button
                     onClick={() => saveAttendance(emp, "present")}
                     className={`rounded-lg py-3 text-sm font-semibold border transition ${

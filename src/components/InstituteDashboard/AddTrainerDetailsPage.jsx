@@ -472,15 +472,12 @@ export default function AddTrainerDetailsPage() {
     e.target.value = null;
   };
 
-
   const formatName = (value) => {
     return value
       .toLowerCase()
       .replace(/[^a-z.\s]/g, "") // allow letters + dot + space
       .split(" ")
-      .map((word) =>
-        word ? word.charAt(0).toUpperCase() + word.slice(1) : ""
-      )
+      .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : ""))
       .join(" ");
   };
 
@@ -675,7 +672,7 @@ export default function AddTrainerDetailsPage() {
   }, []);
   /* -------------------- UI -------------------- */
   return (
-    <div className="min-h-screen flex justify-center bg-white py-6 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex justify-center bg-white pt-2 pb-24 sm:pb-10 px-3 sm:px-6 lg:px-8 overflow-x-hidden">
       <div className="w-full max-w-6xl">
         {/* HEADER */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-6 mb-10 text-center lg:text-left">
@@ -722,8 +719,9 @@ export default function AddTrainerDetailsPage() {
               {[1, 2].map((s) => (
                 <div
                   key={s}
-                  className={`h-3 flex-1 rounded-full ${step >= s ? "bg-orange-500" : "bg-gray-300"
-                    }`}
+                  className={`h-3 flex-1 rounded-full ${
+                    step >= s ? "bg-orange-500" : "bg-gray-300"
+                  }`}
                 />
               ))}
             </div>
@@ -907,8 +905,9 @@ export default function AddTrainerDetailsPage() {
 
                   <ChevronDown
                     size={18}
-                    className={`ml-2 flex-shrink-0 transition-transform ${showCategoryDropdown ? "rotate-180" : ""
-                      }`}
+                    className={`ml-2 flex-shrink-0 transition-transform ${
+                      showCategoryDropdown ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -957,21 +956,23 @@ export default function AddTrainerDetailsPage() {
                     formData.category &&
                     setShowSubCategoryDropdown(!showSubCategoryDropdown)
                   }
-                  className={`${inputClass} w-full flex items-center justify-between text-left ${!formData.category && "bg-gray-100 cursor-not-allowed"
-                    }`}
+                  className={`${inputClass} w-full flex items-center justify-between text-left ${
+                    !formData.category && "bg-gray-100 cursor-not-allowed"
+                  }`}
                 >
                   <span>
                     {formData.subCategory
                       ? formData.subCategory
                       : formData.category
-                        ? "Select Sub Category"
-                        : "Select Category First"}
+                      ? "Select Sub Category"
+                      : "Select Category First"}
                   </span>
 
                   <ChevronDown
                     size={18}
-                    className={`ml-2 flex-shrink-0 transition-transform ${showSubCategoryDropdown ? "rotate-180" : ""
-                      }`}
+                    className={`ml-2 flex-shrink-0 transition-transform ${
+                      showSubCategoryDropdown ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -1131,10 +1132,11 @@ export default function AddTrainerDetailsPage() {
                   onClick={handleSubmit}
                   disabled={saving}
                   className={`px-10 py-3 rounded-md font-semibold text-white transition
-    ${saving
-                      ? "bg-orange-300 cursor-not-allowed"
-                      : "bg-orange-500 hover:bg-orange-600"
-                    }`}
+    ${
+      saving
+        ? "bg-orange-300 cursor-not-allowed"
+        : "bg-orange-500 hover:bg-orange-600"
+    }`}
                 >
                   {saving ? "Saving..." : "Save"}
                 </button>
@@ -1149,7 +1151,7 @@ export default function AddTrainerDetailsPage() {
             <button
               type="button"
               onClick={handleNext}
-              className="bg-orange-500 px-8 py-2 rounded-md font-semibold text-white"
+              className="bg-orange-500 px-5 py-2 rounded-md font-semibold text-white"
             >
               Next
             </button>

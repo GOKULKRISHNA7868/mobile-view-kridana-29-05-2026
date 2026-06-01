@@ -452,9 +452,9 @@ export default function AllPeoplePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-white max-w-md mx-auto pb-24">
+    <div className="h-screen bg-gradient-to-b from-orange-50 via-white to-white max-w-md mx-auto flex flex-col overflow-hidden">
       {/* HEADER */}
-      <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-4 pt-4 pb-3 border-b border-orange-100 shadow-sm relative">
+      <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-4 pt-4 pb-3 border-b border-orange-100 shadow-sm relative flex-shrink-0">
         {/* TOP */}
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">People</h1>
@@ -617,7 +617,7 @@ export default function AllPeoplePage() {
       </div>
 
       {/* LIST */}
-      <div className="p-3 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {loading ? (
           <div className="flex justify-center py-10">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
@@ -693,41 +693,6 @@ export default function AllPeoplePage() {
       </div>
 
       {/* BOTTOM NAV */}
-      <div className="fixed bottom-3 left-2 right-2 max-w-md mx-auto bg-white rounded-3xl shadow-2xl z-50 border border-gray-100">
-        <div className="grid grid-cols-4 py-3 px-2">
-          <button
-            onClick={() => navigate("/")}
-            className="flex flex-col items-center text-gray-700"
-          >
-            <Home size={22} />
-            <span className="text-[11px]">Home</span>
-          </button>
-
-          <button
-            onClick={() => navigate("/people")}
-            className="flex flex-col items-center text-orange-500"
-          >
-            <Users size={22} />
-            <span className="text-[11px]">People</span>
-          </button>
-
-          <button
-            onClick={() => setActiveFilter("following")}
-            className="flex flex-col items-center text-gray-700"
-          >
-            <Heart size={22} />
-            <span className="text-[11px]">Following</span>
-          </button>
-
-          <button
-            onClick={() => navigate("/MobileEditprofile")}
-            className="flex flex-col items-center text-gray-700"
-          >
-            <User size={22} />
-            <span className="text-[11px]">Profile</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

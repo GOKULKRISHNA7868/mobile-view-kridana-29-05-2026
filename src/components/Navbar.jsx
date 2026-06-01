@@ -391,53 +391,7 @@ const Navbar = () => {
   /* ================= MOBILE FOOTER SAFE SPACE ================= */
   /* ================= MOBILE SAFE FOOTER SPACE ================= */
   /* ================= GLOBAL MOBILE SAFE FOOTER SPACE ================= */
-  useEffect(() => {
-    const updateBottomSpacing = () => {
-      const isMobile = window.innerWidth < 768;
 
-      if (isMobile) {
-        // navbar height + safe area + extra gap
-        const safeBottom = "calc(95px + env(safe-area-inset-bottom) + 12px)";
-
-        // body spacing
-        document.body.style.paddingBottom = safeBottom;
-
-        // root spacing
-        document.documentElement.style.paddingBottom = safeBottom;
-
-        // prevent content hiding
-        document.body.style.boxSizing = "border-box";
-        document.documentElement.style.boxSizing = "border-box";
-
-        // IMPORTANT
-        // allows scrolling above navbar
-        document.body.style.minHeight = "100dvh";
-        document.documentElement.style.minHeight = "100dvh";
-      } else {
-        document.body.style.paddingBottom = "0px";
-        document.documentElement.style.paddingBottom = "0px";
-
-        document.body.style.minHeight = "";
-        document.documentElement.style.minHeight = "";
-      }
-    };
-
-    updateBottomSpacing();
-
-    window.addEventListener("resize", updateBottomSpacing);
-    window.addEventListener("orientationchange", updateBottomSpacing);
-
-    return () => {
-      window.removeEventListener("resize", updateBottomSpacing);
-      window.removeEventListener("orientationchange", updateBottomSpacing);
-
-      document.body.style.paddingBottom = "0px";
-      document.documentElement.style.paddingBottom = "0px";
-
-      document.body.style.minHeight = "";
-      document.documentElement.style.minHeight = "";
-    };
-  }, []);
   return (
     <>
       <nav className="hidden md:block w-full bg-black shadow-md sticky top-0 z-50">

@@ -1231,7 +1231,7 @@ const ExpenseModal = ({ data, setData, onClose, onSave }) => {
                         value={customCategory}
                         onChange={(e) => setCustomCategory(e.target.value)}
                         placeholder="Enter custom category"
-                        className="h-12 flex-1 rounded-xl border px-4 outline-none bg-white"
+                        className="h-12 flex-4 rounded-xl border px-4 outline-none bg-white"
                       />
 
                       <button

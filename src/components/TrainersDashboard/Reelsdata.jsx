@@ -362,7 +362,7 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
     </div>
   );
   return (
-    <div className="p-3 sm:p-4 md:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div className="min-h-screen pb-24 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-x-hidden">
       {/* HEADER */}
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-6">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight">

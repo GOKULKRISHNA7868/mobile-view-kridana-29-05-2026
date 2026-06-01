@@ -54,6 +54,7 @@ const ChatBox = () => {
   const [renameValue, setRenameValue] = useState("");
   const [chatUsers, setChatUsers] = useState([]);
   const [chatList, setChatList] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const getValidImage = (url, name) => {
     if (!url)
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`;
@@ -932,6 +933,14 @@ const ChatBox = () => {
         users.find((u) => u.uid === uid) || { uid, name: "Unknown User" },
     )
     .filter(Boolean);
+  const filteredChats =
+    activeTab === "group"
+      ? groups.filter((g) =>
+          (g.name || "").toLowerCase().includes(searchTerm.toLowerCase()),
+        )
+      : [...users, ...chatUsers].filter((u) =>
+          (u.name || "").toLowerCase().includes(searchTerm.toLowerCase()),
+        );
 
   return (
     <div
@@ -1053,24 +1062,26 @@ const ChatBox = () => {
 
             <input
               type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={
                 activeTab === "group"
                   ? "Search groups..."
                   : "Search conversations..."
               }
               className="
-      w-full
-      bg-white
-      rounded-2xl
-      py-3
-      pl-11
-      pr-4
-      outline-none
-      text-sm
-      shadow-sm
-      border
-      border-gray-100
-    "
+    w-full
+    bg-white
+    rounded-2xl
+    py-3
+    pl-11
+    pr-4
+    outline-none
+    text-sm
+    shadow-sm
+    border
+    border-gray-100
+  "
             />
           </div>
         </div>
@@ -1149,7 +1160,29 @@ const ChatBox = () => {
   pb-32
 "
         >
-          {(activeTab === "group" ? [...groups] : [...users, ...chatUsers])
+          {activeTab === "group" && groups.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-[50vh] text-center">
+              <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mb-4">
+                <span className="text-3xl">👥</span>
+              </div>
+
+              <h3 className="text-lg font-semibold text-gray-700">
+                No Groups Found
+              </h3>
+
+              <p className="text-sm text-gray-500 mt-2 max-w-[250px]">
+                You haven't created or joined any groups yet.
+              </p>
+
+              <button
+                onClick={() => setShowRecentChats(true)}
+                className="mt-5 bg-[#FF6B00] text-white px-6 py-3 rounded-xl font-medium shadow-md hover:scale-105 transition"
+              >
+                + Create Group
+              </button>
+            </div>
+          )}
+          {filteredChats
             /* REMOVE DUPLICATES */
             .filter(
               (item, index, self) =>

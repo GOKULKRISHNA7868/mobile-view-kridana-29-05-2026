@@ -704,7 +704,7 @@ const AnalyticsPage = () => {
   /* ================= RENDER ================= */
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 overflow-x-hidden">
+    <div className="min-h-screen pb-24 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-x-hidden">
       {/* HEADER */}
 
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-6">
@@ -1065,7 +1065,7 @@ const AnalyticsPage = () => {
 
       {/* WORKFORCE */}
 
-      <div className="bg-white border rounded-3xl p-4 sm:p-6 mt-10 shadow-sm">
+      <div className="bg-white border rounded-3xl p-4 sm:p-6 mt-5 shadow-sm">
         <h2 className="text-2xl font-bold mb-6">Workforce & Clients Metrics</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1075,7 +1075,7 @@ const AnalyticsPage = () => {
             <p className="mt-2">Joined: {employeeStats.joined}</p>
           </div>
 
-          <div className="border border-orange-100 p-5 rounded-3xl bg-orange-50">
+          <div className="border border-orange-100 p-5 rounded-2xl bg-orange-50">
             <h3 className="text-xl font-semibold">Customers</h3>
 
             <p className="mt-2">Joined: {customerStats.joined}</p>

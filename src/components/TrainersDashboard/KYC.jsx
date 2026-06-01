@@ -17,19 +17,21 @@ const TrainerKYC = () => {
     accountNumber: "",
     confirmAccountNumber: "",
     beneficiaryName: "",
+
+    // ✅ UPI FIELDS
+    upiId: "",
+    upiHolderName: "",
   });
 
   const [submitted, setSubmitted] = useState(false);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 🔥 FETCH TRAINER + KYC
   useEffect(() => {
     const fetchData = async () => {
       if (!uid) return;
 
       try {
-        // 🔹 Get trainer details (for autofill)
         const trainerRef = doc(db, "trainers", uid);
         const trainerSnap = await getDoc(trainerRef);
 
@@ -46,7 +48,6 @@ const TrainerKYC = () => {
           }));
         }
 
-        // 🔹 Get KYC
         const kycRef = doc(db, "trainers", uid, "Kyc", "details");
         const kycSnap = await getDoc(kycRef);
 
@@ -64,44 +65,42 @@ const TrainerKYC = () => {
     fetchData();
   }, [uid]);
 
-  // 🔥 HANDLE INPUT
-  // 🔥 HANDLE INPUT
   const handleChange = (e) => {
     let { name, value } = e.target;
 
-    // ✅ Alphabets only + Auto capitalize
     const alphaFields = [
       "accountName",
       "businessName",
       "businessType",
       "profession",
       "beneficiaryName",
+      "upiHolderName",
     ];
 
     if (alphaFields.includes(name)) {
-      value = value.replace(/[^A-Za-z ]/g, ""); // allow letters + space
-      value = value.replace(/\b\w/g, (char) => char.toUpperCase()); // auto capitalize
+      value = value.replace(/[^A-Za-z ]/g, "");
+      value = value.replace(/\b\w/g, (c) => c.toUpperCase());
     }
 
-    // ✅ Numbers only
     if (name === "accountNumber" || name === "confirmAccountNumber") {
       value = value.replace(/[^0-9]/g, "");
     }
 
-    // ✅ Remove spaces in email
     if (name === "accountEmail") {
       value = value.replace(/\s/g, "");
     }
 
-    // ✅ IFSC uppercase
     if (name === "ifsc") {
       value = value.toUpperCase();
+    }
+
+    if (name === "upiId") {
+      value = value.replace(/\s/g, "").toLowerCase();
     }
 
     setForm({ ...form, [name]: value });
   };
 
-  // 🔥 SUBMIT
   const handleSubmit = async () => {
     if (!uid) return;
 
@@ -121,7 +120,7 @@ const TrainerKYC = () => {
       setSubmitted(true);
       setEditing(false);
 
-      alert("✅ Trainer KYC Completed Successfully");
+      alert("✅ KYC Saved Successfully");
     } catch (err) {
       console.error(err);
       alert("❌ Error saving KYC");
@@ -135,167 +134,154 @@ const TrainerKYC = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white shadow-2xl rounded-2xl p-8">
-        <h2 className="text-3xl font-bold text-center mb-6">
+        <h2 className="text-2xl md:text-3xl font-bold text-center mb-6">
           Trainer KYC Details
         </h2>
 
-        {/* ✅ SUCCESS VIEW */}
+        {/* ✅ VIEW MODE */}
         {submitted && !editing ? (
           <>
-            <div className="bg-green-100 text-green-700 p-4 rounded-lg text-center mb-6">
+            <div className="bg-green-100 text-green-700 p-3 rounded-lg text-center mb-5">
               ✅ KYC Completed Successfully
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            {/* BANK DETAILS */}
+            <h3 className="font-semibold text-lg mb-3">🏦 Bank KYC</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-6">
               {Object.entries(form).map(([key, value]) => {
+                if (key === "upiId" || key === "upiHolderName") return null;
+
                 let displayValue = value;
 
-                // 🔥 Fix timestamp
                 if (value && value.seconds) {
                   displayValue = new Date(
                     value.seconds * 1000,
                   ).toLocaleString();
                 }
 
-                // 🔒 Mask account number
                 if (key === "accountNumber") {
-                  displayValue = "****" + value.slice(-4);
+                  displayValue = "****" + value?.slice(-4);
                 }
 
                 return (
-                  <p key={key} className="break-all">
-                    <strong>
-                      {key
-                        .replace(/([A-Z])/g, " $1")
-                        .replace(/^./, (str) => str.toUpperCase())}
-                      :
-                    </strong>{" "}
+                  <p key={key}>
+                    <strong>{key.replace(/([A-Z])/g, " $1")}:</strong>{" "}
                     {String(displayValue)}
                   </p>
                 );
               })}
             </div>
 
+            {/* UPI DETAILS */}
+            <h3 className="font-semibold text-lg mb-3">
+              💳 UPI Transaction KYC
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <p>
+                <strong>UPI ID:</strong> {form.upiId || "-"}
+              </p>
+              <p>
+                <strong>UPI Holder Name:</strong> {form.upiHolderName || "-"}
+              </p>
+            </div>
+
             <button
               onClick={() => setEditing(true)}
-              className="mt-8 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold"
+              className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold"
             >
               Edit Details
             </button>
           </>
         ) : (
           <>
-            {/* ✅ FORM */}
+            {/* FORM */}
+
+            {/* BANK */}
+            <h3 className="font-semibold text-lg mb-3">🏦 Bank Details</h3>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-1 font-medium">Account Name:</label>
-                <input
-                  type="text"
-                  name="accountName"
-                  value={form.accountName}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
+              <Input
+                label="Account Name"
+                name="accountName"
+                form={form}
+                handleChange={handleChange}
+              />
+              <Input
+                label="Email"
+                name="accountEmail"
+                form={form}
+                handleChange={handleChange}
+                type="email"
+              />
+              <Input
+                label="Business Name"
+                name="businessName"
+                form={form}
+                handleChange={handleChange}
+              />
+              <Input
+                label="Business Type"
+                name="businessType"
+                form={form}
+                handleChange={handleChange}
+              />
+              <Input
+                label="Profession"
+                name="profession"
+                form={form}
+                handleChange={handleChange}
+              />
+              <Input
+                label="IFSC Code"
+                name="ifsc"
+                form={form}
+                handleChange={handleChange}
+              />
+              <Input
+                label="Account Number"
+                name="accountNumber"
+                form={form}
+                handleChange={handleChange}
+                inputMode="numeric"
+              />
+              <Input
+                label="Confirm Account Number"
+                name="confirmAccountNumber"
+                form={form}
+                handleChange={handleChange}
+                inputMode="numeric"
+              />
+              <Input
+                label="Beneficiary Name"
+                name="beneficiaryName"
+                form={form}
+                handleChange={handleChange}
+              />
+            </div>
 
-              <div>
-                <label className="block mb-1 font-medium">Account Email:</label>
-                <input
-                  type="email"
-                  name="accountEmail"
-                  value={form.accountEmail}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
+            {/* UPI */}
+            <h3 className="font-semibold text-lg mt-6 mb-3">
+              💳 UPI Transaction KYC
+            </h3>
 
-              <div>
-                <label className="block mb-1 font-medium">Business Name:</label>
-                <input
-                  type="text"
-                  name="businessName"
-                  value={form.businessName}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 font-medium">Business Type:</label>
-                <input
-                  type="text"
-                  name="businessType"
-                  value={form.businessType}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-medium">Profession:</label>
-                <input
-                  type="text"
-                  name="profession"
-                  value={form.profession}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-medium">IFSC Code:</label>
-                <input
-                  type="text"
-                  name="ifsc"
-                  value={form.ifsc}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-medium">
-                  Account Number:
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  name="accountNumber"
-                  value={form.accountNumber}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
-              <div>
-                <label className="block mb-1 font-medium">
-                  Re-enter Account Number:
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  name="confirmAccountNumber"
-                  value={form.confirmAccountNumber}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
-
-              <div>
-                <label className="block mb-1 font-medium">
-                  Beneficiary Name:
-                </label>
-                <input
-                  type="text"
-                  name="beneficiaryName"
-                  value={form.beneficiaryName}
-                  onChange={handleChange}
-                  className="input"
-                />
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Input
+                label="UPI ID"
+                name="upiId"
+                form={form}
+                handleChange={handleChange}
+              />
+              <Input
+                label="UPI Holder Name"
+                name="upiHolderName"
+                form={form}
+                handleChange={handleChange}
+              />
             </div>
 
             <button
               onClick={handleSubmit}
-              className="mt-8 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl font-semibold"
+              className="mt-6 w-full bg-green-600 hover:bg-orange-700 text-white py-3 rounded-xl font-semibold"
             >
               Submit KYC
             </button>
@@ -305,5 +291,27 @@ const TrainerKYC = () => {
     </div>
   );
 };
+
+/* ✅ Reusable Input Component */
+const Input = ({
+  label,
+  name,
+  form,
+  handleChange,
+  type = "text",
+  inputMode,
+}) => (
+  <div>
+    <label className="block mb-1 font-medium">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={form[name] || ""}
+      onChange={handleChange}
+      inputMode={inputMode}
+      className="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-blue-400"
+    />
+  </div>
+);
 
 export default TrainerKYC;

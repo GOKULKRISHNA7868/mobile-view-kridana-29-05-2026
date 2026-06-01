@@ -137,3 +137,13 @@ body {
     width: 66px !important;
   }
 }
+@media (max-width: 768px) {
+  body,
+  #root {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+  }
+
+  * {
+    scroll-padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+}

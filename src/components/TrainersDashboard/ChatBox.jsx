@@ -41,6 +41,7 @@ const ChatBox = () => {
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [unreadCounts, setUnreadCounts] = useState({});
   const [renameValue, setRenameValue] = useState("");
+  const [search, setSearch] = useState("");
   const [chatUsers, setChatUsers] = useState([]);
   const getValidImage = (url, name) => {
     if (!url)
@@ -698,18 +699,36 @@ const ChatBox = () => {
   )
     .map((uid) => users.find((u) => u.uid === uid))
     .filter(Boolean);
+  const filteredUsers = [...users, ...chatUsers].filter((u) =>
+    u?.name?.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const filteredGroups = groups.filter((g) =>
+    g?.name?.toLowerCase().includes(search.toLowerCase()),
+  );
   return (
-    <div className="h-screen w-full bg-[#f7f7f7] flex overflow-hidden relative font-sans">
+    <div
+      className="
+    flex flex-col
+    
+    h-[95dvh]
+    w-full
+    bg-[#ECE5DD]
+    overflow-hidden
+    fixed inset-0
+    md:rounded-3xl
+  "
+    >
       {/* ================= LEFT / MOBILE CHAT LIST ================= */}
       <div
         className={`${
           activeChat || screen === "createGroup" || screen === "participants"
             ? "hidden md:flex"
             : "flex"
-        } flex-col w-full md:w-[380px] border-r bg-[#f7f7f7]`}
+        } flex-col w-full md:w-[380px] border-r bg-[#f7f7f7] h-full`}
       >
         {/* HEADER */}
-        <div className="sticky top-0 z-40 bg-[#f7f7f7] px-5 pt-5 pb-4">
+        <div className="sticky top-0 z-40 bg-[#f7f7f7] px-5 pt-5 pb-4 shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-black">Chat</h1>
@@ -736,7 +755,7 @@ const ChatBox = () => {
                   setScreen("createGroup");
                   setShowMenu(false);
                 }}
-                className="w-full text-left px-5 py-4 hover:bg-gray-50 font-medium"
+                className="w-full text-left sticky top-9 bg-white z-20 border-b px-5 py-4 hover:bg-gray-50 font-medium"
               >
                 + Create Group
               </button>
@@ -804,7 +823,9 @@ const ChatBox = () => {
 
               <input
                 type="text"
-                placeholder="Search messages..."
+                placeholder="Search messages, users, groups..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 className="bg-transparent outline-none flex-1 text-sm"
               />
             </div>
@@ -836,7 +857,7 @@ const ChatBox = () => {
           </div>
 
           {/* ACTIVE USERS */}
-          <div className="mt-6 overflow-x-auto whitespace-nowrap no-scrollbar">
+          <div className="mt-6 overflow-x-auto whitespace-nowrap no-scrollbar shrink-0">
             <div className="flex gap-4">
               {[...users, ...chatUsers].slice(0, 20).map((u) => (
                 <div
@@ -863,8 +884,8 @@ const ChatBox = () => {
         </div>
 
         {/* CHAT LIST */}
-        <div className="flex-1 overflow-y-auto px-4 pb-32">
-          {(activeTab === "group" ? groups : [...users, ...chatUsers])
+        <div className="mt-6 overflow-x-auto whitespace-nowrap no-scrollbar">
+          {(activeTab === "group" ? filteredGroups : filteredUsers)
             .sort((a, b) => {
               const aUnread =
                 unreadCounts[
@@ -949,7 +970,7 @@ const ChatBox = () => {
       {/* ================= CREATE GROUP ================= */}
       {screen === "createGroup" && !activeChat && (
         <div className="flex-1 bg-white overflow-y-auto">
-          <div className="sticky top-0 bg-white z-20 border-b px-4 py-4 flex items-center gap-3">
+          <div className="sticky top-10 bg-white z-20 border-b px-4 py-4 flex items-center gap-3">
             <button onClick={() => setScreen("chat")} className="text-lg">
               ←
             </button>
@@ -957,7 +978,7 @@ const ChatBox = () => {
             <h2 className="font-semibold text-lg">Create Group</h2>
           </div>
 
-          <div className="p-5">
+          <div className="p-10">
             <input
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
@@ -1013,7 +1034,7 @@ const ChatBox = () => {
       {screen === "participants" && activeChat && (
         <div className="flex-1 bg-[#f7f7f7] overflow-y-auto">
           {/* HEADER */}
-          <div className="sticky top-0 z-30 bg-white border-b px-4 py-4 flex items-center gap-3">
+          <div className="sticky top-10 z-30 bg-white border-b px-4 py-4 flex items-center gap-3">
             <button
               onClick={() => setScreen("chat")}
               className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center"
@@ -1082,7 +1103,7 @@ const ChatBox = () => {
 
       {/* ================= ACTIVE CHAT ================= */}
       {screen === "chat" && activeChat && (
-        <div className="flex-1 flex flex-col h-full bg-[#f7f7f7]">
+        <div className="flex-1 flex flex-col h-full min-h-0 bg-[#f7f7f7]">
           {/* HEADER */}
           <div className="sticky top-0 z-40 bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm">
             <div className="flex items-center gap-3">
@@ -1205,7 +1226,7 @@ const ChatBox = () => {
           </div>
 
           {/* MESSAGES */}
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 pb-32">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 py-6 space-y-4">
             <div className="flex justify-center">
               <div className="bg-gray-200 text-xs px-4 py-1 rounded-full text-gray-600">
                 Today
@@ -1257,7 +1278,7 @@ const ChatBox = () => {
           </div>
 
           {/* INPUT */}
-          <div className="sticky bottom-0 bg-[#f7f7f7] px-4 py-4">
+          <div className="shrink-0 bg-[#f7f7f7] px-4 py-4 border-t">
             <div className="bg-white rounded-full flex items-center gap-3 px-4 py-3 shadow-lg">
               <button className="text-gray-500">📎</button>
 

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { initializeAdMob } from "./utils/admob";
 import { Routes, Route, useLocation } from "react-router-dom";
 
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -134,6 +135,9 @@ import Paymentselection from "./components/UserDashboard/paymentselection.jsx";
 import TrainerPaymentSelection from "./components/UserDashboard/TrainerPaymentSelection.jsx";
 
 function App() {
+  useEffect(() => {
+    initializeAdMob();
+  }, []);
   usePageTracking();
 
   const location = useLocation();
@@ -260,282 +264,308 @@ function App() {
           <WishlistProvider>
             <div
               className="
-                bg-white
-                text-black
-                min-h-screen
-                overflow-x-hidden
-                touch-pan-y
-              "
+    bg-white
+    text-black
+    min-h-screen
+    overflow-x-hidden
+    touch-pan-y
+    md:pb-0
+  "
               style={{
                 overscrollBehaviorX: "none",
                 WebkitOverflowScrolling: "touch",
+                paddingBottom:
+                  window.innerWidth < 768
+                    ? "calc(0px + env(safe-area-inset-bottom))"
+                    : "0px",
               }}
             >
               {showNavbar && <Navbar />}
 
               <ScrollToTop />
-
-              <Routes>
-                {/* =====================================================
+              <main
+                className="app-content pb-[90px] md:pb-0"
+                style={{
+                  paddingBottom:
+                    window.innerWidth < 768
+                      ? "calc(0px + env(safe-area-inset-bottom))"
+                      : "0px",
+                }}
+              >
+                <Routes>
+                  {/* =====================================================
                     AUTH
                 ===================================================== */}
-                <Route path="AllPeoplePage" element={<AllPeoplePage />} />
+                  <Route path="AllPeoplePage" element={<AllPeoplePage />} />
 
-                <Route
-                  path="/PaymentMethodPage"
-                  element={<PaymentMethodPage />}
-                />
+                  <Route
+                    path="/PaymentMethodPage"
+                    element={<PaymentMethodPage />}
+                  />
 
-                <Route
-                  path="/TrainerPaymentSelection"
-                  element={<TrainerPaymentSelection />}
-                />
+                  <Route
+                    path="/TrainerPaymentSelection"
+                    element={<TrainerPaymentSelection />}
+                  />
 
-                <Route
-                  path="/paymentselection"
-                  element={<Paymentselection />}
-                />
+                  <Route
+                    path="/paymentselection"
+                    element={<Paymentselection />}
+                  />
 
-                <Route path="/about" element={<About />} />
+                  <Route path="/about" element={<About />} />
 
-                <Route path="/career" element={<Career />} />
+                  <Route path="/career" element={<Career />} />
 
-                <Route path="/contact" element={<Contact />} />
+                  <Route path="/contact" element={<Contact />} />
 
-                <Route path="/" element={<Landing />} />
+                  <Route path="/" element={<Landing />} />
 
-                <Route path="/login" element={<Login />} />
+                  <Route path="/login" element={<Login />} />
 
-                <Route path="/signup" element={<Signup />} />
+                  <Route path="/signup" element={<Signup />} />
 
-                <Route path="/trainer-signup" element={<TrainerSignup />} />
+                  <Route path="/trainer-signup" element={<TrainerSignup />} />
 
-                <Route path="/institute-signup" element={<InstituteSignup />} />
+                  <Route
+                    path="/institute-signup"
+                    element={<InstituteSignup />}
+                  />
 
-                <Route path="/chat/:chatId" element={<ChatBox />} />
+                  <Route path="/chat/:chatId" element={<ChatBox />} />
 
-                <Route
-                  path="/MobileCategoriesPage"
-                  element={<MobileCategoriesPage />}
-                />
+                  <Route
+                    path="/MobileCategoriesPage"
+                    element={<MobileCategoriesPage />}
+                  />
 
-                <Route
-                  path="/MobileEditprofile"
-                  element={<MobileEditprofile />}
-                />
+                  <Route
+                    path="/MobileEditprofile"
+                    element={<MobileEditprofile />}
+                  />
 
-                <Route
-                  path="/StudentsAttendancePage"
-                  element={<StudentsAttendancePage />}
-                />
+                  <Route
+                    path="/StudentsAttendancePage"
+                    element={<StudentsAttendancePage />}
+                  />
 
-                <Route
-                  path="/TrainerStudentsPage"
-                  element={<TrainerStudentsPage />}
-                />
+                  <Route
+                    path="/TrainerStudentsPage"
+                    element={<TrainerStudentsPage />}
+                  />
 
-                <Route path="/feedback" element={<Feedback />} />
+                  <Route path="/feedback" element={<Feedback />} />
 
-                <Route path="/help-center" element={<HelpCenter />} />
+                  <Route path="/help-center" element={<HelpCenter />} />
 
-                <Route
-                  path="/pending-fees/:branch"
-                  element={<PendingFeesDetails />}
-                />
+                  <Route
+                    path="/pending-fees/:branch"
+                    element={<PendingFeesDetails />}
+                  />
 
-                <Route path="/Uploadimages" element={<Uploadimages />} />
+                  <Route path="/Uploadimages" element={<Uploadimages />} />
 
-                <Route
-                  path="/components/InstituteDashboard/ChatBox"
-                  element={<ChatBox1 />}
-                />
+                  <Route
+                    path="/components/InstituteDashboard/ChatBox"
+                    element={<ChatBox1 />}
+                  />
 
-                <Route path="/ChatBox" element={<ChatBoxT />} />
+                  <Route path="/ChatBox" element={<ChatBoxT />} />
 
-                <Route
-                  path="/components/UserDashboard/ChatBox"
-                  element={<ChatBoxS />}
-                />
+                  <Route
+                    path="/components/UserDashboard/ChatBox"
+                    element={<ChatBoxS />}
+                  />
 
-                {/* =====================================================
+                  {/* =====================================================
                     LANDING
                 ===================================================== */}
-                <Route path="/RoleSelection" element={<RoleSelection />} />
+                  <Route path="/RoleSelection" element={<RoleSelection />} />
 
-                <Route path="/reels/:index" element={<ReelViewer />} />
+                  <Route path="/reels/:index" element={<ReelViewer />} />
 
-                <Route path="/trending-plays" element={<Reelspage />} />
+                  <Route path="/trending-plays" element={<Reelspage />} />
 
-                <Route
-                  path="/feepaymentsuccess"
-                  element={<FeePaymentSuccess />}
-                />
+                  <Route
+                    path="/feepaymentsuccess"
+                    element={<FeePaymentSuccess />}
+                  />
 
-                <Route
-                  path="/Instfeepaymentsuccess"
-                  element={<InstFeePaymentSuccess />}
-                />
+                  <Route
+                    path="/Instfeepaymentsuccess"
+                    element={<InstFeePaymentSuccess />}
+                  />
 
-                {/* =====================================================
+                  {/* =====================================================
                     DASHBOARDS
                 ===================================================== */}
-                <Route
-                  path="/trainers/dashboard"
-                  element={
-                    <ProtectedRoute role="trainer">
-                      <TrainersDashboard />
-                    </ProtectedRoute>
-                  }
-                />
+                  <Route
+                    path="/trainers/dashboard"
+                    element={
+                      <ProtectedRoute role="trainer">
+                        <TrainersDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                <Route
-                  path="/institutes/dashboard"
-                  element={
-                    <ProtectedRoute role="institute">
-                      <InstituteDashboard />
-                    </ProtectedRoute>
-                  }
-                />
+                  <Route
+                    path="/institutes/dashboard"
+                    element={
+                      <ProtectedRoute role="institute">
+                        <InstituteDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
 
-                <Route path="/user/dashboard" element={<UserDashboard />} />
+                  <Route path="/user/dashboard" element={<UserDashboard />} />
 
-                {/* =====================================================
+                  {/* =====================================================
                     SELL
                 ===================================================== */}
-                <Route
-                  path="/sell-sports-material"
-                  element={<SellSportsMaterial />}
-                />
+                  <Route
+                    path="/sell-sports-material"
+                    element={<SellSportsMaterial />}
+                  />
 
-                <Route
-                  path="/upload-product-details"
-                  element={<UploadProductDetails />}
-                />
+                  <Route
+                    path="/upload-product-details"
+                    element={<UploadProductDetails />}
+                  />
 
-                {/* =====================================================
+                  {/* =====================================================
                     SHOP
                 ===================================================== */}
-                <Route
-                  path="/components/TrainersDashboard/reelsdata"
-                  element={<Reelsdata />}
-                />
+                  <Route
+                    path="/components/TrainersDashboard/reelsdata"
+                    element={<Reelsdata />}
+                  />
 
-                <Route
-                  path="/components/InstituteDashboard/Reelsdata"
-                  element={<InstituteReelsdata />}
-                />
+                  <Route
+                    path="/components/InstituteDashboard/Reelsdata"
+                    element={<InstituteReelsdata />}
+                  />
 
-                <Route path="/shop" element={<ShopPage />} />
+                  <Route path="/shop" element={<ShopPage />} />
 
-                <Route path="/shop/:category" element={<ProductsGridPage />} />
+                  <Route
+                    path="/shop/:category"
+                    element={<ProductsGridPage />}
+                  />
 
-                <Route path="/addresspage" element={<AddAddressPage />} />
+                  <Route path="/addresspage" element={<AddAddressPage />} />
 
-                <Route path="/payment" element={<PaymentPage />} />
+                  <Route path="/payment" element={<PaymentPage />} />
 
-                <Route path="/payment-failed" element={<PaymentFailed />} />
+                  <Route path="/payment-failed" element={<PaymentFailed />} />
 
-                <Route path="/payment-success" element={<PaymentSuccess />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
 
-                <Route path="/cart" element={<CartPage />} />
+                  <Route path="/cart" element={<CartPage />} />
 
-                <Route path="/wishlist" element={<WishlistPage />} />
+                  <Route path="/wishlist" element={<WishlistPage />} />
 
-                <Route
-                  path="/components/TrainersDashboard/ChatBox"
-                  element={<ChatBoxT />}
-                />
+                  <Route
+                    path="/components/TrainersDashboard/ChatBox"
+                    element={<ChatBoxT />}
+                  />
 
-                {/* =====================================================
+                  {/* =====================================================
                     DETAILS
                 ===================================================== */}
-                <Route path="/trainers" element={<ViewTrainers />} />
+                  <Route path="/trainers" element={<ViewTrainers />} />
 
-                <Route path="/institutes" element={<ViewInstitutes />} />
+                  <Route path="/institutes" element={<ViewInstitutes />} />
 
-                <Route path="/trainers/:id" element={<TrainerDetailsPage />} />
+                  <Route
+                    path="/trainers/:id"
+                    element={<TrainerDetailsPage />}
+                  />
 
-                <Route
-                  path="/institutes/:id"
-                  element={<InstituteDetailsPage />}
-                />
+                  <Route
+                    path="/institutes/:id"
+                    element={<InstituteDetailsPage />}
+                  />
 
-                <Route path="/viewTrainers" element={<ViewTrainers />} />
+                  <Route path="/viewTrainers" element={<ViewTrainers />} />
 
-                <Route path="/viewInstitutes" element={<ViewInstitutes />} />
+                  <Route path="/viewInstitutes" element={<ViewInstitutes />} />
 
-                <Route path="/terms" element={<Terms />} />
+                  <Route path="/terms" element={<Terms />} />
 
-                <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/privacy" element={<Privacy />} />
 
-                <Route path="/paymentpolicy" element={<PaymentPolicy />} />
+                  <Route path="/paymentpolicy" element={<PaymentPolicy />} />
 
-                <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
 
-                <Route
-                  path="/customer-policies"
-                  element={<CustomerCentricPolicies />}
-                />
+                  <Route
+                    path="/customer-policies"
+                    element={<CustomerCentricPolicies />}
+                  />
 
-                <Route
-                  path="/delivery-shipping-policy"
-                  element={<DeliveryAndShippingPolicy />}
-                />
+                  <Route
+                    path="/delivery-shipping-policy"
+                    element={<DeliveryAndShippingPolicy />}
+                  />
 
-                <Route
-                  path="/payment-refund-policy"
-                  element={<PaymentAndRefundPolicy />}
-                />
+                  <Route
+                    path="/payment-refund-policy"
+                    element={<PaymentAndRefundPolicy />}
+                  />
 
-                {/* =====================================================
+                  {/* =====================================================
                     SERVICES
                 ===================================================== */}
-                <Route path="/categories" element={<Categories />} />
+                  <Route path="/categories" element={<Categories />} />
 
-                <Route
-                  path="/services/martial-arts"
-                  element={<MartialArts />}
-                />
+                  <Route
+                    path="/services/martial-arts"
+                    element={<MartialArts />}
+                  />
 
-                <Route path="/services/teamball" element={<TeamBallSports />} />
+                  <Route
+                    path="/services/teamball"
+                    element={<TeamBallSports />}
+                  />
 
-                <Route
-                  path="/services/racketsports"
-                  element={<RacketSports />}
-                />
+                  <Route
+                    path="/services/racketsports"
+                    element={<RacketSports />}
+                  />
 
-                <Route path="/services/fitness" element={<Fitness />} />
+                  <Route path="/services/fitness" element={<Fitness />} />
 
-                <Route
-                  path="/services/target-precision-sports"
-                  element={<TargetPrecisionSports />}
-                />
+                  <Route
+                    path="/services/target-precision-sports"
+                    element={<TargetPrecisionSports />}
+                  />
 
-                <Route
-                  path="/services/equestrian-sports"
-                  element={<EquestrianSports />}
-                />
+                  <Route
+                    path="/services/equestrian-sports"
+                    element={<EquestrianSports />}
+                  />
 
-                <Route
-                  path="/services/adventure-outdoor-sports"
-                  element={<AdventureOutdoorSports />}
-                />
+                  <Route
+                    path="/services/adventure-outdoor-sports"
+                    element={<AdventureOutdoorSports />}
+                  />
 
-                <Route path="/services/ice-sports" element={<IceSports />} />
+                  <Route path="/services/ice-sports" element={<IceSports />} />
 
-                <Route path="/services/wellness" element={<Wellness />} />
+                  <Route path="/services/wellness" element={<Wellness />} />
 
-                <Route path="/services/dance" element={<Dance />} />
+                  <Route path="/services/dance" element={<Dance />} />
 
-                <Route path="/services/aquatic" element={<AquaticSports />} />
+                  <Route path="/services/aquatic" element={<AquaticSports />} />
 
-                <Route path="/plans" element={<Plans />} />
+                  <Route path="/plans" element={<Plans />} />
 
-                <Route
-                  path="/book-demo/:instituteId"
-                  element={<AvailableDemoClasses />}
-                />
-              </Routes>
+                  <Route
+                    path="/book-demo/:instituteId"
+                    element={<AvailableDemoClasses />}
+                  />
+                </Routes>
+              </main>
             </div>
           </WishlistProvider>
         </CartProvider>

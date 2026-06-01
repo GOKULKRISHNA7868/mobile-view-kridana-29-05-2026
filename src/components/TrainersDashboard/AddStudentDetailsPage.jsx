@@ -880,7 +880,7 @@ export default function AddTrainerDetailsPage() {
 
   /* -------------------- UI -------------------- */
   return (
-    <div className="min-h-screen flex justify-center bg-white py-10">
+    <div className="min-h-screen flex justify-center bg-white pt-2 pb-24 sm:pb-10 px-3 sm:px-6 lg:px-8 overflow-x-hidden">
       <div className="w-full max-w-5xl p-2">
         {/* HEADER */}
         <div className="flex flex-col lg:flex-row items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-10 text-center lg:text-left">
@@ -939,8 +939,9 @@ export default function AddTrainerDetailsPage() {
               {[1, 2].map((s) => (
                 <div
                   key={s}
-                  className={`h-3 flex-1 rounded-full ${step >= s ? "bg-orange-500" : "bg-gray-300"
-                    }`}
+                  className={`h-3 flex-1 rounded-full ${
+                    step >= s ? "bg-orange-500" : "bg-gray-300"
+                  }`}
                 />
               ))}
             </div>
@@ -1095,17 +1096,20 @@ export default function AddTrainerDetailsPage() {
               <input
                 type="date"
                 placeholder="dd-mm-yyyy"
-                className={`${inputClass} mobile-date ${errors.joiningDate
+                className={`${inputClass} mobile-date ${
+                  errors.joiningDate
                     ? "border-red-500 focus:border-red-500"
                     : ""
-                  }`}
+                }`}
                 min={
                   formData.dateOfBirth
                     ? new Date(
-                      new Date(formData.dateOfBirth).setDate(
-                        new Date(formData.dateOfBirth).getDate() + 1
+                        new Date(formData.dateOfBirth).setDate(
+                          new Date(formData.dateOfBirth).getDate() + 1,
+                        ),
                       )
-                    ).toISOString().split("T")[0]
+                        .toISOString()
+                        .split("T")[0]
                     : "1900-01-01"
                 }
                 max={new Date().toISOString().split("T")[0]}
@@ -1114,18 +1118,18 @@ export default function AddTrainerDetailsPage() {
                   const value = e.target.value;
 
                   if (formData.dateOfBirth && value <= formData.dateOfBirth) {
-                    setErrors(prev => ({
+                    setErrors((prev) => ({
                       ...prev,
                       joiningDate: "Joining date must be after DOB",
                     }));
                   } else {
-                    setErrors(prev => ({
+                    setErrors((prev) => ({
                       ...prev,
                       joiningDate: "",
                     }));
                   }
 
-                  setFormData(prev => ({
+                  setFormData((prev) => ({
                     ...prev,
                     joiningDate: value,
                   }));
@@ -1156,8 +1160,9 @@ export default function AddTrainerDetailsPage() {
 
                   <ChevronDown
                     size={16}
-                    className={`transition-transform ${showCategoryDropdown ? "rotate-180" : ""
-                      }`}
+                    className={`transition-transform ${
+                      showCategoryDropdown ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -1207,21 +1212,23 @@ export default function AddTrainerDetailsPage() {
                     formData.category &&
                     setShowSubCategoryDropdown(!showSubCategoryDropdown)
                   }
-                  className={`${inputClass} w-full flex items-center justify-between ${!formData.category && "bg-gray-100 cursor-not-allowed"
-                    }`}
+                  className={`${inputClass} w-full flex items-center justify-between ${
+                    !formData.category && "bg-gray-100 cursor-not-allowed"
+                  }`}
                 >
                   <span>
                     {formData.subCategory
                       ? formData.subCategory
                       : formData.category
-                        ? "Select Sub Category"
-                        : "Select Category First"}
+                      ? "Select Sub Category"
+                      : "Select Category First"}
                   </span>
 
                   <ChevronDown
                     size={16}
-                    className={`transition-transform ${showSubCategoryDropdown ? "rotate-180" : ""
-                      }`}
+                    className={`transition-transform ${
+                      showSubCategoryDropdown ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -1328,14 +1335,15 @@ export default function AddTrainerDetailsPage() {
                   <span>
                     {formData.timings
                       ? timeSlots.find((t) => t.value === formData.timings)
-                        ?.label
+                          ?.label
                       : "Select Time"}
                   </span>
 
                   <ChevronDown
                     size={16}
-                    className={`transition-transform ${showTimeDropdown ? "rotate-180" : ""
-                      }`}
+                    className={`transition-transform ${
+                      showTimeDropdown ? "rotate-180" : ""
+                    }`}
                   />
                 </button>
 
@@ -1583,10 +1591,11 @@ export default function AddTrainerDetailsPage() {
                   onClick={handleSubmit}
                   disabled={isSaving}
                   className={`px-10 py-3 rounded-lg font-semibold text-white transition
-    ${isSaving
-                      ? "bg-orange-300 cursor-not-allowed"
-                      : "bg-orange-500 hover:bg-orange-600"
-                    }
+    ${
+      isSaving
+        ? "bg-orange-300 cursor-not-allowed"
+        : "bg-orange-500 hover:bg-orange-600"
+    }
   `}
                 >
                   {isSaving ? "Saving..." : "Save"}

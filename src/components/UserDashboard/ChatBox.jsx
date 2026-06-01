@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MoreVertical, Smile, Send, Mic } from "lucide-react";
 import { db, auth } from "../../firebase";
+import { useLocation } from "react-router-dom";
 import {
   collection,
   doc,
@@ -45,6 +46,10 @@ const ChatBox = () => {
   const userCache = {};
   const chatUid = selectedStudentUid || user?.uid;
   const [chatFilter, setChatFilter] = useState("all");
+  const location = useLocation();
+
+  const selectedChat = location.state;
+
   const getValidImage = (url, name) => {
     if (!url)
       return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}`;
@@ -106,7 +111,39 @@ const ChatBox = () => {
 
     return fallback;
   };
+  useEffect(() => {
+    if (!selectedChat?.chatId) return;
 
+    const openSelectedChat = async () => {
+      setActiveChat({
+        id: selectedChat.chatId,
+        type: "individual",
+      });
+
+      setActiveChatName(
+        selectedChat.receiverName || selectedChat.instituteName || "Institute",
+      );
+
+      setScreen("chat");
+
+      // force load messages immediately
+      const q = query(
+        collection(db, "chats", selectedChat.chatId, "messages"),
+        orderBy("createdAt", "asc"),
+      );
+
+      const snap = await getDocs(q);
+
+      setMessages(
+        snap.docs.map((d) => ({
+          id: d.id,
+          ...d.data(),
+        })),
+      );
+    };
+
+    openSelectedChat();
+  }, [selectedChat]);
   useEffect(() => {
     if (!chatUid) return;
 
@@ -503,7 +540,7 @@ const ChatBox = () => {
     .map((uid) => users.find((u) => u.uid === uid))
     .filter(Boolean);
   return (
-    <div className="flex h-[82vh] md:h-[60vh] w-full bg-[#f3f3f3] overflow-hidden rounded-xl">
+    <div className=" flex h-[92vh] md:h-[60vh] w-full bg-[#f3f3f3] overflow-hidden rounded-xl">
       {/* ================= CHAT LIST ================= */}
       <div
         className={`
@@ -521,19 +558,6 @@ const ChatBox = () => {
         <div className="px-5 pt-6 pb-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-black">Chat</h1>
-
-            <button
-              onClick={() => setShowSidebar(true)}
-              className="relative bg-[#FF6B00] text-white px-4 py-2 rounded-full text-sm font-medium"
-            >
-              Chats
-              {hasMobileNotification && (
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
-                </span>
-              )}
-            </button>
           </div>
 
           {/* SEARCH */}
@@ -820,17 +844,19 @@ const ChatBox = () => {
         {/* TOP HEADER */}
         <div
           className="
-          bg-white
-          border-b
-          border-gray-100
-          px-4
-          py-3
-          flex
-          items-center
-          justify-between
-          flex-shrink-0
-          z-20
-        "
+    sticky
+    top-3
+    bg-white
+    border-b
+    border-gray-100
+    px-4
+    py-3
+    flex
+    items-center
+    justify-between
+    flex-shrink-0
+    z-20
+  "
         >
           <div className="flex items-center gap-3">
             {/* BACK */}
@@ -864,15 +890,6 @@ const ChatBox = () => {
           </div>
 
           {/* ACTIONS */}
-          <div className="flex items-center gap-4">
-            <button>📞</button>
-
-            <MoreVertical
-              size={20}
-              className="cursor-pointer"
-              onClick={() => setShowMenu(!showMenu)}
-            />
-          </div>
         </div>
 
         {/* MESSAGE AREA */}
@@ -893,7 +910,33 @@ const ChatBox = () => {
               Today
             </div>
           </div>
+          {messages.length === 0 && activeChat && (
+            <div className="flex justify-center mt-8">
+              <div className="bg-white rounded-3xl p-6 shadow-sm max-w-sm text-center">
+                <img
+                  src={getValidImage("", activeChatName)}
+                  alt=""
+                  className="w-16 h-16 rounded-full mx-auto mb-3"
+                />
 
+                <h3 className="font-semibold text-lg">{activeChatName}</h3>
+
+                <p className="text-sm text-gray-500 mt-2">
+                  Start your conversation with {activeChatName}.
+                </p>
+
+                <button
+                  onClick={() => {
+                    setText("Hi 👋");
+                    setTimeout(() => sendMessage(), 100);
+                  }}
+                  className="mt-4 bg-[#FF6B00] text-white px-5 py-2 rounded-full font-medium"
+                >
+                  Continue Chat
+                </button>
+              </div>
+            </div>
+          )}
           {messages.map((m) => {
             const sender = users.find((u) => u.uid === m.senderId);
 
@@ -981,22 +1024,18 @@ const ChatBox = () => {
             <button
               onClick={sendMessage}
               className="
-              w-14
-              h-14
-              rounded-full
-              bg-[#FF6B00]
-              flex
-              items-center
-              justify-center
-              shadow-lg
-              shrink-0
-            "
+    w-14
+    h-12
+    rounded-full
+    bg-[#FF6B00]
+    flex
+    items-center
+    justify-center
+    shadow-lg
+    shrink-0
+  "
             >
-              {text.trim() ? (
-                <Send size={20} className="text-white" />
-              ) : (
-                <Mic size={22} className="text-white" />
-              )}
+              <Send size={20} className="text-white" />
             </button>
           </div>
         </div>

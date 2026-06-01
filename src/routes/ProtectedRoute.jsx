@@ -16,7 +16,6 @@ export default function ProtectedRoute({ children, role }) {
         return;
       }
 
-      // 🔹 ROLE CHECK
       let hasRole = false;
 
       if (role === "trainer") {
@@ -29,34 +28,7 @@ export default function ProtectedRoute({ children, role }) {
         hasRole = snap.exists();
       }
 
-      if (!hasRole) {
-        setAllowed(false);
-        setLoading(false);
-        return;
-      }
-
-      // 🔹 PLAN CHECK
-      const planSnap = await getDoc(doc(db, "plans", user.uid));
-      if (!planSnap.exists()) {
-        setAllowed(false);
-        setLoading(false);
-        return;
-      }
-
-      const plan = planSnap.data();
-      const now = Date.now();
-
-      if (
-        plan.currentPlan?.status !== "active" ||
-        plan.currentPlan?.endDate?.toMillis() < now
-      ) {
-        setAllowed(false);
-        setLoading(false);
-        return;
-      }
-
-      // ✅ ALL CHECKS PASSED
-      setAllowed(true);
+      setAllowed(hasRole);
       setLoading(false);
     });
 
@@ -71,5 +43,5 @@ export default function ProtectedRoute({ children, role }) {
     );
   }
 
-  return allowed ? children : <Navigate to="/plans" replace />;
+  return allowed ? children : <Navigate to="/" replace />;
 }
