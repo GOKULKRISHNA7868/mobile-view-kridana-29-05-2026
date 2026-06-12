@@ -41,7 +41,7 @@ const RazorpayKYC = () => {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
+  const [showChargesModal, setShowChargesModal] = useState(false);
   /* =====================================================
      FETCH KYC
   ===================================================== */
@@ -589,7 +589,31 @@ const RazorpayKYC = () => {
                     </div>
                   </div>
                 </div>
+                {/* IMPORTANT NOTE */}
+                <div className="mt-8 bg-red-50 border border-red-300 rounded-2xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="text-red-600 text-xl">⚠️</div>
 
+                    <div className="flex-1">
+                      <h4 className="font-bold text-red-700 text-sm sm:text-base">
+                        Important Payment Charges Information
+                      </h4>
+
+                      <p className="text-red-600 text-sm mt-1">
+                        Please read the payment settlement and transaction
+                        charge details before submitting your KYC.
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowChargesModal(true)}
+                        className="mt-3 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-xl transition"
+                      >
+                        View Charges & Terms
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 {/* SUBMIT BUTTON */}
                 <button
                   onClick={handleSubmit}
@@ -608,6 +632,118 @@ const RazorpayKYC = () => {
           </div>
         </div>
       </div>
+      {/* PAYMENT CHARGES MODAL */}
+      {showChargesModal && (
+        <div className="fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="bg-red-600 text-white px-5 py-4 flex justify-between items-center">
+              <h3 className="font-bold text-lg">Payment Charges Information</h3>
+
+              <button
+                onClick={() => setShowChargesModal(false)}
+                className="text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[70vh] p-5 space-y-5 text-sm">
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <h4 className="font-bold text-green-700 mb-2">
+                  1. Pay Using Your Business UPI QR Code
+                </h4>
+
+                <p className="font-semibold text-green-600 mb-2">
+                  Zero Transaction Fees
+                </p>
+
+                <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                  <li>Add your business UPI ID during KYC.</li>
+                  <li>
+                    Your business QR code will be generated automatically.
+                  </li>
+                  <li>Students can scan and pay directly.</li>
+                  <li>No platform transaction fees are charged.</li>
+                  <li>
+                    Payments are credited directly to your linked bank account.
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <h4 className="font-bold text-orange-700 mb-3">
+                  2. Razorpay Payment Gateway Charges
+                </h4>
+
+                <div className="space-y-3">
+                  <div>
+                    <p className="font-semibold">Domestic Payments</p>
+
+                    <ul className="list-disc pl-5 text-gray-700">
+                      <li>2% Transaction Fee</li>
+                      <li>18% GST on Transaction Fee</li>
+                      <li>Effective Charge: 2.36%</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold">
+                      International Cards, AMEX, EMI & Corporate Cards
+                    </p>
+
+                    <ul className="list-disc pl-5 text-gray-700">
+                      <li>3% Transaction Fee</li>
+                      <li>18% GST on Transaction Fee</li>
+                      <li>Effective Charge: 3.54%</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <h4 className="font-bold text-blue-700 mb-2">Example</h4>
+
+                <p>
+                  For a payment of <strong>₹100</strong>:
+                </p>
+
+                <ul className="list-disc pl-5 mt-2">
+                  <li>Razorpay Fee: ₹2.36</li>
+                  <li>Amount Settled: ₹97.64</li>
+                </ul>
+              </div>
+
+              <div className="bg-gray-50 border rounded-xl p-4">
+                <h4 className="font-bold mb-2">Additional Information</h4>
+
+                <ul className="list-disc pl-5 space-y-1 text-gray-700">
+                  <li>No setup fees.</li>
+                  <li>No annual maintenance charges.</li>
+                  <li>
+                    Charges apply only to successful Razorpay transactions.
+                  </li>
+                  <li>
+                    GST is calculated only on the transaction fee, not on the
+                    total payment amount.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="border-t p-4 bg-gray-50">
+              <button
+                onClick={() => setShowChargesModal(false)}
+                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white font-semibold"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

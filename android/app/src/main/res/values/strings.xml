@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">kridana</string>
     <string name="title_activity_main">kridana</string>
-    <string name="package_name">com.kridana.app</string>
-    <string name="custom_url_scheme">com.kridana.app</string>
+    <string name="package_name">www.kridana.net</string>
+    <string name="custom_url_scheme">www.kridana.net</string>
 </resources>
