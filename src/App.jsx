@@ -133,11 +133,25 @@ import PaymentMethodPage from "./pages/PaymentMethodPage.jsx";
 import Paymentselection from "./components/UserDashboard/paymentselection.jsx";
 
 import TrainerPaymentSelection from "./components/UserDashboard/TrainerPaymentSelection.jsx";
+import { AdMob } from "@capacitor-community/admob";
 
 function App() {
   useEffect(() => {
-    initializeAdMob();
+    const initAdmob = async () => {
+      try {
+        await AdMob.initialize({
+          initializeForTesting: true,
+        });
+
+        console.log("AdMob initialized");
+      } catch (e) {
+        console.log("AdMob init error", e);
+      }
+    };
+
+    initAdmob();
   }, []);
+
   usePageTracking();
 
   const location = useLocation();
@@ -165,29 +179,21 @@ function App() {
   ========================================================= */
   useEffect(() => {
     let startX = 0;
-    let startY = 0;
 
     const EDGE_SIZE = 20;
 
     const handleTouchStart = (e) => {
       startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
     };
 
     const handleTouchMove = (e) => {
       const currentX = e.touches[0].clientX;
 
-      // =====================================================
-      // BLOCK LEFT EDGE BACK GESTURE ONLY
-      // =====================================================
       if (startX <= EDGE_SIZE && currentX > startX) {
         e.preventDefault();
         return;
       }
 
-      // =====================================================
-      // BLOCK RIGHT EDGE GESTURE ONLY
-      // =====================================================
       if (startX >= window.innerWidth - EDGE_SIZE && currentX < startX) {
         e.preventDefault();
         return;
@@ -198,19 +204,18 @@ function App() {
       passive: true,
     });
 
-    document.addEventListener("touchmove", handleTouchMove, {
-      passive: false,
-    });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
 
-    // =======================================================
-    // HARDWARE BACK BUTTON
-    // =======================================================
-    const backHandler = CapApp.addListener("backButton", ({ canGoBack }) => {
+    let backListener;
+
+    CapApp.addListener("backButton", ({ canGoBack }) => {
       if (canGoBack) {
         window.history.back();
       } else {
         CapApp.exitApp();
       }
+    }).then((listener) => {
+      backListener = listener;
     });
 
     return () => {
@@ -218,7 +223,7 @@ function App() {
 
       document.removeEventListener("touchmove", handleTouchMove);
 
-      backHandler.remove();
+      backListener?.remove();
     };
   }, []);
 
@@ -245,15 +250,16 @@ function App() {
 
     initNotifications();
 
-    const appStateListener = CapApp.addListener(
-      "appStateChange",
-      ({ isActive }) => {
-        console.log("App Active:", isActive);
-      },
-    );
+    let appStateListener;
+
+    CapApp.addListener("appStateChange", ({ isActive }) => {
+      console.log("App Active:", isActive);
+    }).then((listener) => {
+      appStateListener = listener;
+    });
 
     return () => {
-      appStateListener.remove();
+      appStateListener?.remove();
     };
   }, []);
 

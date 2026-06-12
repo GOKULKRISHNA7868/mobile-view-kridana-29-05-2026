@@ -174,11 +174,11 @@ const InstituteProfileEditPage = () => {
 
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", "kridana_upload");
+    data.append("upload_preset", "kirdana");
 
     try {
       const res = await fetch(
-        `https://api.cloudinary.com/v1_1/daiyvial8/${type}/upload`,
+        `https://api.cloudinary.com/v1_1/dr0svrhu1/${type}/upload`,
         {
           method: "POST",
           body: data,
@@ -390,95 +390,94 @@ const InstituteProfileEditPage = () => {
 
       {/* Categories */}
       {/* ✅ CATEGORY DROPDOWN SECTION (same as Trainer UI) */}
-<section className="bg-gray-100 p-6 rounded-2xl border border-gray-300 space-y-6">
-  <h2 className="font-bold text-orange-500 text-lg">
-    Select Categories & Sub Categories
-  </h2>
+      <section className="bg-gray-100 p-6 rounded-2xl border border-gray-300 space-y-6">
+        <h2 className="font-bold text-orange-500 text-lg">
+          Select Categories & Sub Categories
+        </h2>
 
-  {/* Category Dropdown */}
-  <select
-    onChange={(e) => {
-      const cat = e.target.value;
-      if (!cat) return;
+        {/* Category Dropdown */}
+        <select
+          onChange={(e) => {
+            const cat = e.target.value;
+            if (!cat) return;
 
-      setForm((prev) => ({
-        ...prev,
-        categories: {
-          ...prev.categories,
-          [cat]: [],
-        },
-      }));
-    }}
-    className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2"
-  >
-    <option value="">-- Select Category --</option>
-    {Object.keys(CATEGORY_OPTIONS).map((cat) => (
-      <option key={cat} value={cat}>
-        {cat}
-      </option>
-    ))}
-  </select>
+            setForm((prev) => ({
+              ...prev,
+              categories: {
+                ...prev.categories,
+                [cat]: [],
+              },
+            }));
+          }}
+          className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2"
+        >
+          <option value="">-- Select Category --</option>
+          {Object.keys(CATEGORY_OPTIONS).map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))}
+        </select>
 
-  {/* Selected Categories */}
-  {Object.keys(form.categories || {}).map((cat) => (
-    <div key={cat} className="bg-white p-4 rounded-xl border space-y-3">
-      <h3 className="font-bold text-orange-600">{cat}</h3>
+        {/* Selected Categories */}
+        {Object.keys(form.categories || {}).map((cat) => (
+          <div key={cat} className="bg-white p-4 rounded-xl border space-y-3">
+            <h3 className="font-bold text-orange-600">{cat}</h3>
 
-      {/* Subcategory dropdown */}
-      <select
-        onChange={(e) => {
-          const sub = e.target.value;
-          if (!sub) return;
+            {/* Subcategory dropdown */}
+            <select
+              onChange={(e) => {
+                const sub = e.target.value;
+                if (!sub) return;
 
-          setForm((prev) => ({
-            ...prev,
-            categories: {
-              ...prev.categories,
-              [cat]: prev.categories[cat]?.includes(sub)
-                ? prev.categories[cat]
-                : [...(prev.categories[cat] || []), sub],
-            },
-          }));
-        }}
-        className="w-full border px-3 py-2 rounded-lg"
-      >
-        <option value="">-- Select Sub Category --</option>
-        {CATEGORY_OPTIONS[cat].map((sub) => (
-          <option key={sub} value={sub}>
-            {sub}
-          </option>
-        ))}
-      </select>
-
-      {/* Pills */}
-      <div className="flex flex-wrap gap-2 mt-3">
-        {(form.categories[cat] || []).map((sub) => (
-          <span
-            key={sub}
-            className="px-3 py-1 bg-orange-200 rounded-full text-sm flex items-center gap-2"
-          >
-            {sub}
-            <button
-              onClick={() =>
                 setForm((prev) => ({
                   ...prev,
                   categories: {
                     ...prev.categories,
-                    [cat]: prev.categories[cat].filter((s) => s !== sub),
+                    [cat]: prev.categories[cat]?.includes(sub)
+                      ? prev.categories[cat]
+                      : [...(prev.categories[cat] || []), sub],
                   },
-                }))
-              }
-              className="text-red-600 font-bold"
+                }));
+              }}
+              className="w-full border px-3 py-2 rounded-lg"
             >
-              ✕
-            </button>
-          </span>
-        ))}
-      </div>
-    </div>
-  ))}
-</section>
+              <option value="">-- Select Sub Category --</option>
+              {CATEGORY_OPTIONS[cat].map((sub) => (
+                <option key={sub} value={sub}>
+                  {sub}
+                </option>
+              ))}
+            </select>
 
+            {/* Pills */}
+            <div className="flex flex-wrap gap-2 mt-3">
+              {(form.categories[cat] || []).map((sub) => (
+                <span
+                  key={sub}
+                  className="px-3 py-1 bg-orange-200 rounded-full text-sm flex items-center gap-2"
+                >
+                  {sub}
+                  <button
+                    onClick={() =>
+                      setForm((prev) => ({
+                        ...prev,
+                        categories: {
+                          ...prev.categories,
+                          [cat]: prev.categories[cat].filter((s) => s !== sub),
+                        },
+                      }))
+                    }
+                    className="text-red-600 font-bold"
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </section>
 
       {/* Media Uploads */}
       <div>

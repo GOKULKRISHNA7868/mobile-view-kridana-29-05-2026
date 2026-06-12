@@ -34,7 +34,7 @@ const MediaGallery = ({ setStep }) => {
       const uploadedUrls = [];
 
       for (const file of files) {
-       const url = await uploadToCloudinary(file, "video", "reels");// 👈 video type
+        const url = await uploadToCloudinary(file, "video", "reels"); // 👈 video type
         if (url) uploadedUrls.push(url);
       }
 
@@ -106,11 +106,11 @@ const MediaGallery = ({ setStep }) => {
 
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", "kridana_upload");
+    data.append("upload_preset", "kirdana");
 
     try {
       const res = await fetch(
-        `https://api.cloudinary.com/v1_1/daiyvial8/${type}/upload`,
+        `https://api.cloudinary.com/v1_1/dr0svrhu1/${type}/upload`,
         {
           method: "POST",
           body: data,
@@ -124,9 +124,9 @@ const MediaGallery = ({ setStep }) => {
       }
 
       setUploadMsg((prev) => ({
-  ...prev,
-  [fieldName]: "✅ Upload Successful!",
-}));
+        ...prev,
+        [fieldName]: "✅ Upload Successful!",
+      }));
       return result.secure_url;
     } catch (err) {
       console.error("Cloudinary Upload Error:", err);
@@ -135,11 +135,11 @@ const MediaGallery = ({ setStep }) => {
     } finally {
       setUploading(false);
       setTimeout(() => {
-  setUploadMsg((prev) => ({
-    ...prev,
-    [fieldName]: "",
-  }));
-}, 3000);
+        setUploadMsg((prev) => ({
+          ...prev,
+          [fieldName]: "",
+        }));
+      }, 3000);
     }
   };
 
@@ -151,7 +151,7 @@ const MediaGallery = ({ setStep }) => {
     const selectedFiles = Array.from(files);
 
     for (const file of selectedFiles) {
-      const url = await uploadToCloudinary(file, "image", name);// 👈 image type
+      const url = await uploadToCloudinary(file, "image", name); // 👈 image type
 
       if (url) {
         setFormData((prev) => ({
@@ -235,10 +235,10 @@ const MediaGallery = ({ setStep }) => {
             <div key={field.name} className="flex flex-col">
               <label className="text-sm font-medium mb-2">{field.label}</label>
               {uploadMsg[field.name] && (
-  <p className="text-green-600 text-sm mt-1">
-    {uploadMsg[field.name]}
-  </p>
-)}
+                <p className="text-green-600 text-sm mt-1">
+                  {uploadMsg[field.name]}
+                </p>
+              )}
 
               <label className="cursor-pointer">
                 <input
@@ -251,11 +251,11 @@ const MediaGallery = ({ setStep }) => {
                 />
 
                 <div className="border border-gray-300 rounded-md px-3 py-2 flex justify-between items-center hover:border-orange-500 transition">
-<span className="text-gray-500">
-  {formData[field.name]?.length > 0
-    ? `${formData[field.name].length} image(s) uploaded`
-    : "Upload Images"}
-</span>
+                  <span className="text-gray-500">
+                    {formData[field.name]?.length > 0
+                      ? `${formData[field.name].length} image(s) uploaded`
+                      : "Upload Images"}
+                  </span>
                   <img src="/upload.png" alt="upload" className="w-5 h-5" />
                 </div>
               </label>
@@ -263,34 +263,30 @@ const MediaGallery = ({ setStep }) => {
           ))}
         </div>
         {/* ================= REELS UPLOAD UI ================= */}
- <div className="flex flex-col mt-6">
-  <label className="text-sm font-medium mb-2">
-    Upload Reels (Videos)
-  </label>
+        <div className="flex flex-col mt-6">
+          <label className="text-sm font-medium mb-2">
+            Upload Reels (Videos)
+          </label>
 
-  <label className="cursor-pointer">
-    <input
-      type="file"
-      accept="video/*"
-      multiple
-      onChange={handleReelsUpload}
-      className="hidden"
-    />
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              accept="video/*"
+              multiple
+              onChange={handleReelsUpload}
+              className="hidden"
+            />
 
-    <div className="border border-gray-300 rounded-md px-3 py-2 flex justify-between items-center hover:border-orange-500 transition">
-      <span className="text-gray-500">
-        Upload Reels
-      </span>
-      <img src="/upload.png" alt="upload" className="w-5 h-5" />
-    </div>
-  </label>
+            <div className="border border-gray-300 rounded-md px-3 py-2 flex justify-between items-center hover:border-orange-500 transition">
+              <span className="text-gray-500">Upload Reels</span>
+              <img src="/upload.png" alt="upload" className="w-5 h-5" />
+            </div>
+          </label>
 
-  {uploadMsg.reels && (
-    <p className="text-green-600 text-sm mt-1">
-      {uploadMsg.reels}
-    </p>
-  )}
-</div>
+          {uploadMsg.reels && (
+            <p className="text-green-600 text-sm mt-1">{uploadMsg.reels}</p>
+          )}
+        </div>
         {/* BUTTONS */}
         <div className="flex flex-col sm:flex-row justify-end gap-4 mt-8">
           <button

@@ -29,8 +29,9 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 const ChatBox = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState("chats");
   const [screen, setScreen] = useState("chat");
@@ -989,7 +990,14 @@ const ChatBox = () => {
     backdrop-blur-xl
   "
         >
-          <div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+            >
+              <ArrowLeft size={22} />
+            </button>
+
             <h1 className="text-3xl font-bold text-black">Chat</h1>
           </div>
 
@@ -1743,7 +1751,7 @@ font-semibold
         <div
           className="
     sticky
-    bottom-12
+    bottom-0
     bg-[#ECE5DD]
     px-2
     md:px-3
@@ -1783,7 +1791,7 @@ font-semibold
   bg-transparent
   max-h-60
   overflow-y-auto
-  py-4
+  py-2
   leading-5
 "
                 onKeyDown={(e) => {

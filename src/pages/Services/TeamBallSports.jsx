@@ -105,7 +105,7 @@ const TeamBallPage = () => {
               setSelectedSubCategory(item.name);
               setShowChoice(true);
             }}
-            className="h-[120px] rounded-2xl bg-white shadow-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-lg transition active:scale-95"
+            className="h-[125px] rounded-2xl bg-white shadow-md flex flex-col items-center justify-center gap-2 cursor-pointer hover:shadow-lg transition active:scale-95"
           >
             <img
               src={item.image}

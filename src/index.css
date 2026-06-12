@@ -147,3 +147,27 @@ body {
     scroll-padding-bottom: calc(10px + env(safe-area-inset-bottom));
   }
 }
+:root {
+  --banner-extra-space: 70px;
+}
+
+@media (max-width: 480px) {
+  :root {
+    --banner-extra-space: 80px;
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --banner-extra-space: 90px;
+  }
+}
+.page-content {
+  padding-bottom: var(--bottom-navbar-height, 64px);
+}
+
+@media (min-width: 768px) {
+  .page-content {
+    padding-bottom: 0;
+  }
+}

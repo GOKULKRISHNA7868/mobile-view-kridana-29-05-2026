@@ -35,11 +35,11 @@ const OrganizerDetails = ({ formData, setFormData }) => {
 
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", "kridana_upload");
+    data.append("upload_preset", "kirdana"); // 👈 your unsigned preset name
 
     try {
       const res = await fetch(
-        `https://api.cloudinary.com/v1_1/daiyvial8/${type}/upload`,
+        `https://api.cloudinary.com/v1_1/dr0svrhu1/${type}/upload`,
         {
           method: "POST",
           body: data,
@@ -179,14 +179,14 @@ const OrganizerDetails = ({ formData, setFormData }) => {
             type="text"
             className={inputStyle}
             value={formData?.organizer?.organizerName || ""}
-           onChange={(e) => {
-  let value = e.target.value.replace(/[^A-Za-z ]/g, "");
+            onChange={(e) => {
+              let value = e.target.value.replace(/[^A-Za-z ]/g, "");
 
-  // ✅ Capitalize each word
-  value = value.replace(/\b[a-z]/g, (char) => char.toUpperCase());
+              // ✅ Capitalize each word
+              value = value.replace(/\b[a-z]/g, (char) => char.toUpperCase());
 
-  handleChange("organizerName", value);
-}}
+              handleChange("organizerName", value);
+            }}
           />
         </div>
 
@@ -197,14 +197,14 @@ const OrganizerDetails = ({ formData, setFormData }) => {
             type="text"
             className={inputStyle}
             value={formData?.organizer?.volunteersName || ""}
-           onChange={(e) => {
-  let value = e.target.value.replace(/[^A-Za-z ]/g, "");
+            onChange={(e) => {
+              let value = e.target.value.replace(/[^A-Za-z ]/g, "");
 
-  // ✅ Capitalize each word
-  value = value.replace(/\b[a-z]/g, (char) => char.toUpperCase());
+              // ✅ Capitalize each word
+              value = value.replace(/\b[a-z]/g, (char) => char.toUpperCase());
 
-  handleChange("volunteersName", value);
-}}
+              handleChange("volunteersName", value);
+            }}
           />
         </div>
 
@@ -217,14 +217,14 @@ const OrganizerDetails = ({ formData, setFormData }) => {
             type="text"
             className={inputStyle}
             value={formData?.organizer?.contactPerson || ""}
-           onChange={(e) => {
-  let value = e.target.value.replace(/[^A-Za-z ]/g, "");
+            onChange={(e) => {
+              let value = e.target.value.replace(/[^A-Za-z ]/g, "");
 
-  // ✅ Capitalize each word
-  value = value.replace(/\b[a-z]/g, (char) => char.toUpperCase());
+              // ✅ Capitalize each word
+              value = value.replace(/\b[a-z]/g, (char) => char.toUpperCase());
 
-  handleChange("contactPerson", value);
-}}
+              handleChange("contactPerson", value);
+            }}
           />
         </div>
 

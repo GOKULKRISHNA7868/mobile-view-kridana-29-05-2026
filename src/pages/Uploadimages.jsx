@@ -59,11 +59,11 @@ export default function App() {
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", "kridana_upload");
+    formData.append("upload_preset", "kirdana"); // same preset for all uploads
 
     const cloudUrl = isVideo
-      ? "https://api.cloudinary.com/v1_1/daiyvial8/video/upload"
-      : "https://api.cloudinary.com/v1_1/daiyvial8/image/upload";
+      ? "https://api.cloudinary.com/v1_1/dr0svrhu1/video/upload"
+      : "https://api.cloudinary.com/v1_1/dr0svrhu1/image/upload";
 
     const res = await fetch(cloudUrl, {
       method: "POST",

@@ -44,8 +44,8 @@ import {
 } from "react-icons/fa";
 import {
   AdMob,
-  BannerAdPosition,
   BannerAdSize,
+  BannerAdPosition,
 } from "@capacitor-community/admob";
 const categories = [
   { name: "Martial Arts", path: "/services/martial-arts", icon: FaFistRaised },
@@ -128,19 +128,61 @@ const Landing = () => {
   /* ===================================================== */
   /* ================= FETCH SUGGESTED =================== */
   /* ===================================================== */
-  const showBanner = async () => {
-    try {
-      await AdMob.showBanner({
-        adId: "ca-app-pub-3940256099942544/9214589741",
-        adSize: BannerAdSize.BANNER,
-        position: BannerAdPosition.BOTTOM_CENTER,
-        margin: 0,
-        isTesting: true,
-      });
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  // Landing.jsx
+
+  useEffect(() => {
+    const handleResize = () => {
+      window.dispatchEvent(new Event("showLandingBanner"));
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+
+  useEffect(() => {
+    let bannerLoadedListener;
+    let bannerFailedListener;
+
+    const loadAds = async () => {
+      try {
+        await AdMob.initialize({
+          initializeForTesting: true,
+        });
+
+        bannerLoadedListener = await AdMob.addListener("bannerAdLoaded", () => {
+          console.log("Banner loaded");
+        });
+
+        bannerFailedListener = await AdMob.addListener(
+          "bannerAdFailedToLoad",
+          (error) => {
+            console.log("Banner failed:", error);
+          },
+        );
+
+        await AdMob.showBanner({
+          adId: "ca-app-pub-3940256099942544/6300978111",
+          adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: BannerAdPosition.TOP_CENTER,
+          margin: 0,
+          isTesting: true,
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    loadAds();
+
+    return () => {
+      AdMob.removeBanner().catch(() => {});
+      bannerLoadedListener?.remove();
+      bannerFailedListener?.remove();
+    };
+  }, []);
   const openComments = async (item) => {
     const mainCol = item.type === "trainer" ? "trainers" : "institutes";
 
@@ -158,13 +200,7 @@ const Landing = () => {
     setCommentsList(list);
     setShowCommentsFor(item);
   };
-  useEffect(() => {
-    showBanner();
 
-    return () => {
-      AdMob.hideBanner();
-    };
-  }, []);
   useEffect(() => {
     const loadSuggested = async () => {
       const trainerSnap = await getDocs(collection(db, "trainers"));
@@ -524,13 +560,13 @@ const Landing = () => {
   }, []);
 
   return (
-    <div className="w-full font-sans">
+    <div className="w-full font-sans pb-50">
       {/* 3px white line */}
-      <div className="w-full h-[6px] bg-white"></div>
+      <div className="w-full h-[90px] bg-white"></div>
 
-      <section className="w-full bg-[#FFFBF8] border-b border-orange-100 py-8 md:py-20 overflow-hidden">
+      <section className="w-full bg-[#FFFBF8] border-b border-orange-100 py-2 md:py-20 overflow-hidden">
         {/* ==================== MOBILE VIEW ===================== */}
-        <div className="flex md:hidden flex-col px-4 gap-6">
+        <div className="flex md:hidden flex-col px-4 gap-2">
           {/* Top Tagline Badge */}
           <div>
             <span className="inline-flex items-center gap-1 bg-[#FFF5EE] border border-[#FF6A00] px-3 py-1 rounded-full text-[11px] font-semibold text-[#FF6A00]">
@@ -554,7 +590,7 @@ const Landing = () => {
           </div>
 
           {/* Main Image Asset Showcase */}
-          <div className="w-full flex justify-center py-4 relative">
+          <div className="w-full flex justify-center py-2 relative">
             <img
               src="/image.png" // Replace with your complete right-side compiled banner asset
               alt="Sports dashboard composite"
@@ -565,9 +601,9 @@ const Landing = () => {
           {/* Features Minimal Feature Cards Block */}
 
           {/* Action Call to Action Buttons */}
-          <div className="flex flex-col gap-3 mt-4 w-full">
+          <div className="flex flex-col gap-1 mt-2 w-full">
             <button
-              onClick={() => navigate("/categories")}
+              onClick={() => navigate("/MobileCategoriesPage")}
               className="w-full bg-[#FF6A00] hover:bg-orange-600 transition-colors text-white py-3.5 rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 shadow-md shadow-orange-500/20"
             >
               Explore Sports <ArrowRight className="w-4 h-4" />
@@ -642,7 +678,7 @@ const Landing = () => {
             </div>
 
             {/* Action Trigger Buttons */}
-            <div className="flex items-center gap-4 mt-8">
+            <div className="flex items-center gap-2 mt-8">
               <button
                 onClick={() => navigate("/book")}
                 className="bg-[#FF6A00] hover:bg-orange-600 transition-colors text-white px-8 py-3.5 rounded-xl text-[15px] font-bold flex items-center gap-2 shadow-lg shadow-orange-500/10"
@@ -670,7 +706,7 @@ const Landing = () => {
         </div>
       </section>
       {/* ================= CATEGORIES ================= */}
-      <section className="px-4 py-6 bg-gray-50">
+      <section className="px-4 py-2 bg-gray-50">
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-xl font-bold">Categories</h2>
           <button
@@ -708,7 +744,7 @@ const Landing = () => {
       </section>
 
       {/* ================= SUGGESTED ================= */}
-      <section className="px-4 py-6 bg-gray-50">
+      <section className="px-4 py-2 bg-gray-50">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Suggested</h2>
 
@@ -933,9 +969,9 @@ const Landing = () => {
       {/* ================= TOP TRAINERS =================== */}
       {/* ================================================= */}
 
-      <section className="px-2 md:px-4 md:px-20 py-16 bg-white">
+      <section className="px-2 md:px-2 md:px-20 py-8 bg-white">
         {/* Header Row */}
-        <div className="flex flex-col sm:flex-row md:flex-row md:items-center md:justify-between gap-4 mb-10">
+        <div className="flex flex-col sm:flex-row md:flex-row md:items-center md:justify-between gap-2 mb-10">
           <h2 className="text-3xl md:text-4xl font-bold">Top Trainers</h2>
 
           {/* Filter Buttons */}
@@ -1078,9 +1114,9 @@ const Landing = () => {
       {/* ================= TOP INSTITUTES ================= */}
       {/* ================================================= */}
 
-      <section className="px-6 md:px-20 py-16 bg-gray-50">
+      <section className="px-6 md:px-20 py-4 bg-gray-50">
         {/* Header + Filters */}
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-2">
           <h2 className="text-3xl md:text-4xl font-bold">Top Institutes</h2>
 
           <div className="flex gap-3">
@@ -1224,7 +1260,7 @@ const Landing = () => {
         </div>
       </section>
       {/* ================= FULLSCREEN REEL VIEWER ================= */}
-      <section className="py-10 sm:py-12 md:py-14 px-4 sm:px-6 md:px-12 lg:px-16 bg-gray-50 overflow-hidden pb-10 md:pb-16">
+      <section className="py-10 sm:py-10 md:py-14 px-4 sm:px-6 md:px-12 lg:px-16 bg-gray-50 overflow-hidden pb-10 md:pb-16">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 mb-6">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
@@ -1267,39 +1303,6 @@ const Landing = () => {
               </div>
             </motion.div>
           ))}
-        </div>
-      </section>
-      <section className="px-4 py-4 bg-gray-50">
-        <div className="max-w-md mx-auto">
-          {/* Small Professional Label */}
-          <div className="flex items-center gap-2 mb-9">
-            <div className="h-px flex-1 bg-gray-200"></div>
-            <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">
-              Sponsored
-            </span>
-            <div className="h-px flex-1 bg-gray-200"></div>
-          </div>
-
-          {/* Google Ad Container */}
-          <div
-            className="
-             sticky
-    bottom-10
-        bg-white
-        border
-        border-gray-200
-        rounded-xl
-        overflow-hidden
-        min-h-[120px]
-        flex
-        items-center
-        justify-center
-        shadow-sm
-      "
-          >
-            {/* Google Adsense Code Here */}
-            <span className="text-xs text-gray-400">Advertisement</span>
-          </div>
         </div>
       </section>
 

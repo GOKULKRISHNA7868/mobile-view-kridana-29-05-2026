@@ -11,12 +11,12 @@ import {
 } from "firebase/firestore";
 
 import {
+  ResponsiveContainer,
   BarChart,
   Bar,
   XAxis,
   YAxis,
   Tooltip,
-  ResponsiveContainer,
   LineChart,
   Line,
 } from "recharts";
@@ -25,7 +25,8 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 const AnalyticsPage = () => {
   const user = auth.currentUser;
-
+  const [expenses, setExpenses] = useState([]);
+  const [totalExpenses, setTotalExpenses] = useState(0);
   const [reels, setReels] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [graphData, setGraphData] = useState([]);
@@ -120,6 +121,57 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
 
     document.body.removeChild(container);
   };
+  useEffect(() => {
+    if (!user || startMonth === "" || endMonth === "") return;
+
+    const fetchExpenses = async () => {
+      try {
+        const snap = await getDocs(
+          collection(db, "trainers", user.uid, "expenses"),
+        );
+
+        const expenseData = [];
+        let expenseTotal = 0;
+
+        snap.forEach((docSnap) => {
+          const data = docSnap.data();
+
+          const paidDate = data.paidDate || "";
+
+          if (!paidDate) return;
+
+          const [yearStr, monthStr] = paidDate.split("-");
+
+          const year = Number(yearStr);
+          const monthIndex = Number(monthStr) - 1;
+
+          if (
+            year === selectedYear &&
+            monthIndex >= Number(startMonth) &&
+            monthIndex <= Number(endMonth)
+          ) {
+            const amount = Number(data.amount || 0);
+
+            expenseTotal += amount;
+
+            expenseData.push({
+              month: monthIndex,
+              amount,
+            });
+          }
+        });
+
+        console.log("Expense Total =>", expenseTotal);
+
+        setExpenses(expenseData);
+        setTotalExpenses(expenseTotal);
+      } catch (error) {
+        console.error("Expense fetch error:", error);
+      }
+    };
+
+    fetchExpenses();
+  }, [user, selectedYear, startMonth, endMonth]);
   /* ================= FETCH TOP REELS (DYNAMIC LOGIN BASED) ================= */
   useEffect(() => {
     if (!user) return;
@@ -260,6 +312,7 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
     fetchWorkforce();
   }, [user]);
   /* ================= GRAPH REVENUE FROM FIRESTORE ================= */
+  /* ================= GRAPH REVENUE FROM FIRESTORE ================= */
   const [loadingRevenue, setLoadingRevenue] = useState(false);
 
   useEffect(() => {
@@ -294,32 +347,55 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
           query(
             collection(db, "institutesFees"),
             where("trainerId", "==", user.uid),
-            where("year", "==", String(selectedYear)), // 🔥 FIX
           ),
         );
 
-        feesSnap.forEach((doc) => {
-          const data = doc.data();
+        let revenueTotal = 0;
 
-          const monthIndex = parseInt(data.month) - 1;
+        feesSnap.forEach((docSnap) => {
+          const data = docSnap.data();
 
-          if (monthIndex >= startMonth && monthIndex <= endMonth) {
-            revenueMap[monthIndex] += Number(data.paidAmount || 0);
+          const paidDate = data.paidDate || "";
+
+          if (!paidDate) return;
+
+          const [yearStr, monthStr] = paidDate.split("-");
+
+          const year = Number(yearStr);
+          const monthIndex = Number(monthStr) - 1;
+
+          if (
+            year === selectedYear &&
+            monthIndex >= Number(startMonth) &&
+            monthIndex <= Number(endMonth)
+          ) {
+            const amount = Number(data.paidAmount || 0);
+
+            revenueMap[monthIndex] += amount;
+
+            revenueTotal += amount;
           }
         });
 
         const graph = [];
 
-        for (let m = Number(startMonth); m <= Number(endMonth); m++) {
+        for (
+          let month = Number(startMonth);
+          month <= Number(endMonth);
+          month++
+        ) {
           graph.push({
-            month: months[m],
-            revenue: revenueMap[m] || 0,
+            month: months[month],
+            revenue: revenueMap[month] || 0,
           });
         }
 
+        console.log("Revenue Graph =>", graph);
+        console.log("Revenue Total =>", revenueTotal);
+
         setGraphData(graph);
-      } catch (err) {
-        console.error("Revenue fetch error:", err);
+      } catch (error) {
+        console.error("Revenue fetch error:", error);
       } finally {
         setLoadingRevenue(false);
       }
@@ -339,6 +415,12 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
   );
 
   const totalRevenue = graphData.reduce((sum, item) => sum + item.revenue, 0);
+  const netProfit = totalRevenue - totalExpenses;
+
+  const profitPercentage =
+    totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : 0;
+
+  const isProfit = netProfit >= 0;
   const Card = ({ title, value }) => (
     <div className="border p-4 rounded-xl bg-orange-50">
       <p className="text-xs sm:text-sm text-gray-600">{title}</p>
@@ -361,20 +443,50 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
       {sub && <p className="text-sm text-gray-500">{sub}</p>}
     </div>
   );
+  /* ================= FINANCE DATA ================= */
+
+  // replace with Firestore expenses total later
+
+  const profit = totalRevenue - totalExpenses;
+
+  const financeChartData = [
+    {
+      name: "Revenue",
+      amount: totalRevenue,
+    },
+    {
+      name: "Expenses",
+      amount: totalExpenses,
+    },
+    {
+      name: netProfit >= 0 ? "Profit" : "Loss",
+      amount: Math.abs(netProfit),
+    },
+  ];
   return (
-    <div className="min-h-screen pb-24 bg-gray-50 p-3 sm:p-4 md:p-6 overflow-x-hidden">
+    <div
+      className="
+      min-h-screen
+      bg-gray-50
+      p-3
+      sm:p-4
+      md:p-6
+      pb-32
+      md:pb-6
+      overflow-x-hidden
+    "
+    >
       {/* HEADER */}
       <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 mb-6">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold leading-tight">
           Growth & Performance Overview
         </h1>
 
-        {/* FILTERS */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full xl:w-auto">
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="border px-3 py-2 rounded-lg text-sm w-full"
+            className="border px-3 py-2 rounded-lg text-sm w-full bg-white"
           >
             {[2026, 2025, 2024, 2023].map((y) => (
               <option key={y} value={y}>
@@ -386,12 +498,14 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
           <select
             value={startMonth}
             onChange={(e) => setStartMonth(e.target.value)}
-            className="border px-3 py-2 rounded-lg text-sm w-full"
+            className="border px-3 py-2 rounded-lg text-sm w-full bg-white"
           >
             <option value="">From</option>
             {[...Array(12)].map((_, i) => (
               <option key={i} value={i}>
-                {new Date(0, i).toLocaleString("default", { month: "short" })}
+                {new Date(0, i).toLocaleString("default", {
+                  month: "short",
+                })}
               </option>
             ))}
           </select>
@@ -399,58 +513,116 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
           <select
             value={endMonth}
             onChange={(e) => setEndMonth(e.target.value)}
-            className="border px-3 py-2 rounded-lg text-sm w-full"
+            className="border px-3 py-2 rounded-lg text-sm w-full bg-white"
           >
             <option value="">To</option>
             {[...Array(12)].map((_, i) => (
               <option key={i} value={i}>
-                {new Date(0, i).toLocaleString("default", { month: "short" })}
+                {new Date(0, i).toLocaleString("default", {
+                  month: "short",
+                })}
               </option>
             ))}
           </select>
 
           <button
             onClick={downloadPDFReport}
-            className="bg-orange-500 text-white rounded-lg px-4 py-2 text-sm font-medium w-full"
+            className="bg-orange-500 text-white rounded-lg px-4 py-2 text-sm font-medium"
           >
-            Report
+            Download Report
           </button>
         </div>
       </div>
 
-      {/* SUMMARY */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      {/* KPI CARDS */}
+      <div className="grid grid-cols-2 xl:grid-cols-7 gap-3 mb-6">
         <Card
           title="Profile Views"
           value={topReels.reduce((s, r) => s + Number(r.profileViews || 0), 0)}
         />
+
         <Card
           title="Video Views"
           value={topReels.reduce((s, r) => s + r.views, 0)}
         />
+
         <Card title="Likes" value={topReels.reduce((s, r) => s + r.likes, 0)} />
+
         <Card
           title="Dislikes"
           value={topReels.reduce((s, r) => s + r.dislikes, 0)}
         />
+
+        <Card title="Revenue" value={`₹${totalRevenue.toLocaleString()}`} />
+
+        <Card title="Expenses" value={`₹${totalExpenses.toLocaleString()}`} />
+
+        <Card
+          title={netProfit >= 0 ? "Profit" : "Loss"}
+          value={`₹${Math.abs(netProfit).toLocaleString()}`}
+        />
+      </div>
+
+      {/* FINANCIAL OVERVIEW */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold mb-4">Financial Overview</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-5">
+            <p className="text-green-600 font-medium">Total Revenue</p>
+
+            <h3 className="text-3xl font-bold mt-2">
+              ₹{totalRevenue.toLocaleString()}
+            </h3>
+          </div>
+
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-5">
+            <p className="text-red-600 font-medium">Total Expenses</p>
+
+            <h3 className="text-3xl font-bold mt-2">
+              ₹{totalExpenses.toLocaleString()}
+            </h3>
+          </div>
+
+          <div
+            className={`rounded-2xl p-5 border ${
+              netProfit >= 0
+                ? "bg-green-50 border-green-200"
+                : "bg-red-50 border-red-200"
+            }`}
+          >
+            <p
+              className={`font-medium ${
+                netProfit >= 0 ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {netProfit >= 0 ? "Net Profit" : "Net Loss"}
+            </p>
+
+            <h3 className="text-3xl font-bold mt-2">
+              ₹{Math.abs(netProfit).toLocaleString()}
+            </h3>
+
+            <p className="text-sm text-gray-500 mt-2">
+              Margin {profitPercentage}%
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* TOP CONTENT */}
-      <div className="bg-gray-50 border rounded-xl p-3 sm:p-5 shadow-sm">
-        <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-4">
-          Top Content Insights
-        </h2>
+      <div className="bg-white rounded-2xl shadow border p-4 sm:p-5">
+        <h2 className="text-xl font-bold mb-4">Top Content Insights</h2>
 
-        {/* TABS */}
         <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-6 border-b pb-3 mb-4">
           {["views", "likes", "dislikes", "comments"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`text-sm pb-2 capitalize ${
+              className={`pb-2 capitalize ${
                 activeTab === tab
-                  ? "text-orange-600 border-b-2 border-orange-600 font-semibold"
-                  : "text-gray-600"
+                  ? "border-b-2 border-orange-500 text-orange-600 font-semibold"
+                  : "text-gray-500"
               }`}
             >
               Most {tab}
@@ -458,126 +630,84 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
           ))}
         </div>
 
-        {/* MOBILE CARDS */}
-        <div className="grid grid-cols-6 gap-2 bg-black text-orange-500 text-[11px] font-semibold rounded-t-xl px-3 py-3">
-          <div>Video</div>
-          <div className="col-span-2">Title</div>
-          <div className="text-center">Views</div>
-          <div className="text-center">Likes</div>
-          <div className="text-center">Dislikes</div>
-        </div>
-
-        {/* ROWS */}
-        <div className="bg-white rounded-b-xl border border-t-0 overflow-hidden">
+        <div className="overflow-x-auto">
           {topReels.slice(0, 5).map((reel, i) => (
             <div
               key={i}
-              className="grid grid-cols-6 gap-2 items-center px-3 py-3 border-t first:border-t-0"
+              className="flex items-center justify-between gap-4 border-b py-4"
             >
-              {/* VIDEO */}
               <button
                 onClick={() => handlePlayReel(reel.videoUrl)}
-                className="w-14 h-10 rounded-md bg-gray-200 text-[10px] font-semibold flex items-center justify-center"
+                className="w-20 h-12 rounded-lg bg-gray-200 text-xs font-semibold"
               >
                 ▶ Play
               </button>
 
-              {/* TITLE */}
-              <div className="col-span-2 min-w-0">
-                <p className="text-sm font-medium text-gray-800 truncate">
-                  {reel.title}
-                </p>
+              <div className="flex-1">
+                <p className="font-medium">{reel.title}</p>
 
-                <p className="text-[10px] text-gray-500 mt-1">
-                  💬 {reel.comments} •
+                <p className="text-xs text-gray-500">
+                  💬 {reel.comments} Comments
                 </p>
               </div>
 
-              {/* VIEWS */}
               <div className="text-center">
-                <p className="text-sm font-semibold text-gray-800">
-                  {reel.views}
-                </p>
-                <p className="text-[10px] text-gray-500">Views</p>
+                <p className="font-semibold">{reel.views}</p>
+                <p className="text-xs">Views</p>
               </div>
 
-              {/* LIKES */}
               <div className="text-center">
-                <p className="text-sm font-semibold text-orange-600">
-                  {reel.likes}
-                </p>
-                <p className="text-[10px] text-gray-500">Likes</p>
+                <p className="font-semibold text-green-600">{reel.likes}</p>
+                <p className="text-xs">Likes</p>
               </div>
+
               <div className="text-center">
-                <p className="text-sm font-semibold text-orange-600">
-                  {reel.dislikes}
-                </p>
-                <p className="text-[10px] text-gray-500">Dislikes</p>
+                <p className="font-semibold text-red-500">{reel.dislikes}</p>
+                <p className="text-xs">Dislikes</p>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* DESKTOP TABLE */}
-      <div className="hidden md:block">
-        <div className="grid grid-cols-6 font-semibold text-orange-600 mb-3 text-sm">
-          <div>Videos</div>
-          <div>Title</div>
-          <div>Views</div>
-          <div>Likes</div>
-          <div>Dislikes</div>
-          <div>Comments</div>
-        </div>
+      {/* REVENUE CHART */}
+      <h2 className="text-xl font-bold mt-8 mb-3">Revenue Report</h2>
 
-        {topReels.slice(0, 5).map((reel, i) => (
-          <div
-            key={i}
-            className="grid grid-cols-6 items-center py-4 border-t text-sm"
-          >
-            <button
-              onClick={() => handlePlayReel(reel.videoUrl)}
-              className="w-20 h-14 bg-gray-300 rounded-md text-xs font-semibold"
-            >
-              ▶ Play
-            </button>
-
-            <div>{reel.title}</div>
-            <div>{reel.views}</div>
-            <div>{reel.likes}</div>
-            <div>{reel.dislikes}</div>
-            <div>{reel.comments}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* REVENUE GRAPH */}
-      <h2 className="text-lg sm:text-xl font-semibold mt-8 mb-3">
-        Revenue Reports
-      </h2>
-
-      <div className="bg-white shadow rounded-xl p-3 sm:p-5">
-        <ResponsiveContainer width="100%" height={260}>
+      <div className="bg-white rounded-2xl shadow p-4">
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart data={graphData}>
-            <XAxis dataKey="month" fontSize={11} />
-            <YAxis fontSize={11} />
+            <XAxis dataKey="month" />
+            <YAxis />
             <Tooltip />
             <Bar dataKey="revenue" fill="#f97316" radius={[6, 6, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
+      {/* REVENUE VS EXPENSE */}
+      <h2 className="text-xl font-bold mt-8 mb-3">Revenue vs Expenses</h2>
+
+      <div className="bg-white rounded-2xl shadow p-4">
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart data={financeChartData}>
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+
+            <Bar dataKey="amount" fill="#f97316" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
       {/* PAYROLL */}
-      <h2 className="text-lg sm:text-xl font-semibold mt-8 mb-3">
-        Payroll Overview
-      </h2>
+      <h2 className="text-xl font-bold mt-8 mb-3">Payroll Overview</h2>
 
       <div className="grid lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 bg-white shadow rounded-xl p-3 sm:p-5">
-          <ResponsiveContainer width="100%" height={280}>
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow p-4">
+          <ResponsiveContainer width="100%" height={300}>
             <LineChart data={graphData}>
-              <XAxis dataKey="month" fontSize={11} />
-              <YAxis fontSize={11} />
+              <XAxis dataKey="month" />
+              <YAxis />
               <Tooltip />
               <Line
                 type="monotone"
@@ -589,32 +719,33 @@ Total Revenue: ₹${totalRevenue.toLocaleString()}
           </ResponsiveContainer>
         </div>
 
-        <div className="grid sm:grid-cols-3 lg:grid-cols-1 gap-4">
+        <div className="grid gap-4">
           <MiniCard
-            title="Highest Paying"
-            value={`₹ ${highestMonth?.revenue || 0}`}
+            title="Highest Revenue"
+            value={`₹${highestMonth?.revenue || 0}`}
             sub={highestMonth?.month}
             green
           />
+
           <MiniCard
-            title="Lowest Paying"
-            value={`₹ ${lowestMonth?.revenue || 0}`}
+            title="Lowest Revenue"
+            value={`₹${lowestMonth?.revenue || 0}`}
             sub={lowestMonth?.month}
             red
           />
-          <MiniCard title="Total Paying" value={`₹ ${totalRevenue || 0}`} />
+
+          <MiniCard title="Total Revenue" value={`₹${totalRevenue || 0}`} />
         </div>
       </div>
 
-      {/* CUSTOMERS */}
-      <div className="bg-gray-50 border rounded-xl p-4 sm:p-6 mt-8 shadow-sm">
-        <h2 className="text-lg sm:text-2xl font-bold mb-4">
-          Workforce & Clients Metrics
-        </h2>
+      {/* CUSTOMER SECTION */}
+      <div className="bg-white rounded-2xl shadow p-5 mt-8">
+        <h2 className="text-xl font-bold mb-4">Workforce & Clients</h2>
 
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="bg-white border rounded-xl p-5">
-            <h3 className="text-lg font-semibold">Customers</h3>
+          <div className="border rounded-xl p-5">
+            <h3 className="font-semibold">Customers</h3>
+
             <p className="mt-2 text-gray-600">Joined: {customerStats.joined}</p>
           </div>
         </div>

@@ -52,11 +52,11 @@ const ParticipantConfiguration = ({ formData, setFormData }) => {
 
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", "kridana_upload");
+    data.append("upload_preset", "kirdana"); // same preset
 
     try {
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/daiyvial8/auto/upload",
+        "https://api.cloudinary.com/v1_1/dr0svrhu1/auto/upload",
         {
           method: "POST",
           body: data,
@@ -419,7 +419,7 @@ const ParticipantConfiguration = ({ formData, setFormData }) => {
 
       {/* ================= OTHER INSTITUTE CUSTOMERS ================= */}
       <div className="bg-white rounded-xl shadow-md p-6 space-y-4">
-       <div className="flex flex-row items-center justify-between gap-4 sm:gap-6">
+        <div className="flex flex-row items-center justify-between gap-4 sm:gap-6">
           <h3 className="text-lg font-semibold">
             Choose Customers From Other Institutes
           </h3>
@@ -429,7 +429,7 @@ const ParticipantConfiguration = ({ formData, setFormData }) => {
             onClick={() =>
               setOtherCustomers([...otherCustomers, { name: "", phone: "" }])
             }
-           className="shrink-0 bg-orange-500 text-white px-4 sm:px-5 py-2 rounded-md text-sm hover:bg-orange-600 transition"
+            className="shrink-0 bg-orange-500 text-white px-4 sm:px-5 py-2 rounded-md text-sm hover:bg-orange-600 transition"
           >
             + Add
           </button>

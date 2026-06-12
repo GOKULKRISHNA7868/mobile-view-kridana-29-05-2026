@@ -43,7 +43,7 @@ import { useSelectedStudent } from "../../context/SelectedStudentContext";
 const studentSidebarItems = [
   "Dashboard",
   "Time Table",
-  "Chat Box",
+  //"Chat Box",
 
   "Fees Details",
 ];
@@ -60,7 +60,7 @@ const trainerSidebarItems = [
 const trainerStudentSidebarItems = [
   "TrainerDashboard",
   "Time Tables",
-  "ChatBox",
+  // "ChatBox",
 
   "Fee Details",
 ];

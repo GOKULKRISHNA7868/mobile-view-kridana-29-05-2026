@@ -240,10 +240,10 @@ export default function TrainerEditProfile() {
 
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", "kridana_upload");
+    data.append("upload_preset", "kirdana");
 
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/daiyvial8/${type}/upload`,
+      `https://api.cloudinary.com/v1_1/dr0svrhu1/${type}/upload`,
       {
         method: "POST",
         body: data,
@@ -359,78 +359,77 @@ export default function TrainerEditProfile() {
         ))}
       </section>
 
-{/* ✅ ABOUT / FACILITIES / ACHIEVEMENTS */}
-<section className="bg-gray-100 p-6 rounded-2xl border border-gray-300 space-y-6">
+      {/* ✅ ABOUT / FACILITIES / ACHIEVEMENTS */}
+      <section className="bg-gray-100 p-6 rounded-2xl border border-gray-300 space-y-6">
+        {/* ABOUT */}
+        <div>
+          <p className="font-semibold mb-2">About Trainer</p>
+          <textarea
+            name="about"
+            value={form.about}
+            onChange={handleChange}
+            placeholder="Write about the trainer..."
+            rows={4}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2"
+          />
+        </div>
 
-  {/* ABOUT */}
-  <div>
-    <p className="font-semibold mb-2">About Trainer</p>
-    <textarea
-      name="about"
-      value={form.about}
-      onChange={handleChange}
-      placeholder="Write about the trainer..."
-      rows={4}
-      className="w-full border border-gray-300 rounded-lg px-4 py-2"
-    />
-  </div>
+        {/* FACILITIES */}
+        <div>
+          <p className="font-semibold mb-2">Facilities</p>
+          <textarea
+            name="facilities"
+            value={form.facilities}
+            onChange={handleChange}
+            placeholder="Facilities provided..."
+            rows={3}
+            className="w-full border border-gray-300 rounded-lg px-4 py-2"
+          />
+        </div>
 
-  {/* FACILITIES */}
-  <div>
-    <p className="font-semibold mb-2">Facilities</p>
-    <textarea
-      name="facilities"
-      value={form.facilities}
-      onChange={handleChange}
-      placeholder="Facilities provided..."
-      rows={3}
-      className="w-full border border-gray-300 rounded-lg px-4 py-2"
-    />
-  </div>
+        {/* ACHIEVEMENTS */}
+        <div>
+          <p className="font-semibold mb-2">Achievements</p>
 
-  {/* ACHIEVEMENTS */}
-  <div>
-    <p className="font-semibold mb-2">Achievements</p>
+          {form.achievements.map((ach, i) => (
+            <div key={i} className="flex gap-2 mb-2">
+              <input
+                value={ach}
+                onChange={(e) => {
+                  const copy = [...form.achievements];
+                  copy[i] = e.target.value;
+                  setForm({ ...form, achievements: copy });
+                }}
+                className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
+                placeholder="Achievement"
+              />
 
-    {form.achievements.map((ach, i) => (
-      <div key={i} className="flex gap-2 mb-2">
-        <input
-          value={ach}
-          onChange={(e) => {
-            const copy = [...form.achievements];
-            copy[i] = e.target.value;
-            setForm({ ...form, achievements: copy });
-          }}
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2"
-          placeholder="Achievement"
-        />
+              <button
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    achievements: form.achievements.filter(
+                      (_, idx) => idx !== i,
+                    ),
+                  })
+                }
+                className="text-red-500 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
 
-        <button
-          onClick={() =>
-            setForm({
-              ...form,
-              achievements: form.achievements.filter((_, idx) => idx !== i),
-            })
-          }
-          className="text-red-500 font-bold"
-        >
-          ✕
-        </button>
-      </div>
-    ))}
-
-    <button
-      onClick={() =>
-        setForm({ ...form, achievements: [...form.achievements, ""] })
-      }
-      className="text-orange-500 font-semibold"
-    >
-      + Add Achievement
-    </button>
-  </div>
-
-</section>
-
+          <button
+            onClick={() =>
+              setForm({ ...form, achievements: [...form.achievements, ""] })
+            }
+            className="text-orange-500 font-semibold"
+          >
+            + Add Achievement
+          </button>
+        </div>
+      </section>
 
       {/* ✅ CATEGORY DROPDOWN SECTION */}
       <section className="bg-gray-100 p-6 rounded-2xl border border-gray-300 space-y-6">

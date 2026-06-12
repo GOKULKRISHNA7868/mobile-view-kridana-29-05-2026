@@ -15,6 +15,7 @@ import {
   updateDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { App } from "@capacitor/app";
 import PerformanceReports from "./PerformanceReports";
 import InstituteDataPage from "./InstituteDataPage";
 import StudentsAttendancePage from "./StudentsAttendancePage";
@@ -139,6 +140,19 @@ const InstituteDashboard = () => {
         return null;
     }
   };
+  useEffect(() => {
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
   useEffect(() => {
     if (mainContentRef.current) {
       mainContentRef.current.scrollTo({

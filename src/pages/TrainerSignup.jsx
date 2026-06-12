@@ -432,11 +432,11 @@ export default function TrainerSignup() {
     formData.append("file", file);
 
     // ✅ Your Unsigned Preset
-    formData.append("upload_preset", "kridana_upload");
+    formData.append("upload_preset", "kirdana");
 
     try {
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/daiyvial8/image/upload",
+        "https://api.cloudinary.com/v1_1/dr0svrhu1/image/upload",
         {
           method: "POST",
           body: formData,

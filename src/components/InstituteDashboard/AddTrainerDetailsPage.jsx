@@ -359,11 +359,11 @@ export default function AddTrainerDetailsPage() {
     const formData = new FormData();
 
     formData.append("file", file);
-    formData.append("upload_preset", "kridana_upload");
+    formData.append("upload_preset", "kirdana");
 
     try {
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/daiyvial8/image/upload",
+        "https://api.cloudinary.com/v1_1/dr0svrhu1/image/upload",
         {
           method: "POST",
           body: formData,
@@ -390,10 +390,10 @@ export default function AddTrainerDetailsPage() {
     for (const file of files) {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("upload_preset", "kridana_upload");
+      fd.append("upload_preset", "kirdana");
 
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/daiyvial8/image/upload",
+        "https://api.cloudinary.com/v1_1/dr0svrhu1/image/upload",
         {
           method: "POST",
           body: fd,
@@ -413,10 +413,10 @@ export default function AddTrainerDetailsPage() {
     for (const file of files) {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("upload_preset", "kridana_upload");
+      fd.append("upload_preset", "kirdana");
 
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/daiyvial8/image/upload",
+        "https://api.cloudinary.com/v1_1/dr0svrhu1/image/upload",
         {
           method: "POST",
           body: fd,

@@ -11,7 +11,9 @@ import {
   onSnapshot,
   setDoc, // ✅ ADD THIS
   arrayUnion,
+  updateDoc,
 } from "firebase/firestore";
+import { useLocation } from "react-router-dom";
 import {
   Home,
   Grid,
@@ -62,6 +64,32 @@ const Navbar = () => {
   const [unreadChats, setUnreadChats] = useState(false);
   const [totalUnread, setTotalUnread] = useState(0);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const location = useLocation();
+
+  const hideNavbarOnChat = location.pathname.includes("ChatBox");
+  const markMessagesAsRead = async (chatId) => {
+    const snap = await getDocs(collection(db, "chats", chatId, "messages"));
+
+    const updates = [];
+
+    snap.forEach((docSnap) => {
+      const data = docSnap.data();
+
+      if (
+        data.senderId !== auth.currentUser.uid &&
+        !(data.readBy || []).includes(auth.currentUser.uid)
+      ) {
+        updates.push(
+          updateDoc(docSnap.ref, {
+            readBy: [...(data.readBy || []), auth.currentUser.uid],
+          }),
+        );
+      }
+    });
+
+    await Promise.all(updates);
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setHighlight(false);
@@ -74,23 +102,61 @@ const Navbar = () => {
 
   // ================= FOLLOW NOTIFICATION REALTIME =================
   useEffect(() => {
+    const updateNavbarHeight = () => {
+      const navbar = document.getElementById("bottom-navbar");
+
+      if (!navbar) return;
+
+      const height = keyboardOpen ? 0 : navbar.offsetHeight;
+
+      document.documentElement.style.setProperty(
+        "--bottom-navbar-height",
+        `${height}px`,
+      );
+    };
+
     const initialHeight = window.innerHeight;
 
     const handleResize = () => {
-      // keyboard usually reduces height by 150px+
-      if (window.innerHeight < initialHeight - 150) {
-        setKeyboardOpen(true);
-      } else {
-        setKeyboardOpen(false);
-      }
+      const viewportHeight =
+        window.visualViewport?.height || window.innerHeight;
+
+      const isKeyboardOpen = viewportHeight < initialHeight - 150;
+
+      setKeyboardOpen(isKeyboardOpen);
+
+      document.documentElement.style.setProperty(
+        "--bottom-navbar-height",
+        isKeyboardOpen ? "0px" : "64px",
+      );
     };
+
+    updateNavbarHeight();
 
     window.addEventListener("resize", handleResize);
 
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", handleResize);
+    }
+
     return () => {
       window.removeEventListener("resize", handleResize);
+
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", handleResize);
+      }
     };
   }, []);
+  useEffect(() => {
+    const navbar = document.getElementById("bottom-navbar");
+
+    const shouldHide = keyboardOpen || location.pathname.includes("ChatBox");
+
+    document.documentElement.style.setProperty(
+      "--bottom-navbar-height",
+      shouldHide ? "0px" : `${navbar?.offsetHeight || 64}px`,
+    );
+  }, [keyboardOpen, location.pathname]);
   useEffect(() => {
     let unsubAuth = null;
     let unsubFollowers = null;
@@ -386,6 +452,15 @@ const Navbar = () => {
       console.error("Logout failed:", error);
     }
   };
+  const openMenu = () => {
+    window.dispatchEvent(new Event("hideLandingBanner"));
+    setMenuOpen(true);
+  };
+
+  const closeMenu = () => {
+    window.dispatchEvent(new Event("showLandingBanner"));
+    setMenuOpen(false);
+  };
   /* REPLACE THIS useEffect BODY FOR PERFECT PAGE GAP */
 
   /* ================= MOBILE FOOTER SAFE SPACE ================= */
@@ -564,6 +639,7 @@ const Navbar = () => {
       </nav>
       {/* ================= MOBILE APP FOOTER NAVBAR ================= */}
       <div
+        id="bottom-navbar"
         className={`
     md:hidden
     fixed
@@ -575,15 +651,11 @@ const Navbar = () => {
     border-t border-orange-400
     shadow-[0_-4px_20px_rgba(0,0,0,0.18)]
     transition-transform duration-300
-    ${keyboardOpen ? "translate-y-full" : "translate-y-0"}
+    ${keyboardOpen || hideNavbarOnChat ? "translate-y-full" : "translate-y-0"}
   `}
-        style={{
-          paddingBottom: "env(safe-area-inset-bottom)",
-          height: "53px",
-        }}
       >
         <div className="w-full max-w-screen-md mx-auto">
-          <div className="grid grid-cols-5 items-center h-[58px] px-1">
+          <div className="grid grid-cols-5 items-center h-[42px] px-0">
             {/* HOME */}
             <button
               onClick={() => navigate("/")}
@@ -714,7 +786,7 @@ const Navbar = () => {
 
             {/* MORE */}
             <button
-              onClick={() => setMenuOpen(true)}
+              onClick={openMenu}
               className="flex flex-col items-center justify-center text-black relative active:scale-95 transition"
             >
               <div className="relative">
@@ -742,7 +814,7 @@ const Navbar = () => {
           <>
             {/* BACKDROP */}
             <div
-              onClick={() => setMenuOpen(false)}
+              onClick={closeMenu}
               className="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[9998]"
             />
 
@@ -766,7 +838,7 @@ const Navbar = () => {
                   </div>
 
                   <button
-                    onClick={() => setMenuOpen(false)}
+                    onClick={closeMenu}
                     className="w-9 h-9 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center active:scale-95"
                   >
                     ✕

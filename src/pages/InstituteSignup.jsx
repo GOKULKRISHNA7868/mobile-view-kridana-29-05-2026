@@ -562,11 +562,11 @@ export default function InstituteSignup() {
     formData.append("file", file);
 
     // ✅ Your Unsigned Preset
-    formData.append("upload_preset", "kridana_upload");
+    formData.append("upload_preset", "kirdana");
 
     try {
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/daiyvial8/image/upload",
+        "https://api.cloudinary.com/v1_1/dr0svrhu1/image/upload",
         {
           method: "POST",
           body: formData,
@@ -592,10 +592,10 @@ export default function InstituteSignup() {
     for (const file of files) {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("upload_preset", "kridana_upload");
+      fd.append("upload_preset", "kirdana");
 
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/daiyvial8/image/upload",
+        "https://api.cloudinary.com/v1_1/dr0svrhu1/image/upload",
         {
           method: "POST",
           body: fd,
@@ -869,7 +869,9 @@ export default function InstituteSignup() {
                     name="founderName"
                     value={formData.founderName}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.founderName && (
                     <p className="text-red-500 text-xs mt-1">
@@ -887,7 +889,9 @@ export default function InstituteSignup() {
                     name="designation"
                     value={formData.designation}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.designation && (
                     <p className="text-red-500 text-xs mt-1">
@@ -986,7 +990,9 @@ export default function InstituteSignup() {
                     </span>
                     <ChevronDown
                       size={18}
-                      className={`transition-transform ${showCategory ? "rotate-180" : ""}`}
+                      className={`transition-transform ${
+                        showCategory ? "rotate-180" : ""
+                      }`}
                     />
                   </div>
 
@@ -1043,7 +1049,9 @@ export default function InstituteSignup() {
 
                     <ChevronDown
                       size={18}
-                      className={`transition-transform ${showSubCategory ? "rotate-180" : ""}`}
+                      className={`transition-transform ${
+                        showSubCategory ? "rotate-180" : ""
+                      }`}
                     />
                   </div>
 
@@ -1084,7 +1092,9 @@ export default function InstituteSignup() {
                     pattern="[0-9]*"
                     value={formData.phoneNumber}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.phoneNumber && (
                     <p className="text-red-500 text-xs mt-1">
@@ -1100,7 +1110,9 @@ export default function InstituteSignup() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.email && (
                     <p className="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -1116,7 +1128,9 @@ export default function InstituteSignup() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.password && (
                     <p className="text-red-500 text-xs mt-1">
@@ -1134,7 +1148,9 @@ export default function InstituteSignup() {
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.confirmPassword && (
                     <p className="text-red-500 text-xs mt-1">
@@ -1159,7 +1175,9 @@ export default function InstituteSignup() {
                     type="text"
                     value={`${formData.building} ${formData.street} ${formData.city}`}
                     readOnly
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                 </div>
 
@@ -1172,7 +1190,9 @@ export default function InstituteSignup() {
                       type="text"
                       value={formData.latitude || ""}
                       readOnly
-                      className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                      className={`${inputClass} ${
+                        errors.instituteName ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
 
@@ -1184,7 +1204,9 @@ export default function InstituteSignup() {
                       type="text"
                       value={formData.longitude || ""}
                       readOnly
-                      className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                      className={`${inputClass} ${
+                        errors.instituteName ? "border-red-500" : ""
+                      }`}
                     />
                   </div>
                 </div>
@@ -1235,7 +1257,9 @@ export default function InstituteSignup() {
                     name="building"
                     value={formData.building}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.building && (
                     <p className="text-red-500 text-xs mt-1">
@@ -1253,7 +1277,9 @@ export default function InstituteSignup() {
                     name="street"
                     value={formData.street}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.street && (
                     <p className="text-red-500 text-xs mt-1">{errors.street}</p>
@@ -1269,7 +1295,9 @@ export default function InstituteSignup() {
                     name="landmark"
                     value={formData.landmark}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                 </div>
 
@@ -1282,7 +1310,9 @@ export default function InstituteSignup() {
                     name="city"
                     value={formData.city}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.city && (
                     <p className="text-red-500 text-xs mt-1">{errors.city}</p>
@@ -1298,7 +1328,9 @@ export default function InstituteSignup() {
                     name="district"
                     value={formData.district}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.district && (
                     <p className="text-red-500 text-xs mt-1">
@@ -1314,7 +1346,9 @@ export default function InstituteSignup() {
                     name="state"
                     value={formData.state}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.state && (
                     <p className="text-red-500 text-xs mt-1">{errors.state}</p>
@@ -1330,7 +1364,9 @@ export default function InstituteSignup() {
                     name="country"
                     value={formData.country}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.country && (
                     <p className="text-red-500 text-xs mt-1">
@@ -1348,7 +1384,9 @@ export default function InstituteSignup() {
                     name="zipCode"
                     value={formData.zipCode}
                     onChange={handleChange}
-                    className={`${inputClass} ${errors.instituteName ? "border-red-500" : ""}`}
+                    className={`${inputClass} ${
+                      errors.instituteName ? "border-red-500" : ""
+                    }`}
                   />
                   {errors.zipCode && (
                     <p className="text-red-500 text-xs mt-1">

@@ -329,7 +329,7 @@ const EmployeeAttendancePage = () => {
   }, [draftAttendance, attendance]);
 
   return (
-    <div className="bg-[#f3f4f6] h-[calc(100vh-80px)] flex flex-col overflow-hidden pt-10 pb-10 px-4 md:px-6">
+    <div className="bg-[#f3f4f6] h-[calc(100dvh-80px)] flex flex-col overflow-hidden min-h-0 pt-10 pb-10 px-4 md:px-6">
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
         <h1 className="text-3xl font-bold">Employee Attendance</h1>
@@ -380,9 +380,9 @@ const EmployeeAttendancePage = () => {
 
       {/* TABLE */}
       {/* ================= RESPONSIVE ATTENDANCE TABLE ================= */}
-      <div className="border-2 border-orange-300 rounded-xl overflow-hidden bg-white">
+      <div className="border-2 border-orange-300 rounded-xl overflow-hidden bg-white flex-1 flex flex-col min-h-0">
         {/* ================= DESKTOP VIEW ================= */}
-        <div className="hidden lg:block flex-1 overflow-y-auto scrollbar-thin">
+        <div className="hidden lg:block flex-1 overflow-y-auto min-h-0 scrollbar-thin">
           {/* HEADER */}
           <div className="grid grid-cols-5 bg-black text-orange-500 font-semibold px-6 py-3 text-sm">
             <div>Employee Name</div>
@@ -461,7 +461,7 @@ const EmployeeAttendancePage = () => {
         </div>
 
         {/* ================= MOBILE VIEW ================= */}
-        <div className="lg:hidden flex-1 overflow-y-auto divide-y">
+        <div className="lg:hidden flex-1 overflow-y-auto min-h-0 divide-y">
           {filteredEmployees.map((emp, index) => {
             const record = draftAttendance[emp.uid];
 

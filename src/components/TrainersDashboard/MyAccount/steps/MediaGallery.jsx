@@ -55,17 +55,17 @@ const MediaGallery = ({ setStep }) => {
   const uploadToCloudinary = async (file, type, fieldName) => {
     setUploading(true);
     setUploadMsg((prev) => ({
-  ...prev,
-  [fieldName]: ""
-}));
+      ...prev,
+      [fieldName]: "",
+    }));
 
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", "kridana_upload");
+    data.append("upload_preset", "kirdana"); // same preset for all uploads
 
     try {
       const res = await fetch(
-        `https://api.cloudinary.com/v1_1/daiyvial8/${type}/upload`,
+        `https://api.cloudinary.com/v1_1/dr0svrhu1/${type}/upload`,
         {
           method: "POST",
           body: data,
@@ -79,9 +79,9 @@ const MediaGallery = ({ setStep }) => {
       }
 
       setUploadMsg((prev) => ({
-  ...prev,
-  [fieldName]: "✅ Upload Successful!",
-}));
+        ...prev,
+        [fieldName]: "✅ Upload Successful!",
+      }));
       return result.secure_url;
     } catch (err) {
       console.error("Cloudinary Upload Error:", err);
@@ -90,11 +90,11 @@ const MediaGallery = ({ setStep }) => {
     } finally {
       setUploading(false);
       setTimeout(() => {
-  setUploadMsg((prev) => ({
-    ...prev,
-    [fieldName]: "",
-  }));
-}, 3000);
+        setUploadMsg((prev) => ({
+          ...prev,
+          [fieldName]: "",
+        }));
+      }, 3000);
     }
   };
 
@@ -191,31 +191,31 @@ const MediaGallery = ({ setStep }) => {
             <div key={field.name} className="flex flex-col">
               <label className="text-sm font-medium mb-2">{field.label}</label>
 
-             <label className="cursor-pointer">
-  <input
-    type="file"
-    name={field.name}
-    accept="image/*"
-    multiple
-    onChange={(e) => handleFileUpload(e, field.name, "image")}
-    className="hidden"
-  />
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  name={field.name}
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleFileUpload(e, field.name, "image")}
+                  className="hidden"
+                />
 
-  <div className="border border-gray-300 rounded-md px-3 py-2 flex justify-between items-center hover:border-orange-500 transition">
-    <span className="text-gray-500">
-      {formData[field.name]?.length > 0
-        ? `${formData[field.name].length} image(s) uploaded`
-        : "Upload Images"}
-    </span>
-    <img src="/upload.png" alt="upload" className="w-5 h-5" />
-  </div>
-</label>
+                <div className="border border-gray-300 rounded-md px-3 py-2 flex justify-between items-center hover:border-orange-500 transition">
+                  <span className="text-gray-500">
+                    {formData[field.name]?.length > 0
+                      ? `${formData[field.name].length} image(s) uploaded`
+                      : "Upload Images"}
+                  </span>
+                  <img src="/upload.png" alt="upload" className="w-5 h-5" />
+                </div>
+              </label>
 
-{uploadMsg[field.name] && (
-  <p className="text-green-600 text-sm mt-1">
-    {uploadMsg[field.name]}
-  </p>
-)}
+              {uploadMsg[field.name] && (
+                <p className="text-green-600 text-sm mt-1">
+                  {uploadMsg[field.name]}
+                </p>
+              )}
             </div>
           ))}
 
@@ -243,10 +243,10 @@ const MediaGallery = ({ setStep }) => {
               </div>
             </label>
             {uploadMsg.reels && (
-  <div className="mt-1">
-    <p className="text-green-600 text-sm">{uploadMsg.reels}</p>
-  </div>
-)}
+              <div className="mt-1">
+                <p className="text-green-600 text-sm">{uploadMsg.reels}</p>
+              </div>
+            )}
           </div>
         </div>
 

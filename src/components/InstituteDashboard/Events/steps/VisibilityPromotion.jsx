@@ -11,11 +11,11 @@ const VisibilityPromotion = ({ formData, setFormData }) => {
   const uploadToCloudinary = async (file) => {
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", "kridana_upload");
+    data.append("upload_preset", "kirdana"); // 👈 your unsigned preset name
 
     try {
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/daiyvial8/image/upload",
+        "https://api.cloudinary.com/v1_1/dr0svrhu1/image/upload",
         {
           method: "POST",
           body: data,

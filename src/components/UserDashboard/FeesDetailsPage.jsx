@@ -36,8 +36,46 @@ const PaymentOverview = () => {
     (sum, f) => sum + Number(f.paidAmount || 0),
     0,
   );
+  const sortedMonths = [...generatedMonths].sort((a, b) => {
+    const aPaid = student.sports.every((sport) =>
+      feeHistory.find(
+        (f) =>
+          f.month === a.key &&
+          f.category === sport.category &&
+          f.subCategory === sport.subCategory &&
+          Number(f.paidAmount) > 0,
+      ),
+    );
 
+    const bPaid = student.sports.every((sport) =>
+      feeHistory.find(
+        (f) =>
+          f.month === b.key &&
+          f.category === sport.category &&
+          f.subCategory === sport.subCategory &&
+          Number(f.paidAmount) > 0,
+      ),
+    );
+
+    if (aPaid === bPaid) {
+      return b.key.localeCompare(a.key);
+    }
+
+    return aPaid ? 1 : -1;
+  });
   const [processing, setProcessing] = useState(false);
+  const pendingMonths = sortedMonths.filter((month) => {
+    return student.sports.some((sport) => {
+      const rec = feeHistory.find(
+        (f) =>
+          f.month === month.key &&
+          f.category === sport.category &&
+          f.subCategory === sport.subCategory,
+      );
+
+      return !(rec && Number(rec.paidAmount) > 0);
+    });
+  }).length;
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
@@ -254,12 +292,13 @@ const PaymentOverview = () => {
   return (
     <div className="bg-white flex flex-col h-full max-h-full overflow-hidden px-3 sm:px-5 md:px-8 py-4 md:py-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 mb-6">
         <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">
           Payment Overview
         </h1>
       </div>
-      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+
+      <div className="flex flex-col sm:flex-row gap-1 mb-6">
         <select
           value={selectedCategory}
           onChange={(e) => {
@@ -287,10 +326,10 @@ const PaymentOverview = () => {
       </div>
       <div className="flex-1 min-h-0 overflow-hidden">
         {/* Cards Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 h-full min-h-0 overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-8 h-full min-h-0 overflow-hidden">
           <div className="bg-white border border-orange-400 rounded-lg w-full flex flex-col h-full min-h-0 overflow-hidden">
             {/* Top Section */}
-            <div className="p-5 border-b border-orange-300">
+            <div className="p-2 border-b border-orange-300">
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-semibold">
@@ -308,7 +347,7 @@ const PaymentOverview = () => {
                 <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
               </div>
 
-              <div className="mt-6">
+              <div className="mt-2">
                 <p className="text-sm text-gray-600">Due Amount</p>
                 <p className="text-red-500 font-semibold text-lg">
                   ₹{monthlyFee}
@@ -321,16 +360,23 @@ const PaymentOverview = () => {
 
             {/* Payment History */}
             {/* Payment History */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-5 border-b border-orange-300">
-              <h4 className="font-semibold mb-3 sticky top-0 bg-white z-10 pb-2">
-                Payment History
-              </h4>
+            <div
+              className="
+    flex-1 min-h-0 overflow-y-auto
+    p-5 border-b border-orange-300
+    scrollbar-thin scrollbar-thumb-orange-400
+    relative
+  "
+            >
+              <p className="text-[11px] text-red-400 mb-3">
+                ↓ Scroll to view previous and Pending Months: {pendingMonths}
+              </p>
 
               {generatedMonths.length === 0 && (
                 <p className="text-xs text-gray-400">No payments found</p>
               )}
 
-              {generatedMonths.map((item, index) => (
+              {sortedMonths.map((item, index) => (
                 <div
                   key={index}
                   className="flex flex-col sm:flex-row justify-between text-sm mb-3 gap-2"
@@ -359,6 +405,11 @@ const PaymentOverview = () => {
                         amount: Number(sport.fee || 0), // ✅ attach fee HERE
                         paidAmount: record?.paidAmount || 0,
                         paid: record && Number(record.paidAmount) > 0,
+                        paymentDate:
+                          record?.paymentDate ||
+                          record?.paidAt ||
+                          record?.createdAt ||
+                          null,
                       };
                     });
 
@@ -446,10 +497,18 @@ const PaymentOverview = () => {
                               <p className="text-xs font-medium">
                                 {r.category} - {r.subCategory}
                               </p>
-
                               {r.paid ? (
                                 <p className="text-green-600 text-xs">
                                   Paid ₹{r.paidAmount}
+                                  {r.paymentDate && (
+                                    <span className="text-gray-500 ml-2">
+                                      (
+                                      {r.paymentDate
+                                        .toDate()
+                                        .toLocaleDateString("en-IN")}
+                                      )
+                                    </span>
+                                  )}
                                 </p>
                               ) : (
                                 <>

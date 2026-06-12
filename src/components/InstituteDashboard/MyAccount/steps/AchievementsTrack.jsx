@@ -101,11 +101,11 @@ const AchievementsTrack = ({ setStep }) => {
 
     const data = new FormData();
     data.append("file", file);
-    data.append("upload_preset", "kridana_upload");
+    data.append("upload_preset", "kirdana");
 
     try {
       const res = await fetch(
-        `https://api.cloudinary.com/v1_1/daiyvial8/${type}/upload`,
+        `https://api.cloudinary.com/v1_1/dr0svrhu1/${type}/upload`,
         {
           method: "POST",
           body: data,
@@ -228,23 +228,25 @@ const AchievementsTrack = ({ setStep }) => {
 
       {/* TABLE */}
       <div className="overflow-x-auto mb-8">
-        <table className="min-w-full border border-gray-300">
+        <table className="w-full table-fixed border border-gray-300 min-w-[320px]">
           <thead>
             <tr className="bg-gray-100 text-orange-500">
-              <th className="p-3 border">Category</th>
-              <th className="p-3 border">Gold</th>
-              <th className="p-3 border">Silver</th>
-              <th className="p-3 border">Bronze</th>
+              <th className="p-2 sm:p-3 border w-1/4">Category</th>
+              <th className="p-2 sm:p-3 border w-1/4">Gold</th>
+              <th className="p-2 sm:p-3 border w-1/4">Silver</th>
+              <th className="p-2 sm:p-3 border w-1/4">Bronze</th>
             </tr>
           </thead>
 
           <tbody>
             {["district", "state", "national"].map((level) => (
               <tr key={level} className="text-center">
-                <td className="p-3 border capitalize font-medium">{level}</td>
+                <td className="p-2 sm:p-3 border capitalize font-medium text-xs sm:text-sm">
+                  {level}
+                </td>
 
                 {["gold", "silver", "bronze"].map((medal) => (
-                  <td key={medal} className="p-3 border">
+                  <td key={medal} className="p-2 border">
                     <input
                       type="number"
                       min="0"
@@ -252,7 +254,15 @@ const AchievementsTrack = ({ setStep }) => {
                       onChange={(e) =>
                         handleChange(level, medal, e.target.value)
                       }
-                      className="w-full border border-gray-300 rounded px-2 py-1"
+                      className="
+                  w-full
+                  h-10
+                  text-center
+                  text-sm
+                  border border-gray-300
+                  rounded
+                  px-1
+                "
                     />
                   </td>
                 ))}

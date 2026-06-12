@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { MoreVertical, Smile, Send, Mic } from "lucide-react";
+import { MoreVertical, Smile, Send, Mic, ArrowLeft } from "lucide-react";
 import { db, auth } from "../../firebase";
 import {
   collection,
@@ -18,8 +18,9 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-
+import { useNavigate } from "react-router-dom";
 const ChatBox = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("chats");
   const [screen, setScreen] = useState("chat");
   const [showMenu, setShowMenu] = useState(false);
@@ -711,7 +712,7 @@ const ChatBox = () => {
       className="
     flex flex-col
     
-    h-[95dvh]
+    h-[100dvh]
     w-full
     bg-[#ECE5DD]
     overflow-hidden
@@ -731,7 +732,16 @@ const ChatBox = () => {
         <div className="sticky top-0 z-40 bg-[#f7f7f7] px-5 pt-5 pb-4 shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-black">Chat</h1>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition"
+                >
+                  <ArrowLeft size={22} />
+                </button>
+
+                <h1 className="text-3xl font-bold text-black">Chat</h1>
+              </div>
 
               <p className="text-sm text-gray-500 mt-1">
                 Connect with your people
