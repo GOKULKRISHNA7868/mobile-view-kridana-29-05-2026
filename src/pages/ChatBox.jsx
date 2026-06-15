@@ -420,52 +420,89 @@ const ChatBox = () => {
       </div>
 
       {/* CHAT AREA */}
+      {/* CHAT AREA */}
       <div
         className="
-      flex-1
-      overflow-y-auto
-      px-3
-      py-4
-      space-y-3
-      "
+    flex-1
+    overflow-y-auto
+    px-3
+    py-4
+  "
       >
-        {messages.map((m) => {
-          const isMe = m.senderId === user?.uid;
-
-          const sender = users.find((u) => u.uid === m.senderId);
-
-          return (
-            <div
-              key={m.id}
-              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`
-              max-w-[80%]
-              rounded-2xl
-              px-4
-              py-2
-              shadow-sm
-              ${isMe ? "bg-orange-500 text-white" : "bg-white"}
-              `}
-              >
-                {!isMe && (
-                  <div className="text-[11px] font-semibold mb-1">
-                    {sender?.name || "User"}
-                  </div>
-                )}
-
-                <div className="text-sm break-words">{m.text}</div>
-
-                {isMe && m.readBy?.length > 1 && (
-                  <div className="text-[10px] text-right mt-1">✓✓</div>
-                )}
-              </div>
+        {!activeChat && messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full px-6 text-center">
+            <div className="w-28 h-28 rounded-full bg-orange-100 flex items-center justify-center mb-5">
+              <span className="text-5xl">👋</span>
             </div>
-          );
-        })}
-      </div>
 
+            <h2 className="text-xl font-bold text-gray-800">
+              Make New Friends
+            </h2>
+
+            <p className="text-gray-500 text-sm mt-3 max-w-[280px] leading-6">
+              No conversations yet. Discover students, trainers and
+              professionals, then start chatting instantly.
+            </p>
+
+            <button
+              onClick={() => navigate("/allpeoplepage")}
+              className="
+          mt-6
+          bg-[#FF6B00]
+          text-white
+          px-8
+          py-3
+          rounded-2xl
+          font-semibold
+          shadow-lg
+          hover:scale-105
+          active:scale-95
+          transition-all
+        "
+            >
+              Make Friends
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {messages.map((m) => {
+              const isMe = m.senderId === user?.uid;
+
+              const sender = users.find((u) => u.uid === m.senderId);
+
+              return (
+                <div
+                  key={m.id}
+                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`
+                max-w-[80%]
+                rounded-2xl
+                px-4
+                py-2
+                shadow-sm
+                ${isMe ? "bg-orange-500 text-white" : "bg-white"}
+              `}
+                  >
+                    {!isMe && (
+                      <div className="text-[11px] font-semibold mb-1">
+                        {sender?.name || "User"}
+                      </div>
+                    )}
+
+                    <div className="text-sm break-words">{m.text}</div>
+
+                    {isMe && m.readBy?.length > 1 && (
+                      <div className="text-[10px] text-right mt-1">✓✓</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
       {/* INPUT */}
       <div
         className="
@@ -489,8 +526,6 @@ const ChatBox = () => {
         py-2
         "
         >
-          <Smile size={20} className="text-gray-500" />
-
           <input
             value={text}
             onChange={(e) => setText(e.target.value)}

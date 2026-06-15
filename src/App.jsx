@@ -20,7 +20,7 @@ import TrainerSignup from "./pages/TrainerSignup.jsx";
 import InstituteSignup from "./pages/InstituteSignup.jsx";
 import Login from "./pages/Login.jsx";
 import Landing from "./pages/Landing.jsx";
-
+import UserChatBox from "./pages/ChatBox.jsx";
 import FeePaymentSuccess from "./pages/FeePaymentSuccess";
 import InstFeePaymentSuccess from "./pages/InstFeePaymentSuccess";
 
@@ -308,7 +308,7 @@ function App() {
                     path="/PaymentMethodPage"
                     element={<PaymentMethodPage />}
                   />
-
+                  <Route path="/ChatBox" element={<UserChatBox />} />
                   <Route
                     path="/TrainerPaymentSelection"
                     element={<TrainerPaymentSelection />}

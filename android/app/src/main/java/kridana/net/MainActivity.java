@@ -1,4 +1,4 @@
-package www.kridana.net;
+package kridana.net;
 
 import com.getcapacitor.BridgeActivity;
 

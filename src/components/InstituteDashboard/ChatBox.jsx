@@ -1157,7 +1157,43 @@ const ChatBox = () => {
             </div>
           </div>
         )}
+        {/* EMPTY STATE */}
+        {filteredChats.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-[60vh] px-6 text-center">
+            <div className="w-28 h-28 rounded-full bg-orange-100 flex items-center justify-center mb-5">
+              <span className="text-5xl">👋</span>
+            </div>
 
+            <h2 className="text-xl font-bold text-gray-800">
+              Make New Friends
+            </h2>
+
+            <p className="text-gray-500 text-sm mt-3 max-w-[280px] leading-6">
+              You don't have any chats yet. Connect with students, trainers, and
+              other people to start conversations, build your network, and make
+              new friends.
+            </p>
+
+            <button
+              onClick={() => navigate("/allpeoplepage")}
+              className="
+        mt-6
+        bg-[#FF6B00]
+        text-white
+        px-8
+        py-3
+        rounded-2xl
+        font-semibold
+        shadow-lg
+        hover:scale-105
+        active:scale-95
+        transition-all
+      "
+            >
+              Find People
+            </button>
+          </div>
+        )}
         {/* CHAT / GROUP LIST */}
         <div
           className="

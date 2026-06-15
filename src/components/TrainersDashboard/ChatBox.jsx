@@ -894,89 +894,129 @@ const ChatBox = () => {
         </div>
 
         {/* CHAT LIST */}
-        <div className="mt-6 overflow-x-auto whitespace-nowrap no-scrollbar">
-          {(activeTab === "group" ? filteredGroups : filteredUsers)
-            .sort((a, b) => {
-              const aUnread =
-                unreadCounts[
-                  activeTab === "group"
-                    ? a.id
-                    : [user?.uid, a.uid].sort().join("_")
-                ] || 0;
+        {(
+          activeTab === "group"
+            ? filteredGroups.length === 0
+            : filteredUsers.length === 0
+        ) ? (
+          <div className="flex flex-col items-center justify-center h-[55vh] px-6 text-center">
+            <div className="w-28 h-28 rounded-full bg-orange-100 flex items-center justify-center mb-5">
+              <span className="text-5xl">👋</span>
+            </div>
 
-              const bUnread =
-                unreadCounts[
-                  activeTab === "group"
-                    ? b.id
-                    : [user?.uid, b.uid].sort().join("_")
-                ] || 0;
+            <h2 className="text-xl font-bold text-gray-800">
+              Make New Friends
+            </h2>
 
-              if (aUnread > 0 && bUnread === 0) return -1;
-              if (bUnread > 0 && aUnread === 0) return 1;
+            <p className="text-gray-500 text-sm mt-3 max-w-[280px] leading-6">
+              No conversations yet. Discover people, connect with students,
+              trainers and professionals, then start chatting instantly.
+            </p>
 
-              return bUnread - aUnread;
-            })
-            .map((u) => {
-              const unread =
-                unreadCounts[
-                  activeTab === "group"
-                    ? u.id
-                    : [user?.uid, u.uid].sort().join("_")
-                ] || 0;
+            <button
+              onClick={() => navigate("/allpeoplepage")}
+              className="
+        mt-6
+        bg-[#FF6B00]
+        text-white
+        px-8
+        py-3
+        rounded-2xl
+        font-semibold
+        shadow-lg
+        hover:scale-105
+        active:scale-95
+        transition-all
+      "
+            >
+              Make Friends
+            </button>
+          </div>
+        ) : (
+          <div className="mt-6 overflow-x-auto whitespace-nowrap no-scrollbar">
+            {(activeTab === "group" ? filteredGroups : filteredUsers)
+              .sort((a, b) => {
+                const aUnread =
+                  unreadCounts[
+                    activeTab === "group"
+                      ? a.id
+                      : [user?.uid, a.uid].sort().join("_")
+                  ] || 0;
 
-              return (
-                <div
-                  key={u.uid || u.id}
-                  onClick={() => {
-                    if (activeTab === "group") {
-                      setActiveChat({
-                        id: u.id,
-                        type: "group",
-                      });
+                const bUnread =
+                  unreadCounts[
+                    activeTab === "group"
+                      ? b.id
+                      : [user?.uid, b.uid].sort().join("_")
+                  ] || 0;
 
-                      setActiveChatName(u.name);
-                    } else {
-                      startChat(u);
-                    }
+                if (aUnread > 0 && bUnread === 0) return -1;
+                if (bUnread > 0 && aUnread === 0) return 1;
 
-                    setScreen("chat");
-                  }}
-                  className="bg-white rounded-3xl p-4 mb-4 flex items-center gap-4 shadow-sm active:scale-[0.98] transition cursor-pointer"
-                >
-                  <div className="relative">
-                    <img
-                      src={getValidImage(u.profileImageUrl, u.name)}
-                      className="w-14 h-14 rounded-full object-cover"
-                    />
+                return bUnread - aUnread;
+              })
+              .map((u) => {
+                const unread =
+                  unreadCounts[
+                    activeTab === "group"
+                      ? u.id
+                      : [user?.uid, u.uid].sort().join("_")
+                  ] || 0;
 
-                    <div className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                  </div>
+                return (
+                  <div
+                    key={u.uid || u.id}
+                    onClick={() => {
+                      if (activeTab === "group") {
+                        setActiveChat({
+                          id: u.id,
+                          type: "group",
+                        });
 
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-semibold truncate">{u.name}</h3>
+                        setActiveChatName(u.name);
+                      } else {
+                        startChat(u);
+                      }
 
-                      <span className="text-[11px] text-gray-400">Now</span>
+                      setScreen("chat");
+                    }}
+                    className="bg-white rounded-3xl p-4 mb-4 flex items-center gap-4 shadow-sm active:scale-[0.98] transition cursor-pointer"
+                  >
+                    <div className="relative">
+                      <img
+                        src={getValidImage(u.profileImageUrl, u.name)}
+                        className="w-14 h-14 rounded-full object-cover"
+                        alt={u.name}
+                      />
+
+                      <div className="absolute bottom-1 right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                     </div>
 
-                    <div className="flex items-center justify-between mt-1">
-                      <p className="text-sm text-gray-500 truncate">
-                        {u.lastMessage || "Tap to chat"}
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-semibold truncate">{u.name}</h3>
 
-                      {unread > 0 && (
-                        <div className="min-w-[22px] h-[22px] rounded-full bg-[#FF6B00] text-white text-xs flex items-center justify-center font-semibold">
-                          {unread}
-                        </div>
-                      )}
+                        <span className="text-[11px] text-gray-400">Now</span>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-sm text-gray-500 truncate">
+                          {u.lastMessage || "Tap to chat"}
+                        </p>
+
+                        {unread > 0 && (
+                          <div className="min-w-[22px] h-[22px] rounded-full bg-[#FF6B00] text-white text-xs flex items-center justify-center font-semibold">
+                            {unread}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-        </div>
+                );
+              })}
+          </div>
+        )}
       </div>
-
       {/* ================= CREATE GROUP ================= */}
       {screen === "createGroup" && !activeChat && (
         <div className="flex-1 bg-white overflow-y-auto">

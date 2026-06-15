@@ -751,10 +751,10 @@ const Navbar = () => {
                     return;
                   }
 
-                  navigate("/components/UserDashboard/ChatBox");
+                  navigate("/ChatBox");
                 } catch (error) {
                   console.log(error);
-                  navigate("/components/UserDashboard/ChatBox");
+                  navigate("/ChatBox");
                 }
               }}
               className="flex flex-col items-center justify-center text-black relative active:scale-95 transition"
