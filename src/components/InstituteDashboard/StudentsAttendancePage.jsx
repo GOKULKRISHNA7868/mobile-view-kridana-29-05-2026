@@ -177,40 +177,46 @@ const StudentsAttendancePage = () => {
   // Filter Students (JOIN DATE + LEFT DATE LOGIC)
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
-      const name = `${s.firstName} ${s.lastName}`.toLowerCase();
+      const name = `${s.firstName || ""} ${s.lastName || ""}`.toLowerCase();
+
       const matchSearch = name.includes(search.toLowerCase());
 
       const statusOk = !s.status || s.status === "Active";
+
       const joinedOk = !s.joiningDate || s.joiningDate <= selectedDate;
 
-      let sportMatch = true;
+      const matchBranch =
+        !selectedBranch || (s.branch || "").trim() === selectedBranch.trim();
 
-      if (selectedCategory) {
-        sportMatch =
-          s.sports &&
-          s.sports.some(
+      const sportMatch = !selectedCategory
+        ? true
+        : (s.sports || []).some(
             (sp) =>
               sp.category === selectedCategory &&
               (!selectedSubCategory || sp.subCategory === selectedSubCategory),
           );
-      }
 
-      const matchSession =
-        !selectedSession ||
-        s.sessions === selectedSession ||
-        (s.sports && s.sports.some((sp) => sp.sessions === selectedSession));
-      const matchTime =
-        !selectedTime ||
-        (s.sports && s.sports.some((sp) => sp.timings === selectedTime));
-      const matchBranch = !selectedBranch || s.branch === selectedBranch;
+      const matchSession = !selectedSession
+        ? true
+        : (s.sports || []).some(
+            (sp) =>
+              sp.sessions === selectedSession || sp.session === selectedSession,
+          );
+
+      const matchTime = !selectedTime
+        ? true
+        : (s.sports || []).some(
+            (sp) => sp.timings === selectedTime || sp.timing === selectedTime,
+          );
+
       return (
         matchSearch &&
         statusOk &&
         joinedOk &&
+        matchBranch &&
         sportMatch &&
         matchSession &&
-        matchTime &&
-        matchBranch
+        matchTime
       );
     });
   }, [
@@ -223,6 +229,7 @@ const StudentsAttendancePage = () => {
     selectedTime,
     selectedBranch,
   ]);
+
   // Summary
   useEffect(() => {
     const total = filteredStudents.length;
@@ -390,6 +397,7 @@ const StudentsAttendancePage = () => {
       window.removeEventListener("touchend", handleTouchEnd);
     };
   }, []);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [
@@ -509,12 +517,6 @@ const StudentsAttendancePage = () => {
           {/* BACK + TITLE */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <ArrowLeft
-                size={22}
-                onClick={() => navigate(-1)}
-                className="cursor-pointer shrink-0"
-              />
-
               <h1 className="text-lg font-bold text-[#FF6A00] truncate">
                 Attendance
               </h1>

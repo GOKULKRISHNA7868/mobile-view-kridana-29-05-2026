@@ -130,7 +130,8 @@ const Landing = () => {
   /* ===================================================== */
   // Landing.jsx
 
-  useEffect(() => {
+  {
+    /*} useEffect(() => {
     const handleResize = () => {
       window.dispatchEvent(new Event("showLandingBanner"));
     };
@@ -182,7 +183,8 @@ const Landing = () => {
       bannerLoadedListener?.remove();
       bannerFailedListener?.remove();
     };
-  }, []);
+  }, []);*/
+  }
   const openComments = async (item) => {
     const mainCol = item.type === "trainer" ? "trainers" : "institutes";
 
@@ -562,7 +564,7 @@ const Landing = () => {
   return (
     <div className="w-full font-sans pb-50">
       {/* 3px white line */}
-      <div className="w-full h-[90px] bg-white"></div>
+      <div className="w-full h-[10px] bg-white"></div>
 
       <section className="w-full bg-[#FFFBF8] border-b border-orange-100 py-2 md:py-20 overflow-hidden">
         {/* ==================== MOBILE VIEW ===================== */}

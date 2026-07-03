@@ -37,15 +37,54 @@ export default function App() {
         prev.map((img) => img.file.name + img.file.size),
       );
 
-      const newImages = files
-        .filter((file) => !existingKeys.has(file.name + file.size))
-        .map((file) => ({
-          file,
-          url: URL.createObjectURL(file),
-          type: file.type,
-        }));
+      const currentImages = prev.filter((i) =>
+        i.file.type.startsWith("image"),
+      ).length;
 
-      return [...prev, ...newImages];
+      const currentVideos = prev.filter((i) =>
+        i.file.type.startsWith("video"),
+      ).length;
+
+      let imageCount = currentImages;
+      let videoCount = currentVideos;
+
+      const newItems = [];
+
+      for (const file of files) {
+        const key = file.name + file.size;
+
+        if (existingKeys.has(key)) continue;
+
+        if (file.type.startsWith("image")) {
+          if (imageCount >= 4) {
+            alert("Maximum 4 images allowed");
+            continue;
+          }
+
+          imageCount++;
+
+          newItems.push({
+            file,
+            url: URL.createObjectURL(file),
+            type: file.type,
+          });
+        } else if (file.type.startsWith("video")) {
+          if (videoCount >= 1) {
+            alert("Only one video allowed");
+            continue;
+          }
+
+          videoCount++;
+
+          newItems.push({
+            file,
+            url: URL.createObjectURL(file),
+            type: file.type,
+          });
+        }
+      }
+
+      return [...prev, ...newItems];
     });
 
     e.target.value = null;
@@ -209,9 +248,24 @@ export default function App() {
               <polyline points="9 15 12 12 15 15" />
             </svg>
 
-            <p className="text-base sm:text-lg font-semibold text-[#3d3733]">
-              Upload Image & Videos
-            </p>
+            <div className="text-center px-4">
+              <h2 className="text-2xl font-bold text-[#3d3733]">
+                Upload Your Images & Videos
+              </h2>
+
+              <p className="mt-2 text-gray-600">
+                Showcase your training sessions, achievements, events, and
+                memorable moments.
+              </p>
+
+              <p className="mt-3 text-sm text-orange-500 font-medium">
+                Tap here to select files
+              </p>
+
+              <p className="text-xs text-gray-500 mt-1">
+                Up to 4 images and 1 video
+              </p>
+            </div>
           </div>
 
           <input
@@ -222,17 +276,18 @@ export default function App() {
             onChange={handleUpload}
             className="hidden"
           />
-
-          {images.length > 0 && (
-            <div className="flex justify-end mt-3">
-              <button
-                onClick={() => fileInputRef.current.click()}
-                className="border border-orange-500 text-orange-500 px-3 py-1 rounded text-sm"
-              >
-                + Add More
-              </button>
-            </div>
-          )}
+          {images.length > 0 &&
+            !images.some((img) => img.type.startsWith("video")) &&
+            images.filter((img) => img.type.startsWith("image")).length < 4 && (
+              <div className="flex justify-end mt-3">
+                <button
+                  onClick={() => fileInputRef.current.click()}
+                  className="border border-orange-500 text-orange-500 px-3 py-1 rounded text-sm"
+                >
+                  + Add More
+                </button>
+              </div>
+            )}
 
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
             {images.map((img, i) => (
@@ -262,7 +317,13 @@ export default function App() {
           </div>
 
           <button
-            onClick={() => setStep(2)}
+            onClick={() => {
+              if (images.length === 0) {
+                alert("Please upload at least one image or video");
+                return;
+              }
+              setStep(2);
+            }}
             className="w-full mt-10 bg-orange-500 text-black font-semibold py-3 rounded-lg text-lg"
           >
             Next

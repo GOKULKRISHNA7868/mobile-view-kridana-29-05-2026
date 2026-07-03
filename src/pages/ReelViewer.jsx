@@ -36,7 +36,7 @@ const ReelViewer = () => {
   const { index } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [reels, setReels] = useState(location.state?.reels || []);
   const [activeIndex, setActiveIndex] = useState(Number(index) || 0);
   const [loading, setLoading] = useState(true);
@@ -59,7 +59,7 @@ const ReelViewer = () => {
 
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
-
+  const videoRef = useRef(null);
   const reel =
     reels.length > 0 && reels[activeIndex] ? reels[activeIndex] : null;
 
@@ -95,18 +95,22 @@ const ReelViewer = () => {
           data.profileImageUrl || data.profileImage || data.photoURL || "";
 
         if (Array.isArray(data.reels)) {
-          data.reels.forEach((videoUrl, idx) => {
-            if (videoUrl) {
-              allReels.push({
-                reelId: `trainer_${docu.id}_${idx}`,
-                videoUrl,
-                title: ownerName,
-                ownerName,
-                ownerPhoto,
-                ownerId: docu.id,
-                type: "trainer",
-              });
-            }
+          data.reels.forEach((reelData, idx) => {
+            const videoUrl =
+              typeof reelData === "string" ? reelData : reelData?.url;
+
+            if (!videoUrl) return;
+
+            allReels.push({
+              reelId: `trainer_${docu.id}_${idx}`,
+              videoUrl,
+              about: reelData?.about || "",
+              title: ownerName,
+              ownerName,
+              ownerPhoto,
+              ownerId: docu.id,
+              type: "trainer",
+            });
           });
         }
       });
@@ -127,18 +131,22 @@ const ReelViewer = () => {
           data.profileImageUrl || data.profileImage || data.photoURL || "";
 
         if (Array.isArray(data.reels)) {
-          data.reels.forEach((videoUrl, idx) => {
-            if (videoUrl) {
-              allReels.push({
-                reelId: `institute_${docu.id}_${idx}`,
-                videoUrl,
-                title: ownerName,
-                ownerName,
-                ownerPhoto,
-                ownerId: docu.id,
-                type: "institute",
-              });
-            }
+          data.reels.forEach((reelData, idx) => {
+            const videoUrl =
+              typeof reelData === "string" ? reelData : reelData?.url;
+
+            if (!videoUrl) return;
+
+            allReels.push({
+              reelId: `institute_${docu.id}_${idx}`,
+              videoUrl,
+              about: reelData?.about || "",
+              title: ownerName,
+              ownerName,
+              ownerPhoto,
+              ownerId: docu.id,
+              type: "institute",
+            });
           });
         }
       });
@@ -151,7 +159,35 @@ const ReelViewer = () => {
       setLoading(false);
     }
   };
+  const requireLogin = () => {
+    if (!auth.currentUser) {
+      setShowLoginPopup(true);
+      return false;
+    }
+    return true;
+  };
+  useEffect(() => {
+    const video = videoRef.current;
 
+    if (!video || !reel?.videoUrl) return;
+
+    video.pause();
+
+    video.src = reel.videoUrl;
+
+    video.load();
+
+    const playVideo = async () => {
+      try {
+        await video.play();
+        console.log("Playing:", reel.videoUrl);
+      } catch (err) {
+        console.error("Play failed:", err);
+      }
+    };
+
+    playVideo();
+  }, [reel]);
   /* ================= IMPORTANT ================= */
   /* DELETE your old location.state useEffect */
   /* DELETE your duplicate fetchReels useEffect */
@@ -286,51 +322,144 @@ const ReelViewer = () => {
 
   /* ================= ACTIONS ================= */
   const toggleLike = async () => {
-    if (!user) return;
-
-    const likeRef = doc(db, "reelLikes", `${reel.reelId}_${user.uid}`);
+    if (!requireLogin()) return;
+    if (!reel) return;
+    const user = auth.currentUser;
     const reelRef = doc(db, "reels", reel.reelId);
-    const snap = await getDoc(reelRef);
+    const likeRef = doc(db, "reelLikes", `${reel.reelId}_${user.uid}`);
+    const dislikeRef = doc(db, "reelDislikes", `${reel.reelId}_${user.uid}`);
 
-    const current = snap.data()?.likes || 0;
+    const reelSnap = await getDoc(reelRef);
+
+    if (!reelSnap.exists()) {
+      await setDoc(reelRef, {
+        likes: 0,
+        dislikes: 0,
+        views: 0,
+      });
+    }
+
+    const data = reelSnap.exists()
+      ? reelSnap.data()
+      : { likes: 0, dislikes: 0 };
+
+    let newLikes = data.likes || 0;
+    let newDislikes = data.dislikes || 0;
 
     if (liked) {
+      // Remove Like
       await deleteDoc(likeRef);
-      await updateDoc(reelRef, { likes: Math.max(current - 1, 0) });
-      setLikes(Math.max(current - 1, 0));
+
+      newLikes = Math.max(newLikes - 1, 0);
+
+      await updateDoc(reelRef, {
+        likes: newLikes,
+      });
+
       setLiked(false);
+      setLikes(newLikes);
     } else {
-      await setDoc(likeRef, { reelId: reel.reelId, userId: user.uid });
-      await updateDoc(reelRef, { likes: current + 1 });
-      setLikes(current + 1);
+      // Add Like
+      await setDoc(likeRef, {
+        reelId: reel.reelId,
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+      });
+
+      newLikes++;
+
+      // Remove Dislike automatically
+      if (disliked) {
+        await deleteDoc(dislikeRef);
+
+        newDislikes = Math.max(newDislikes - 1, 0);
+
+        setDisliked(false);
+        setDislikes(newDislikes);
+      }
+
+      await updateDoc(reelRef, {
+        likes: newLikes,
+        dislikes: newDislikes,
+      });
+
       setLiked(true);
+      setLikes(newLikes);
     }
   };
 
   const toggleDislike = async () => {
-    if (!user) return;
+    if (!requireLogin()) return;
+    if (!reel) return;
 
-    const dislikeRef = doc(db, "reelDislikes", `${reel.reelId}_${user.uid}`);
+    const user = auth.currentUser;
     const reelRef = doc(db, "reels", reel.reelId);
-    const snap = await getDoc(reelRef);
+    const likeRef = doc(db, "reelLikes", `${reel.reelId}_${user.uid}`);
+    const dislikeRef = doc(db, "reelDislikes", `${reel.reelId}_${user.uid}`);
 
-    const current = snap.data()?.dislikes || 0;
+    const reelSnap = await getDoc(reelRef);
+
+    if (!reelSnap.exists()) {
+      await setDoc(reelRef, {
+        likes: 0,
+        dislikes: 0,
+        views: 0,
+      });
+    }
+
+    const data = reelSnap.exists()
+      ? reelSnap.data()
+      : { likes: 0, dislikes: 0 };
+
+    let newLikes = data.likes || 0;
+    let newDislikes = data.dislikes || 0;
 
     if (disliked) {
+      // Remove Dislike
       await deleteDoc(dislikeRef);
-      await updateDoc(reelRef, { dislikes: Math.max(current - 1, 0) });
-      setDislikes(Math.max(current - 1, 0));
+
+      newDislikes = Math.max(newDislikes - 1, 0);
+
+      await updateDoc(reelRef, {
+        dislikes: newDislikes,
+      });
+
       setDisliked(false);
+      setDislikes(newDislikes);
     } else {
-      await setDoc(dislikeRef, { reelId: reel.reelId, userId: user.uid });
-      await updateDoc(reelRef, { dislikes: current + 1 });
-      setDislikes(current + 1);
+      // Add Dislike
+      await setDoc(dislikeRef, {
+        reelId: reel.reelId,
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+      });
+
+      newDislikes++;
+
+      // Remove Like automatically
+      if (liked) {
+        await deleteDoc(likeRef);
+
+        newLikes = Math.max(newLikes - 1, 0);
+
+        setLiked(false);
+        setLikes(newLikes);
+      }
+
+      await updateDoc(reelRef, {
+        likes: newLikes,
+        dislikes: newDislikes,
+      });
+
       setDisliked(true);
+      setDislikes(newDislikes);
     }
   };
 
   const followProfile = async () => {
-    if (!user || followLoading) return;
+    if (!requireLogin()) return;
+    if (followLoading) return;
+    const user = auth.currentUser;
 
     setFollowLoading(true);
 
@@ -344,7 +473,9 @@ const ReelViewer = () => {
   };
 
   const unfollowProfile = async () => {
-    if (!user || followLoading) return;
+    if (!requireLogin()) return;
+    if (followLoading) return;
+    const user = auth.currentUser;
 
     setFollowLoading(true);
 
@@ -355,7 +486,11 @@ const ReelViewer = () => {
 
   const sendComment = async () => {
     if (!user || !commentText.trim()) return;
+    if (!requireLogin()) return;
 
+    const user = auth.currentUser;
+
+    if (!commentText.trim()) return;
     await addDoc(collection(db, "reelComments", reel.reelId, "comments"), {
       userId: user.uid,
       userName: user.displayName || user.email || "User",
@@ -371,7 +506,11 @@ const ReelViewer = () => {
     touchStartY.current = e.touches[0].clientY;
     touchStartX.current = e.touches[0].clientX;
   };
-
+  const handlePlay = async () => {
+    if (videoRef.current) {
+      await videoRef.current.play();
+    }
+  };
   const onTouchEnd = (e) => {
     const endY = e.changedTouches[0].clientY;
     const endX = e.changedTouches[0].clientX;
@@ -411,19 +550,12 @@ const ReelViewer = () => {
     >
       {/* VIDEO */}
       <AnimatePresence mode="wait">
-        <motion.video
-          key={reel.reelId}
+        <video
+          ref={videoRef}
           src={reel.videoUrl}
-          autoPlay
-          muted={false}
+          autoPlay={false}
+          controls
           playsInline
-          loop
-          controls={false}
-          initial={{ opacity: 0.5, scale: 1.04 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0.5 }}
-          transition={{ duration: 0.25 }}
-          className="absolute inset-0 w-full h-full object-contain bg-black"
         />
       </AnimatePresence>
 
@@ -461,7 +593,12 @@ const ReelViewer = () => {
           <p className="text-xs">{dislikes}</p>
         </button>
 
-        <button onClick={() => setShowComments(true)}>
+        <button
+          onClick={() => {
+            if (!requireLogin()) return;
+            setShowComments(true);
+          }}
+        >
           <MessageCircle size={28} />
           <p className="text-xs">{comments.length}</p>
         </button>
@@ -561,6 +698,37 @@ const ReelViewer = () => {
                 className="bg-orange-500 text-white px-4 rounded-full"
               >
                 Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showLoginPopup && (
+        <div className="fixed inset-0 z-[999999] bg-black/70 flex items-end sm:items-center justify-center">
+          <div className="bg-white w-full sm:w-[380px] rounded-t-3xl sm:rounded-3xl p-6 animate-slide-up">
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-1.5 rounded-full bg-gray-300 sm:hidden"></div>
+            </div>
+
+            <h2 className="text-xl font-bold text-center">Login Required</h2>
+
+            <p className="text-gray-600 text-center mt-3">
+              Please login to like, dislike, comment and follow creators.
+            </p>
+
+            <div className="mt-6 flex flex-col gap-3">
+              <button
+                onClick={() => navigate("/login")}
+                className="w-full bg-orange-500 text-white py-3 rounded-xl font-semibold"
+              >
+                Login
+              </button>
+
+              <button
+                onClick={() => setShowLoginPopup(false)}
+                className="w-full border border-gray-300 py-3 rounded-xl"
+              >
+                Cancel
               </button>
             </div>
           </div>

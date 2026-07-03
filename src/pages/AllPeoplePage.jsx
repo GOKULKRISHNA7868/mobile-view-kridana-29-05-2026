@@ -320,7 +320,11 @@ export default function AllPeoplePage() {
         }
       });
 
-      setPeople(uniquePeople);
+      setPeople(
+        uniquePeople.filter(
+          (item) => item.type === "trainer" || item.type === "institute",
+        ),
+      );
     } catch (error) {
       console.log(error);
     }
@@ -406,8 +410,11 @@ export default function AllPeoplePage() {
   const filtered = useMemo(() => {
     let data = [...people];
 
-    // IMPORTANT FIX FOR ALL
-    if (activeFilter === "all") {
+    if (activeFilter === "network") {
+      data = data.filter(
+        (item) => item.type === "trainer" || item.type === "institute",
+      );
+    } else if (activeFilter === "all") {
       data = [...people];
     } else if (activeFilter === "followers") {
       data = data.filter((item) => followersMe[item.uid]);
@@ -424,7 +431,6 @@ export default function AllPeoplePage() {
       data = data.filter((item) => item.type === activeFilter);
     }
 
-    // SEARCH
     if (search.trim()) {
       data = data.filter((item) =>
         item.name.toLowerCase().includes(search.toLowerCase()),
@@ -608,10 +614,8 @@ export default function AllPeoplePage() {
         {/* FILTERS */}
         <div className="mt-3 overflow-x-auto no-scrollbar">
           <div className="flex gap-2 pb-1">
-            {filterBtn("all", "All")}
             {filterBtn("trainer", "Trainers", <BadgeCheck size={14} />)}
             {filterBtn("institute", "Institutes", <Building2 size={14} />)}
-            {filterBtn("user", "People", <Users size={14} />)}
           </div>
         </div>
       </div>

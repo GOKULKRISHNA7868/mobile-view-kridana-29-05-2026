@@ -37,6 +37,7 @@ import PrivacyPolicy from "../../pages/Privacy";
 import ChatBoxTS from "./ChatBoxTS";
 import UserMyAccount from "./UserMyAccount";
 import { useSelectedStudent } from "../../context/SelectedStudentContext";
+import UserDashboardPage from "../UserDashboard/UserDashboard";
 /* ============================= 
    SIDEBAR ITEMS
 ============================= */
@@ -65,7 +66,7 @@ const trainerStudentSidebarItems = [
   "Fee Details",
 ];
 
-const otherUserSidebarItems = ["My Account"];
+const otherUserSidebarItems = ["UserDashboard", "My Account"];
 const SettingsItems = ["Customer Policy", "Privacy Policy", "Logout"];
 /* ============================= 
    WELCOME SCREEN
@@ -85,7 +86,7 @@ const WelcomeDashboard = () => (
    MAIN DASHBOARD
 ============================= */
 const UserDashboard = () => {
-  const [activeMenu, setActiveMenu] = useState("WELCOME");
+  const [activeMenu, setActiveMenu] = useState("Welcome");
   const { user } = useAuth();
   const navigate = useNavigate();
   const idleTimer = useRef(null);
@@ -337,7 +338,7 @@ const UserDashboard = () => {
 
     if (role === "student" || role === "family") setActiveMenu("Dashboard");
     else if (role === "trainerstudent") setActiveMenu("TrainerDashboard");
-    else setActiveMenu("WELCOME"); // or whatever default for trainer/other
+    else setActiveMenu("UserDashboard"); // or whatever default for trainer/other
   }, [role]);
   /* ============================= 
      MAIN CONTENT RENDER
@@ -346,6 +347,8 @@ const UserDashboard = () => {
     switch (activeMenu) {
       case "Dashboard":
         return <Dashboard />;
+      case "UserDashboard":
+        return <UserDashboardPage />;
       case "Student Timetables":
         return <Studenttimetables />;
       case "Trainer's Timetables":

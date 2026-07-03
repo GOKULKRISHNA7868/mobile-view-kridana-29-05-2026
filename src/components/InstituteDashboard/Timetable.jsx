@@ -397,6 +397,9 @@ export default function ClassTime() {
     loadData();
   }, [instituteId]);
   const filteredStudents = students.filter((s) => s.branch === form.branch);
+
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
   /* ---------------- SAVE ---------------- */
   const saveClass = async () => {
     if (
@@ -406,7 +409,30 @@ export default function ClassTime() {
       !form.trainerId ||
       form.students.length === 0
     ) {
-      alert("Please fill all fields");
+      if (!form.category) {
+        alert("Select Category");
+        return;
+      }
+
+      if (!form.subCategory) {
+        alert("Select Sub Category");
+        return;
+      }
+
+      if (!form.branch) {
+        alert("Select Branch");
+        return;
+      }
+
+      if (!form.trainerId) {
+        alert("Select Trainer");
+        return;
+      }
+
+      if (!form.students || form.students.length === 0) {
+        alert("No students found in selected branch");
+        return;
+      }
       return;
     }
 
@@ -466,29 +492,75 @@ export default function ClassTime() {
   useEffect(() => {
     if (form.branch && students.length > 0 && !editId) {
       const autoStudents = students
-        .filter((s) => s.branch === form.branch)
+        .filter(
+          (s) =>
+            s.branch?.trim().toLowerCase() ===
+            form.branch?.trim().toLowerCase(),
+        )
         .map((s) => s.id);
+
+      console.log("Selected Branch:", form.branch);
+      console.log("Matched Students:", autoStudents);
 
       setForm((prev) => ({
         ...prev,
         students: autoStudents,
       }));
     }
-  }, [form.branch, students]);
+  }, [form.branch, students, editId]);
   /* ---------------- FORMAT EVENTS ---------------- */
   const events = schedule.map((s) => ({
     id: s.id,
-    title: s.subCategory,
+    title: s.cancelled ? `❌ Cancelled - ${s.subCategory}` : s.subCategory,
     start: s.start?.toDate ? s.start.toDate() : s.start,
     end: s.end?.toDate ? s.end.toDate() : s.end,
+
     extendedProps: {
       trainer: s.trainerName,
       count: s.students?.length || 0,
+      cancelled: s.cancelled || false,
+      cancelReason: s.cancelReason || "",
     },
   }));
   const filteredEvents = events.filter((e) =>
     e.title?.toLowerCase().includes(search.toLowerCase()),
   );
+  const cancelClass = async () => {
+    if (!editId) return;
+
+    if (!cancelReason.trim()) {
+      alert("Please enter cancellation reason");
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, "institutes", instituteId, "timetable", editId), {
+        cancelled: true,
+        cancelReason: cancelReason,
+        cancelledAt: serverTimestamp(),
+      });
+
+      setSchedule((prev) =>
+        prev.map((item) =>
+          item.id === editId
+            ? {
+                ...item,
+                cancelled: true,
+                cancelReason,
+              }
+            : item,
+        ),
+      );
+
+      setShowCancelModal(false);
+      setCancelReason("");
+      setShowModal(false);
+
+      alert("Class cancelled successfully");
+    } catch (err) {
+      console.error(err);
+    }
+  };
   return (
     <div className="bg-gray-100 p-3 sm:p-4 rounded-xl min-h-screen">
       {/* -------- TOP BAR -------- */}
@@ -512,15 +584,17 @@ export default function ClassTime() {
           <div className="flex border rounded-md overflow-hidden text-sm w-full sm:w-auto">
             <button
               onClick={() => setIs24Hour(false)}
-              className={`flex-1 sm:flex-none px-3 py-2 ${!is24Hour ? "bg-orange-500 text-white" : "bg-white"
-                }`}
+              className={`flex-1 sm:flex-none px-3 py-2 ${
+                !is24Hour ? "bg-orange-500 text-white" : "bg-white"
+              }`}
             >
               12 hrs
             </button>
             <button
               onClick={() => setIs24Hour(true)}
-              className={`flex-1 sm:flex-none px-3 py-2 ${is24Hour ? "bg-orange-500 text-white" : "bg-white"
-                }`}
+              className={`flex-1 sm:flex-none px-3 py-2 ${
+                is24Hour ? "bg-orange-500 text-white" : "bg-white"
+              }`}
             >
               24 hrs
             </button>
@@ -580,11 +654,9 @@ export default function ClassTime() {
           dayHeaderFormat={{
             weekday: "short",
             month: "numeric",
-            day: "numeric"
+            day: "numeric",
           }}
           slotLabelInterval="01:00"
-
-
           dayMaxEvents={true}
           /* TIME FORMAT */
           slotLabelFormat={{
@@ -639,12 +711,26 @@ export default function ClassTime() {
           }}
           /* EVENT UI */
           eventContent={(info) => (
-            <div className="bg-orange-200 rounded-md px-2 py-1 text-[10px] sm:text-xs leading-tight break-words whitespace-normal max-w-full">
-              <div className="font-semibold truncate">{info.event.title}</div>
-              <div className="truncate">
-                👤 {info.event.extendedProps.trainer}
-              </div>
+            <div
+              className={`rounded-md px-2 py-1 text-xs
+      ${
+        info.event.extendedProps.cancelled
+          ? "bg-red-200 text-red-800"
+          : "bg-orange-200"
+      }
+    `}
+            >
+              <div className="font-semibold">{info.event.title}</div>
+
+              <div>👤 {info.event.extendedProps.trainer}</div>
+
               <div>👥 {info.event.extendedProps.count}</div>
+
+              {info.event.extendedProps.cancelled && (
+                <div className="mt-1 text-[10px] font-medium">
+                  Reason: {info.event.extendedProps.cancelReason}
+                </div>
+              )}
             </div>
           )}
         />
@@ -760,6 +846,14 @@ export default function ClassTime() {
 
             {/* ACTIONS */}
             <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              {editId && (
+                <button
+                  onClick={() => setShowCancelModal(true)}
+                  className="flex-1 bg-red-500 text-white py-2 rounded-lg"
+                >
+                  Cancel Class
+                </button>
+              )}
               <button
                 onClick={saveClass}
                 className="flex-1 bg-orange-500 text-white py-2 rounded-lg"
@@ -772,6 +866,36 @@ export default function ClassTime() {
                 className="flex-1 bg-gray-200 py-2 rounded-lg"
               >
                 Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999]">
+          <div className="bg-white p-5 rounded-xl w-[350px]">
+            <h3 className="font-semibold mb-3">Cancel Class</h3>
+
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="Enter cancellation reason..."
+              className="w-full border rounded-lg p-3 h-28"
+            />
+
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="border px-4 py-2 rounded-lg"
+              >
+                Close
+              </button>
+
+              <button
+                onClick={cancelClass}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg"
+              >
+                Save Reason
               </button>
             </div>
           </div>

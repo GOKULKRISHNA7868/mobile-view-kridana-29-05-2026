@@ -26,7 +26,7 @@ const RazorpayKYC = () => {
     accountEmail: "",
     businessName: "",
     businessType: "",
-    profession: "",
+
     ifsc: "",
     accountNumber: "",
     confirmAccountNumber: "",
@@ -62,7 +62,7 @@ const RazorpayKYC = () => {
             accountEmail: data.accountEmail || "",
             businessName: data.businessName || "",
             businessType: data.businessType || "",
-            profession: data.profession || "",
+
             ifsc: data.ifsc || "",
             accountNumber: data.accountNumber || "",
             confirmAccountNumber: data.confirmAccountNumber || "",
@@ -96,7 +96,7 @@ const RazorpayKYC = () => {
       "accountName",
       "businessName",
       "businessType",
-      "profession",
+
       "beneficiaryName",
       "upiName",
     ];
@@ -278,10 +278,7 @@ const RazorpayKYC = () => {
                       label: "Business Type",
                       value: form.businessType,
                     },
-                    {
-                      label: "Profession",
-                      value: form.profession,
-                    },
+
                     {
                       label: "IFSC Code",
                       value: form.ifsc,
@@ -330,17 +327,20 @@ const RazorpayKYC = () => {
                 {/* =====================================================
                    BANK DETAILS
                 ===================================================== */}
+                {/* =====================================================
+   ACCOUNT HOLDER DETAILS
+===================================================== */}
                 <div className="mb-8">
                   <h3 className="text-lg sm:text-xl font-bold mb-5 flex items-center gap-2">
-                    <Landmark className="text-orange-500" />
-                    Bank Details
+                    <User className="text-orange-500" />
+                    Account Holder Details
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* ACCOUNT NAME */}
+                    {/* ACCOUNT HOLDER NAME */}
                     <div>
                       <label className="block mb-2 text-sm font-medium">
-                        Account Name
+                        Account Holder Name
                       </label>
 
                       <div className="relative">
@@ -360,10 +360,10 @@ const RazorpayKYC = () => {
                       </div>
                     </div>
 
-                    {/* EMAIL */}
+                    {/* REGISTERED EMAIL */}
                     <div>
                       <label className="block mb-2 text-sm font-medium">
-                        Account Email
+                        Registered Email Address
                       </label>
 
                       <div className="relative">
@@ -378,15 +378,43 @@ const RazorpayKYC = () => {
                           value={form.accountEmail}
                           onChange={handleChange}
                           className={`${inputClass} pl-10`}
-                          placeholder="Enter email"
+                          placeholder="Enter registered email"
                         />
                       </div>
                     </div>
 
+                    {/* BENEFICIARY NAME */}
+                    <div className="md:col-span-2">
+                      <label className="block mb-2 text-sm font-medium">
+                        Bank Beneficiary Name
+                      </label>
+
+                      <input
+                        type="text"
+                        name="beneficiaryName"
+                        value={form.beneficiaryName}
+                        onChange={handleChange}
+                        className={inputClass}
+                        placeholder="Enter beneficiary name"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* =====================================================
+   BUSINESS DETAILS
+===================================================== */}
+                <div className="mb-8 border-t pt-8">
+                  <h3 className="text-lg sm:text-xl font-bold mb-5 flex items-center gap-2">
+                    <Building2 className="text-orange-500" />
+                    Business Details
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* BUSINESS NAME */}
                     <div>
                       <label className="block mb-2 text-sm font-medium">
-                        Business Name
+                        Academy / Business Name
                       </label>
 
                       <div className="relative">
@@ -401,7 +429,7 @@ const RazorpayKYC = () => {
                           value={form.businessName}
                           onChange={handleChange}
                           className={`${inputClass} pl-10`}
-                          placeholder="Enter business name"
+                          placeholder="Enter academy or business name"
                         />
                       </div>
                     </div>
@@ -409,7 +437,7 @@ const RazorpayKYC = () => {
                     {/* BUSINESS TYPE */}
                     <div>
                       <label className="block mb-2 text-sm font-medium">
-                        Business Type
+                        Business Category
                       </label>
 
                       <div className="relative">
@@ -424,52 +452,29 @@ const RazorpayKYC = () => {
                           value={form.businessType}
                           onChange={handleChange}
                           className={`${inputClass} pl-10`}
-                          placeholder="Enter business type"
+                          placeholder="Enter business category"
                         />
                       </div>
                     </div>
 
                     {/* PROFESSION */}
-                    <div>
-                      <label className="block mb-2 text-sm font-medium">
-                        Profession
-                      </label>
+                  </div>
+                </div>
 
-                      <input
-                        type="text"
-                        name="profession"
-                        value={form.profession}
-                        onChange={handleChange}
-                        className={inputClass}
-                        placeholder="Enter profession"
-                      />
-                    </div>
+                {/* =====================================================
+   BANK ACCOUNT DETAILS
+===================================================== */}
+                <div className="mb-8 border-t pt-8">
+                  <h3 className="text-lg sm:text-xl font-bold mb-5 flex items-center gap-2">
+                    <Landmark className="text-orange-500" />
+                    Bank Account Details
+                  </h3>
 
-                    {/* IFSC */}
-                    <div>
-                      <label className="block mb-2 text-sm font-medium">
-                        IFSC Code
-                      </label>
-
-                      <input
-                        type="text"
-                        name="ifsc"
-                        value={form.ifsc}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            ifsc: e.target.value.toUpperCase(),
-                          })
-                        }
-                        className={inputClass}
-                        placeholder="Enter IFSC"
-                      />
-                    </div>
-
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* ACCOUNT NUMBER */}
                     <div>
                       <label className="block mb-2 text-sm font-medium">
-                        Account Number
+                        Bank Account Number
                       </label>
 
                       <div className="relative">
@@ -485,7 +490,7 @@ const RazorpayKYC = () => {
                           value={form.accountNumber}
                           onChange={handleChange}
                           className={`${inputClass} pl-10`}
-                          placeholder="Enter account number"
+                          placeholder="Enter bank account number"
                         />
                       </div>
                     </div>
@@ -493,7 +498,7 @@ const RazorpayKYC = () => {
                     {/* CONFIRM ACCOUNT NUMBER */}
                     <div>
                       <label className="block mb-2 text-sm font-medium">
-                        Re-enter Account Number
+                        Confirm Account Number
                       </label>
 
                       <div className="relative">
@@ -514,19 +519,24 @@ const RazorpayKYC = () => {
                       </div>
                     </div>
 
-                    {/* BENEFICIARY NAME */}
+                    {/* IFSC */}
                     <div className="md:col-span-2">
                       <label className="block mb-2 text-sm font-medium">
-                        Beneficiary Name
+                        IFSC Code
                       </label>
 
                       <input
                         type="text"
-                        name="beneficiaryName"
-                        value={form.beneficiaryName}
-                        onChange={handleChange}
+                        name="ifsc"
+                        value={form.ifsc}
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            ifsc: e.target.value.toUpperCase(),
+                          })
+                        }
                         className={inputClass}
-                        placeholder="Enter beneficiary name"
+                        placeholder="Enter IFSC code"
                       />
                     </div>
                   </div>

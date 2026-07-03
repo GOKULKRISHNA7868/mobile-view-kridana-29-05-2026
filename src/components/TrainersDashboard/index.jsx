@@ -30,7 +30,7 @@ import ResetPassword from "./ResetPassword";
 import PaidRecipet from "./PaidRecipet";
 import Dashboard from "./Dashboard";
 import KYC from "./KYC";
-import Expences from "./Expences";
+import Expenses from "./Expences";
 import { App } from "@capacitor/app";
 import {
   collection,
@@ -155,7 +155,7 @@ const TrainersDashboard = () => {
       items: [
         { label: "Time Table", value: "Time Table" },
         { label: "Add Events", value: "Add Events" },
-        { label: "Expences", value: "Expences" },
+        { label: "Expenses", value: "Expenses" },
         //{ label: "Chat Box", value: "Chat Box" },
       ],
     },
@@ -367,7 +367,7 @@ const TrainersDashboard = () => {
     if (item === "Analytics") return setView("analytics");
 
     if (item === "Chat Box") return setView("chatBox");
-    if (item === "Expences") return setView("expences");
+    if (item === "Expenses") return setView("expenses");
     if (item === "My Account") return setView("myAccount");
     if (item === "Complete KYC") return setView("KYC");
     if (item === "Dashboard") return setView("Dashboard");
@@ -434,7 +434,7 @@ const TrainersDashboard = () => {
     if (view === "terms") return <TermsAndConditions />;
     if (view === "privacy") return <PrivacyPolicy />;
     if (view === "ResetPassword") return <ResetPassword />;
-    if (view === "expences") return <Expences />;
+    if (view === "expenses") return <Expenses />;
     if (view === "performance") return <PerformanceReports />;
     if (view === "analytics") return <Reelsdata />;
     if (view === "myAccount") return <TrainerMyAccountLayout />;

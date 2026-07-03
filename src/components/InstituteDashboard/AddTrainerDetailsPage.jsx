@@ -36,7 +36,7 @@ export default function AddTrainerDetailsPage() {
   const profileInputRef = useRef(null);
   const certificateInputRef = useRef(null);
   const aadharInputRef = useRef(null);
-
+  const [nextLoading, setNextLoading] = useState(false);
   const categories = [
     "Martial Arts",
     "Team Ball Sports",
@@ -329,7 +329,9 @@ export default function AddTrainerDetailsPage() {
   /* -------------------- FORM DATA -------------------- */
   const [formData, setFormData] = useState({
     firstName: "",
+    middleName: "",
     lastName: "",
+    gender: "",
     designation: "",
     dateOfBirth: "",
     category: "",
@@ -521,6 +523,8 @@ export default function AddTrainerDetailsPage() {
       // Format validations
       if (formData.firstName && !nameRegex.test(formData.firstName))
         newErrors.firstName = "Only letters allowed";
+      if (formData.middleName && !nameRegex.test(formData.middleName))
+        newErrors.middleName = "Only letters allowed";
 
       if (formData.lastName && !nameRegex.test(formData.lastName))
         newErrors.lastName = "Only letters allowed";
@@ -551,11 +555,21 @@ export default function AddTrainerDetailsPage() {
   };
 
   /* -------------------- NAV -------------------- */
-  const handleNext = () => {
+  const handleNext = async () => {
+    setNextLoading(true);
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     if (!validateStep()) {
+      setNextLoading(false);
       return;
     }
-    setStep(step + 1);
+
+    setStep(2);
+
+    setTimeout(() => {
+      setNextLoading(false);
+    }, 100);
   };
 
   const handleBack = () => {
@@ -570,7 +584,9 @@ export default function AddTrainerDetailsPage() {
   const resetForm = () => {
     setFormData({
       firstName: "",
+      middleName: "",
       lastName: "",
+      gender: "",
       designation: "",
       dateOfBirth: "",
       category: "",
@@ -627,16 +643,18 @@ export default function AddTrainerDetailsPage() {
         aadharUrls = await uploadAadharToCloudinary(formData.aadharFiles);
       }
 
-      const cleanedData = {
-        ...formData,
-        certificates: certificateUrls,
-        aadharFiles: aadharUrls,
-        profileImageUrl: profileUrl || "",
-        trainerUid,
-        instituteId: user.uid,
-        role: "trainer",
-        createdAt: serverTimestamp(),
-      };
+      const cleanedData = Object.fromEntries(
+        Object.entries({
+          ...formData,
+          certificates: certificateUrls,
+          aadharFiles: aadharUrls,
+          profileImageUrl: profileUrl || "",
+          trainerUid,
+          instituteId: user?.uid || "",
+          role: "trainer",
+          createdAt: serverTimestamp(),
+        }).filter(([_, value]) => value !== undefined),
+      );
 
       await setDoc(doc(db, "InstituteTrainers", trainerUid), cleanedData);
 
@@ -753,6 +771,20 @@ export default function AddTrainerDetailsPage() {
                   {errors.firstName}
                 </span>
               )}
+            </div>
+            {/* Middle Name */}
+            <div className="flex flex-col">
+              <label className="text-sm font-semibold mb-2">Middle Name</label>
+              <input
+                className={inputClass}
+                value={formData.middleName}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    middleName: formatName(e.target.value),
+                  })
+                }
+              />
             </div>
 
             {/* Last Name */}
@@ -1151,9 +1183,14 @@ export default function AddTrainerDetailsPage() {
             <button
               type="button"
               onClick={handleNext}
-              className="bg-orange-500 px-5 py-2 rounded-md font-semibold text-white"
+              disabled={nextLoading}
+              className={`px-5 py-2 rounded-md font-semibold text-white ${
+                nextLoading
+                  ? "bg-orange-300 cursor-not-allowed"
+                  : "bg-orange-500"
+              }`}
             >
-              Next
+              {nextLoading ? "Loading..." : "Next"}
             </button>
           </div>
         )}

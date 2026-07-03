@@ -41,7 +41,7 @@ import WishlistPage from "./components/WishlistPage.jsx";
 
 import ReelViewer from "./pages/ReelViewer";
 import Reelspage from "./pages/Reelspage.jsx";
-
+import Howitworkdchatbox from "./pages/Howitworkdchatbox";
 /* ================= DASHBOARDS ================= */
 import InstituteDashboard from "./components/InstituteDashboard";
 import TrainersDashboard from "./components/TrainersDashboard";
@@ -320,7 +320,10 @@ function App() {
                   />
 
                   <Route path="/about" element={<About />} />
-
+                  <Route
+                    path="/Howitworkdchatbox"
+                    element={<Howitworkdchatbox />}
+                  />
                   <Route path="/career" element={<Career />} />
 
                   <Route path="/contact" element={<Contact />} />

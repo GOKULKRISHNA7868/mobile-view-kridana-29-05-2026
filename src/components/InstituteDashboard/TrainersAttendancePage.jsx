@@ -103,6 +103,7 @@ const EmployeeAttendancePage = () => {
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0],
   );
+  const [saving, setSaving] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFromDate, setExportFromDate] = useState("");
   const [exportToDate, setExportToDate] = useState("");
@@ -288,14 +289,12 @@ const EmployeeAttendancePage = () => {
       },
     }));
   };
-
   const handleSaveAll = async () => {
     if (!selectedDate) {
       alert("Select date");
       return;
     }
 
-    // 🔥 reason validation
     for (const rec of Object.values(draftAttendance)) {
       if (rec.status === "absent" && !rec.reason) {
         alert("Please select reason for all absent employees");
@@ -303,22 +302,36 @@ const EmployeeAttendancePage = () => {
       }
     }
 
-    const promises = Object.values(draftAttendance).map((rec) =>
-      setDoc(
-        doc(db, "employeeAttendance", `${rec.employeeId}_${selectedDate}`),
-        {
-          ...rec,
-          createdAt: serverTimestamp(),
-        },
-        { merge: true },
-      ),
-    );
+    try {
+      setSaving(true);
 
-    await Promise.all(promises);
+      const changedRecords = Object.values(draftAttendance).filter((rec) => {
+        const original = attendance[rec.employeeId];
 
-    alert("Attendance saved successfully ✅");
+        return JSON.stringify(original) !== JSON.stringify(rec);
+      });
+
+      const promises = changedRecords.map((rec) =>
+        setDoc(
+          doc(db, "employeeAttendance", `${rec.employeeId}_${selectedDate}`),
+          {
+            ...rec,
+            createdAt: serverTimestamp(),
+          },
+          { merge: true },
+        ),
+      );
+
+      await Promise.all(promises);
+
+      alert("Attendance saved successfully ✅");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save attendance");
+    } finally {
+      setSaving(false);
+    }
   };
-
   const handleCancel = () => {
     setDraftAttendance({ ...attendance });
     // revert changes
@@ -549,12 +562,14 @@ const EmployeeAttendancePage = () => {
 
         <button
           onClick={handleSaveAll}
-          disabled={!hasChanges}
+          disabled={!hasChanges || saving}
           className={`px-5 py-2 rounded-md text-white ${
-            hasChanges ? "bg-orange-500" : "bg-gray-400 cursor-not-allowed"
+            !hasChanges || saving
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-orange-500"
           }`}
         >
-          Save
+          {saving ? "Saving..." : "Save"}
         </button>
       </div>
 

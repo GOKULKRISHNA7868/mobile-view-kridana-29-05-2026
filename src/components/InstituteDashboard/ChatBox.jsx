@@ -1758,7 +1758,7 @@ font-semibold
                 className={`flex ${isMine ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[85%] md:max-w-[72%] px-4 py-3 text-[14px] md:text-sm shadow-sm ${
+                  className={`max-w-[85%] md:max-w-[72%] px-4 py-2.5 text-[14px] md:text-sm shadow-sm ${
                     isMine
                       ? "bg-[#DCF8C6] rounded-2xl rounded-br-md"
                       : "bg-white rounded-2xl rounded-bl-md"
@@ -1777,6 +1777,39 @@ font-semibold
                       <source src={m.audio} type="audio/webm" />
                     </audio>
                   )}
+
+                  {/* Time + Tick */}
+                  <div
+                    className={`flex items-center gap-1 mt-1 ${
+                      isMine ? "justify-end" : "justify-start"
+                    }`}
+                  >
+                    {m.createdAt?.seconds && (
+                      <span className="text-[10px] text-gray-500">
+                        {new Date(
+                          m.createdAt.seconds * 1000,
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    )}
+
+                    {/* Mobile Only */}
+                    {isMine && (
+                      <div className="md:hidden flex items-center">
+                        {m.readBy?.length > 1 ? (
+                          <span className="text-[#53BDEB] text-xs font-bold tracking-[-1px]">
+                            ✓✓
+                          </span>
+                        ) : (
+                          <span className="text-gray-500 text-xs font-bold">
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );

@@ -65,7 +65,7 @@ const Navbar = () => {
   const [totalUnread, setTotalUnread] = useState(0);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const location = useLocation();
-
+  const [chatRoute, setChatRoute] = useState("/ChatBox");
   const hideNavbarOnChat = location.pathname.includes("ChatBox");
   const markMessagesAsRead = async (chatId) => {
     const snap = await getDocs(collection(db, "chats", chatId, "messages"));
@@ -211,7 +211,64 @@ const Navbar = () => {
       if (unsubFollowers) unsubFollowers();
     };
   }, []);
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
+      if (!currentUser) return;
 
+      try {
+        let route = "/ChatBox";
+
+        const instituteSnap = await getDoc(
+          doc(db, "institutes", currentUser.uid),
+        );
+
+        if (instituteSnap.exists()) {
+          route = "/components/InstituteDashboard/ChatBox";
+        } else {
+          const trainerSnap = await getDoc(
+            doc(db, "trainers", currentUser.uid),
+          );
+
+          if (trainerSnap.exists()) {
+            route = "/components/TrainersDashboard/ChatBox";
+          } else {
+            const trainerStudentSnap = await getDoc(
+              doc(db, "trainerstudents", currentUser.uid),
+            );
+
+            if (trainerStudentSnap.exists()) {
+              route = "/components/UserDashboard/ChatBoxTS";
+            } else {
+              const studentSnap = await getDoc(
+                doc(db, "students", currentUser.uid),
+              );
+
+              if (studentSnap.exists()) {
+                route = "/components/UserDashboard/ChatBox";
+              } else {
+                const trainerQuery = query(
+                  collection(db, "InstituteTrainers"),
+                  where("trainerUid", "==", currentUser.uid),
+                );
+
+                const trainerResult = await getDocs(trainerQuery);
+
+                if (!trainerResult.empty) {
+                  route = "/components/TrainersDashboard/ChatBox";
+                }
+              }
+            }
+          }
+        }
+
+        setChatRoute(route);
+      } catch (err) {
+        console.log(err);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
   /* ================= FETCH USER ROLE & PLAN ================= */
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
@@ -415,7 +472,8 @@ const Navbar = () => {
       navigate("/user/dashboard");
       return;
     }
-
+    {
+      /*}
     if (
       (userRole === "trainer" || userRole === "institute") &&
       !hasActivePlan
@@ -423,7 +481,8 @@ const Navbar = () => {
       navigate("/plans");
       return;
     }
-
+  */
+    }
     if (userRole === "institute") {
       navigate("/institutes/dashboard");
       return;
@@ -694,68 +753,13 @@ const Navbar = () => {
 
             {/* CHAT */}
             <button
-              onClick={async () => {
-                const currentUser = auth.currentUser;
-
-                if (!currentUser) {
+              onClick={() => {
+                if (!auth.currentUser) {
                   navigate("/login");
                   return;
                 }
 
-                try {
-                  const instituteSnap = await getDoc(
-                    doc(db, "institutes", currentUser.uid),
-                  );
-
-                  if (instituteSnap.exists()) {
-                    navigate("/components/InstituteDashboard/ChatBox");
-                    return;
-                  }
-
-                  const trainerSnap = await getDoc(
-                    doc(db, "trainers", currentUser.uid),
-                  );
-
-                  if (trainerSnap.exists()) {
-                    navigate("/components/TrainersDashboard/ChatBox");
-                    return;
-                  }
-
-                  const trainerStudentSnap = await getDoc(
-                    doc(db, "trainerstudents", currentUser.uid),
-                  );
-
-                  if (trainerStudentSnap.exists()) {
-                    navigate("/components/UserDashboard/ChatBoxTS");
-                    return;
-                  }
-
-                  const studentSnap = await getDoc(
-                    doc(db, "students", currentUser.uid),
-                  );
-
-                  if (studentSnap.exists()) {
-                    navigate("/components/UserDashboard/ChatBox");
-                    return;
-                  }
-
-                  const trainerQuery = query(
-                    collection(db, "InstituteTrainers"),
-                    where("trainerUid", "==", currentUser.uid),
-                  );
-
-                  const trainerResult = await getDocs(trainerQuery);
-
-                  if (!trainerResult.empty) {
-                    navigate("/components/TrainersDashboard/ChatBox");
-                    return;
-                  }
-
-                  navigate("/ChatBox");
-                } catch (error) {
-                  console.log(error);
-                  navigate("/ChatBox");
-                }
+                navigate(chatRoute);
               }}
               className="flex flex-col items-center justify-center text-black relative active:scale-95 transition"
             >
